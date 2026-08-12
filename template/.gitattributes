@@ -1,3 +1,8 @@
+# No global eol=lf here: the contents of a consuming project are unknown, and
+# Windows batch files need CRLF to run.
 * text=auto
 *.sh text eol=lf
 *.md text eol=lf
+VERSION text eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
