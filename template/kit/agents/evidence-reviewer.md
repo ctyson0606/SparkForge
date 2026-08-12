@@ -2,6 +2,9 @@
 name: evidence-reviewer
 description: Read-only reviewer that judges whether a completion claim is
              supported by evidence.
+# This line is mirrored in the .claude/agents stub, because that is the copy
+# the tool actually loads. scripts/check.sh fails if the two disagree. Do not
+# change one without the other.
 tools: Read, Grep, Glob
 ---
 

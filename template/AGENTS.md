@@ -32,7 +32,18 @@ T2  expensive — skipped when MODE is sprint
 
 ## Skill routing
 
-(empty)
+bootstrap — The one-time opening pass, run only while METHOD.md and STATE.md
+  are both still empty shells.
+spec-gate — What has to be settled before implementation starts, at a depth
+  set by MODE.
+team-contract — The two things more than one person has to agree on once, and
+  nothing beyond them.
+verification — Judging whether a test, probe, or suite actually constitutes
+  evidence. Read before trusting any green run.
+diagnosis — Chasing a failure to its cause: reproduction, rates, confounds,
+  and what a measurement means before it is attributed to anything.
+memory-update — When memory is written, by whom, and what an update has to
+  re-read before it writes.
 
 ## Canonical content
 
