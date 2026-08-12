@@ -17,6 +17,7 @@ STUB_ROOTS=(".claude")
 
 fail() { echo "FAIL  $1"; FAILED=1; }
 pass() { echo "ok    $1"; }
+na()   { echo "n/a   $1"; }
 
 # --- required files -------------------------------------------------------
 REQUIRED=(
@@ -112,6 +113,42 @@ else pass "AGENTS.md path references resolve ($(echo $paths | wc -w) paths)"; fi
 crlf="$(find "$ROOT" -name '*.sh' -exec grep -lU "$(printf '\r')" {} + 2>/dev/null)"
 if [ -n "$crlf" ]; then fail "CRLF in shell scripts: $crlf"
 else pass "no CRLF in any .sh"; fi
+
+# --- every .sh is executable in the index ---------------------------------
+# Read the index, never the working tree: on Windows core.filemode is false,
+# so the mode on disk is not the mode anyone else will receive. A script
+# committed at 100644 is unrunnable on every platform that honours the bit,
+# and there is no symptom on the platform that produced it.
+if ! git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  fail "executable bit: $ROOT is not inside a git work tree, so the index cannot be read"
+else
+  bad=""
+  for f in $(cd "$ROOT" && find kit scripts -name '*.sh' 2>/dev/null); do
+    mode="$(git -C "$ROOT" ls-files -s -- "$f" | awk '{print $1}')"
+    case "$mode" in
+      100755) ;;
+      "")     bad="$bad; $f is not in the index" ;;
+      *)      bad="$bad; $f is $mode" ;;
+    esac
+  done
+  if [ -n "$bad" ]; then fail "shell scripts not executable in the index${bad}"
+  else pass "every .sh is 100755 in the index"; fi
+fi
+
+# --- the shipped memory files are still empty shells ----------------------
+# Only meaningful for the template inside the SparkForge repository. In a
+# project that consumes the framework these files are supposed to fill up.
+if [ "$(basename "$ROOT")" = "template" ] && [ -d "$ROOT/../.git" ]; then
+  bad=""
+  for f in METHOD.md STATE.md GOTCHAS.md; do
+    hit="$(grep -nE '^### |^> (Evidence|Found|Rationale):' "$ROOT/$f" 2>/dev/null | head -1)"
+    [ -n "$hit" ] && bad="$bad; $f:$hit"
+  done
+  if [ -n "$bad" ]; then fail "template memory files carry content${bad}"
+  else pass "template memory files are still empty shells"; fi
+else
+  na "template-shell check (this is not the SparkForge template)"
+fi
 
 # --- tier tag grammar -----------------------------------------------------
 bad="$(grep -rhoE '`\[T[^]]*\]`' "$ROOT/kit/skills" 2>/dev/null \
