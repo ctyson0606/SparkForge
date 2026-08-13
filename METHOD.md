@@ -53,12 +53,17 @@ working tree, since the index is what other platforms will receive.
 
 Restoring is part of the experiment and can fail silently. Do not hand-roll a
 backup: restore from the last commit and confirm the diff is empty before
-moving on. A restore that fails leaves the sabotage in place, and the next
-check reports a real state as if it were the test result.
+moving on. If the content under test is not yet committed, git add it first so
+that the index becomes the restore point. Restoring from HEAD would delete it.
+A restore that fails leaves the sabotage in place, and the next check reports a
+real state as if it were the test result.
 
 > Evidence: A backup written to a path built from an environment variable that
 > was already set elsewhere. The copy back failed, and the deliberately broken
-> content stayed in the file after the test was considered finished.
+> content stayed in the file after the test was considered finished. The rule
+> caught its own author one commit later: restoring an uncommitted rule from
+> HEAD deleted the rule itself, and the empty diff the rule demands was what
+> revealed it.
 
 ## Anti-Patterns
 

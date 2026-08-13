@@ -142,13 +142,17 @@ else pass "tier tags conform ($(grep -rhoE '`\[T[^]]*\]`' "$ROOT/kit/skills" 2>/
 
 # --- exactly one evidence label per rule ----------------------------------
 # Anchored on the ### heading: a block with no heading is not a rule and is
-# not subject to this check.
+# not subject to this check. A rule ends at the next heading or at end of
+# file, never at a trailing comment — ending it at a comment would tie the
+# invariant to a convention someone has to remember, and a rule written
+# without that comment would leave the check silently.
 viol="$(for f in "$ROOT"/kit/skills/*.md; do
   [ -e "$f" ] || continue
   awk -v F="$(basename "$f")" '
-    /^### / { inb=1; h=$0; n=0; next }
+    function close_block() { if (inb && n != 1) printf "%s: %d labels: %s\n", F, n, h; inb=0 }
+    /^### / { close_block(); inb=1; h=$0; n=0; next }
     inb && /^> (Evidence|Found|Rationale):/ { n++ }
-    inb && /^<!-- source:/ { if (n != 1) printf "%s: %d labels: %s\n", F, n, h; inb=0 }
+    END { close_block() }
   ' "$f"
 done)"
 if [ -n "$viol" ]; then fail "evidence labels: $viol"

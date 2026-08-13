@@ -70,6 +70,13 @@ has been tested in the shape it now has.
   only what remains meaningful after the template has been copied; anything
   guarding this repository's own shape moved to scripts/check-repo.sh, which
   runs the shipped one first and stops if it fails.
+- Two holes were closed, and both had the same shape: a check that could not
+  fail. The evidence-label invariant ended a rule at a trailing comment, so a
+  rule written without one was never counted; it now ends at the next heading
+  or at end of file. The sabotage rule named the last commit as the restore
+  point, which is not a restore point for content that is not committed yet;
+  it now says to stage first. Where a check or a procedure depends on someone
+  remembering a convention, that is where to look for the next one.
 - The rule about correcting a falsified claim went into kit/, not into this
   repository's METHOD.md: its evidence spans two projects, and it describes
   the structure of a memory file rather than any stack. The rule about a
