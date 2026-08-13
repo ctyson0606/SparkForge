@@ -14,16 +14,9 @@ Do not write into this file:
 
 ## Current Focus
 
-The template is structurally complete: memory shells, six skills, one agent,
-per-tool stubs, and a shipped checker holding thirteen invariants. Two further
-checks stay in this repository, in scripts/check-repo.sh, because what they
-guard does not exist in a project that consumes the framework. SparkForge has
-started using its own method — this file and METHOD.md at the repository root
-are its memory, kept separate from the empty shells under template/.
-
-The stub layout is confirmed for one tool: an agent harness reading
-template/.claude/skills/ picked up all six skills from their SKILL.md stubs
-without any other configuration.
+SparkForge has started using its own method: this file and METHOD.md at the
+repository root are its memory, kept separate from the empty shells under
+template/.
 
 Nothing in the framework has been used on a real project yet. Every rule in
 kit/skills/ was transferred from a previous project's methodology; none of it
@@ -38,13 +31,17 @@ has been tested in the shape it now has.
 
 ## Open Questions
 
-- Kimi Code's project-level skill directory is unconfirmed. The CLI's own
-  repository documentation says `.kimi/skills/`; the product documentation
-  page says `.kimi-code/skills/`. No stub has been created for either. The
-  brand group is documented as mutually exclusive, so adding `.kimi/skills/`
-  would take over from `.claude/skills/` rather than supplement it, and a
-  skill added only to `.claude/` would then be invisible with no error.
-  Resolve by running Kimi Code once and observing whether the skills load.
+- Kimi Code's project-level skill directory is unconfirmed, and reading more
+  documentation will not settle it: the CLI's own repository says
+  `.kimi/skills/` while the product page says `.kimi-code/skills/`, and a path
+  that is correct but not loaded looks exactly like a path that is wrong.
+  Resolve by loading instead: put stubs under a candidate directory, run Kimi
+  Code, and see whether the skills appear in its own list. This session showed
+  what that looks like — Claude Code rescanned and listed all six skills from
+  template/.claude/skills/ with no other configuration, which is the
+  observation to reproduce. Note that the brand group is documented as
+  mutually exclusive, so a `.kimi/` directory would take over from `.claude/`
+  rather than supplement it.
 
 ## Unverified
 
@@ -72,7 +69,10 @@ Three more, none of them rules:
 - Five components have zero executions: spec-gate, team-contract, bootstrap,
   evidence-reviewer, update-kit.sh.
 - The `@GOTCHAS.md` import in AGENTS.md has not been tested on its own. The
-  import mechanism works here, but that line is written correctly and unproven.
+  import mechanism works here, but that line is written correctly and
+  unproven. To settle it: put one recognisable line in template/GOTCHAS.md,
+  open a session, and see whether it arrives in context. That is a next-time
+  errand, not something to schedule.
 
 ## Known Annoyances
 
