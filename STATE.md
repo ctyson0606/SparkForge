@@ -56,31 +56,14 @@ has been tested in the shape it now has.
 
 ## Recent Decisions
 
-- The verification rules were split in two: verification.md judges whether a
-  result is evidence, diagnosis.md pursues a failure that has already
-  appeared. Each file carries one pointer to the other rather than a second
-  copy of the overlap.
-- Classification and update semantics live only in METHOD.md.
-  kit/skills/memory-update.md points at them and deliberately does not
-  restate them, because the rule belongs where the decision is made.
-- The agent's tool restriction is mirrored into its stub, because the stub is
-  the copy the tool actually loads. The mirror is a known duplication held in
-  step by the checker rather than by anyone remembering.
-- Checks are split by where they can still fail. The shipped checker holds
-  only what remains meaningful after the template has been copied; anything
-  guarding this repository's own shape moved to scripts/check-repo.sh, which
-  runs the shipped one first and stops if it fails.
-- Two holes were closed, and both had the same shape: a check that could not
-  fail. The evidence-label invariant ended a rule at a trailing comment, so a
-  rule written without one was never counted; it now ends at the next heading
-  or at end of file. The sabotage rule named the last commit as the restore
-  point, which is not a restore point for content that is not committed yet;
-  it now says to stage first. Where a check or a procedure depends on someone
-  remembering a convention, that is where to look for the next one.
-- The rule about correcting a falsified claim went into kit/, not into this
-  repository's METHOD.md: its evidence spans two projects, and it describes
-  the structure of a memory file rather than any stack. The rule about a
-  platform being unable to report its own output stayed here by the same
-  test — all three incidents are on one platform and one toolchain, so it
-  has no cross-project evidence yet. Promoting it needs a second project to
-  reproduce it.
+Only decisions that still steer the work. Anything already settled into a rule
+in METHOD.md, or visible in the code itself, has been dropped from here.
+
+- Three holes so far had one shape: a check that could not fail. Every one sat
+  where a check or a procedure depended on someone remembering a convention.
+  That is where to look for the next one.
+- A rule earns a place in kit/ when its evidence spans more than one project
+  and it describes the framework rather than a stack; otherwise it stays in
+  this repository's own METHOD.md. The platform rule is the open case — three
+  incidents, all on one platform and one toolchain. Promoting it needs a
+  second project to reproduce it.

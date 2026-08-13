@@ -32,6 +32,8 @@ T2  expensive — skipped when MODE is sprint
 
 ## Skill routing
 
+Each entry below is kit/skills/<name>.md. Read the file, not this line.
+
 bootstrap — The one-time opening pass, run only while METHOD.md and STATE.md
   are both still empty shells.
 spec-gate — What has to be settled before implementation starts, at a depth
@@ -54,7 +56,10 @@ Do not edit anything under kit/ inside a project that consumes
 this framework — send the change upstream and pull it back with
 scripts/update-kit.sh. This project's own knowledge lives only in
 METHOD.md, STATE.md and GOTCHAS.md, which are never overwritten.
+scripts/check.sh verifies the invariants of this layout. Run it after
+any change to kit/, the stubs, or AGENTS.md itself.
 
 ## Memory
 @METHOD.md
 @STATE.md
+@GOTCHAS.md

@@ -17,6 +17,9 @@ STUB_ROOTS=(".claude")
 
 fail() { echo "FAIL  $1"; FAILED=1; }
 pass() { echo "ok    $1"; }
+# A check with nothing to compare has to say so. Reporting it as a pass makes
+# an absence look like a verified agreement.
+na()   { echo "n/a   $1"; }
 
 # --- required files -------------------------------------------------------
 REQUIRED=(
@@ -184,7 +187,7 @@ for r in "$ROOT"/README.md "$ROOT"/README.*.md; do
   [ -e "$r" ] && readmes+=("$r")
 done
 if [ "${#readmes[@]}" -le 1 ]; then
-  pass "README consistency (only one README, nothing to compare)"
+  na "README consistency: only one README, nothing to compare"
 else
   base="$ROOT/README.md"
   count_structure() {
@@ -198,6 +201,13 @@ else
   copyable() {
     awk '/^```/{f=!f; next} f' "$1" | grep -vE '^[[:space:]]*#' | sed 's/[[:space:]]*$//'
   }
+  # Two empty extractions compare equal, so a pair of READMEs with nothing
+  # copyable in either would satisfy the diff by agreeing about nothing. Say
+  # so instead of reporting it as a verified match.
+  vacuous=1
+  for r in "${readmes[@]}"; do
+    [ -n "$(copyable "$r")" ] && vacuous=0
+  done
   bad=""
   for r in "${readmes[@]}"; do
     [ "$r" = "$base" ] && continue
@@ -208,6 +218,8 @@ else
       bad="$bad; $n copyable lines differ"
   done
   if [ -n "$bad" ]; then fail "README translations${bad}"
+  elif [ "$vacuous" -eq 1 ]; then
+    na "README: structure agrees across ${#readmes[@]} files, but no side has copyable content to compare"
   else pass "README translations agree (${#readmes[@]} files)"; fi
 fi
 
