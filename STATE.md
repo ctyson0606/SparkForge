@@ -1,9 +1,12 @@
 # STATE
 
-> Last updated: 2026-08-12
+> Last updated: 2026-08-13
 
 Current working state. Superseded content is deleted, not archived.
 For durable rules see METHOD.md.
+
+Every line here must be something no command answers. Length follows from how
+much of that there is.
 
 <!--
 Do not write into this file:
@@ -37,8 +40,8 @@ has been tested in the shape it now has.
   that is correct but not loaded looks exactly like a path that is wrong.
   Resolve by loading instead: put stubs under a candidate directory, run Kimi
   Code, and see whether the skills appear in its own list. This session showed
-  what that looks like — Claude Code rescanned and listed all six skills from
-  template/.claude/skills/ with no other configuration, which is the
+  what that looks like — Claude Code rescanned template/.claude/skills/ and
+  listed every skill it found there, with no other configuration, which is the
   observation to reproduce. Note that the brand group is documented as
   mutually exclusive, so a `.kimi/` directory would take over from `.claude/`
   rather than supplement it.
@@ -92,9 +95,8 @@ in METHOD.md, or visible in the code itself, has been dropped from here.
   That is where to look for the next one.
 - The parts of kit/ with evidence behind them and the parts never executed
   divide exactly along how they were written: everything transformed from the
-  source methodology has been walked, and all five components written from
-  spec have run zero times. The next step is a real project, not more
-  features.
+  source methodology has been walked, and everything written from spec has run
+  zero times. The next step is a real project, not more features.
 - A rule earns a place in kit/ when its evidence spans more than one project
   and it describes the framework rather than a stack; otherwise it stays in
   this repository's own METHOD.md. The platform rule is the open case — three

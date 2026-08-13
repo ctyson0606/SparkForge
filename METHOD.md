@@ -65,6 +65,19 @@ real state as if it were the test result.
 > HEAD deleted the rule itself, and the empty diff the rule demands was what
 > revealed it.
 
+### A count of things the repository holds does not belong in a memory file.  `[T0]`  `[2026-08-13]`
+
+A number that describes the contents of the repository — how many skills, how
+many checks, how many components — is answered by one command and falsified by
+the next change that adds or removes one. Writing it down creates an entry that
+must be maintained in step with the thing it counts, and nothing reports when
+the two diverge. Name the things or point at the command.
+
+> Evidence: An invariant count in this project's own state file went stale
+> twice in three commits, corrected in place both times before it was
+> recognised as a line that should not exist. Two smaller counts of the same
+> shape were still present after the second correction.
+
 ## Anti-Patterns
 
 (empty)
