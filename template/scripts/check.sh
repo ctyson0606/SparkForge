@@ -17,7 +17,6 @@ STUB_ROOTS=(".claude")
 
 fail() { echo "FAIL  $1"; FAILED=1; }
 pass() { echo "ok    $1"; }
-na()   { echo "n/a   $1"; }
 
 # --- required files -------------------------------------------------------
 REQUIRED=(
@@ -133,21 +132,6 @@ else
   done
   if [ -n "$bad" ]; then fail "shell scripts not executable in the index${bad}"
   else pass "every .sh is 100755 in the index"; fi
-fi
-
-# --- the shipped memory files are still empty shells ----------------------
-# Only meaningful for the template inside the SparkForge repository. In a
-# project that consumes the framework these files are supposed to fill up.
-if [ "$(basename "$ROOT")" = "template" ] && [ -d "$ROOT/../.git" ]; then
-  bad=""
-  for f in METHOD.md STATE.md GOTCHAS.md; do
-    hit="$(grep -nE '^### |^> (Evidence|Found|Rationale):' "$ROOT/$f" 2>/dev/null | head -1)"
-    [ -n "$hit" ] && bad="$bad; $f:$hit"
-  done
-  if [ -n "$bad" ]; then fail "template memory files carry content${bad}"
-  else pass "template memory files are still empty shells"; fi
-else
-  na "template-shell check (this is not the SparkForge template)"
 fi
 
 # --- tier tag grammar -----------------------------------------------------

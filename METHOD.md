@@ -49,6 +49,17 @@ working tree, since the index is what other platforms will receive.
 > because the producing platform does not carry one, leaving the scripts
 > unrunnable on the platforms that do.
 
+### A sabotage is not complete until the restore is verified.  `[T0]`  `[2026-08-12]`
+
+Restoring is part of the experiment and can fail silently. Do not hand-roll a
+backup: restore from the last commit and confirm the diff is empty before
+moving on. A restore that fails leaves the sabotage in place, and the next
+check reports a real state as if it were the test result.
+
+> Evidence: A backup written to a path built from an environment variable that
+> was already set elsewhere. The copy back failed, and the deliberately broken
+> content stayed in the file after the test was considered finished.
+
 ## Anti-Patterns
 
 (empty)

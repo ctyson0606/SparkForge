@@ -15,9 +15,15 @@ Do not write into this file:
 ## Current Focus
 
 The template is structurally complete: memory shells, six skills, one agent,
-per-tool stubs, and a checker that holds fourteen invariants. SparkForge has
+per-tool stubs, and a shipped checker holding thirteen invariants. Two further
+checks stay in this repository, in scripts/check-repo.sh, because what they
+guard does not exist in a project that consumes the framework. SparkForge has
 started using its own method — this file and METHOD.md at the repository root
 are its memory, kept separate from the empty shells under template/.
+
+The stub layout is confirmed for one tool: an agent harness reading
+template/.claude/skills/ picked up all six skills from their SKILL.md stubs
+without any other configuration.
 
 Nothing in the framework has been used on a real project yet. Every rule in
 kit/skills/ was transferred from a previous project's methodology; none of it
@@ -39,9 +45,6 @@ has been tested in the shape it now has.
   would take over from `.claude/skills/` rather than supplement it, and a
   skill added only to `.claude/` would then be invisible with no error.
   Resolve by running Kimi Code once and observing whether the skills load.
-- Whether the template-shell check belongs in the template's own checker,
-  given that it reports "not applicable" in every project that consumes the
-  framework.
 
 ## Known Annoyances
 
@@ -63,3 +66,7 @@ has been tested in the shape it now has.
 - The agent's tool restriction is mirrored into its stub, because the stub is
   the copy the tool actually loads. The mirror is a known duplication held in
   step by the checker rather than by anyone remembering.
+- Checks are split by where they can still fail. The shipped checker holds
+  only what remains meaningful after the template has been copied; anything
+  guarding this repository's own shape moved to scripts/check-repo.sh, which
+  runs the shipped one first and stops if it fails.
