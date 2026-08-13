@@ -58,6 +58,10 @@ scripts/update-kit.sh. This project's own knowledge lives only in
 METHOD.md, STATE.md and GOTCHAS.md, which are never overwritten.
 scripts/check.sh verifies the invariants of this layout. Run it after
 any change to kit/, the stubs, or AGENTS.md itself.
+When sending an improvement upstream, review the Unverified block in
+the upstream STATE.md and tick off anything this project exercised.
+A rule that has now been walked is a finding worth more than the
+improvement itself.
 
 ## Memory
 @METHOD.md
