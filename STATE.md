@@ -70,3 +70,10 @@ has been tested in the shape it now has.
   only what remains meaningful after the template has been copied; anything
   guarding this repository's own shape moved to scripts/check-repo.sh, which
   runs the shipped one first and stops if it fails.
+- The rule about correcting a falsified claim went into kit/, not into this
+  repository's METHOD.md: its evidence spans two projects, and it describes
+  the structure of a memory file rather than any stack. The rule about a
+  platform being unable to report its own output stayed here by the same
+  test — all three incidents are on one platform and one toolchain, so it
+  has no cross-project evidence yet. Promoting it needs a second project to
+  reproduce it.

@@ -54,3 +54,19 @@ exactly why re-reading only those sections leaves it standing.
 > telling its reader to do something that had already been done.
 
 <!-- source: METHOD.md 573-584 -->
+
+### Correcting a claim your own change falsified is not optional and does not wait for a trigger.  `[T0]`  `[2026-08-12]`
+
+A memory update that adds a new claim can wait to be asked for; the reader
+loses nothing but completeness. A statement the just-landed change made false
+cannot wait, because it will be believed. Delete or correct it in the same step
+that falsified it. Adding to the record is a request; keeping the record true
+is part of the work.
+
+> Evidence: In an earlier project a line asserting that work was not committed
+> and not deployed stood for two days after both had happened, because updates
+> only ran when asked for. In this project a line asserting fourteen invariants
+> survived the change that split them into thirteen plus two, and was caught
+> only because the agent raised the question.
+
+<!-- source: none; first recorded in this project -->
