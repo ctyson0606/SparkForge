@@ -81,6 +81,19 @@ result that has not answered the question.
 
 <!-- source: METHOD.md 94-100 -->
 
+### Confirm the sabotage landed before reading the result.  `[T0]`  `[2026-08-12]`
+
+An injection that silently did nothing and a check that correctly passes
+produce the same output. Grep for the damage and confirm the count before
+trusting a green run: an anchor string that does not exist in the target file
+fails without saying so, and the result reads as the check working.
+
+> Evidence: A sabotage aimed at one file used an anchor from another, so
+> nothing was inserted. The first run reported ok and would have been recorded
+> as a passing case had the injection not been counted separately.
+
+<!-- source: none; first recorded in this project -->
+
 ### A probe whose outcomes cannot differ proves nothing.  `[T1]` `[2026-08-12]`
 
 Pick a target where success and failure look different. Run the known-bad
