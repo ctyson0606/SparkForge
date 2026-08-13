@@ -29,7 +29,7 @@ has been tested in the shape it now has.
 
 - Run the framework on a project from its first commit and find out which
   rules earn their place and which are never reached.
-- Design controls for the two rules labelled `Rationale:` in
+- Design controls for the rules labelled `Rationale:` in
   kit/skills/verification.md — they are the ones no incident has tested.
 
 ## Open Questions
@@ -67,9 +67,9 @@ of them has ever been walked. The first real project ticks this list off.
 Also, none of them rules:
 
 - The tier system has never been executed. MODE has been project throughout,
-  the T1/T2 degradation path has never been taken, and the 38 tags are
+  the T1/T2 degradation path has never been taken, and the tier tags are
   annotation so far.
-- Five components have zero executions: spec-gate, team-contract, bootstrap,
+- These components have zero executions: spec-gate, team-contract, bootstrap,
   evidence-reviewer, update-kit.sh.
 - The `@GOTCHAS.md` import in AGENTS.md has not been tested on its own. The
   import mechanism works here, but that line is written correctly and
@@ -78,11 +78,12 @@ Also, none of them rules:
   errand, not something to schedule.
 - A candidate rule, not yet written: a rule's boundary only becomes visible
   the first time it is actually applied, and that boundary has to be written
-  back or the next reader applies it too literally. Two instances so far —
-  the restore point in the sabotage rule, and the scope of the rule about
-  counts — both in this repository, both within one week. Promoting it needs
-  a second instance in a different rule system, not another one in this
-  METHOD.md.
+  back or the next reader applies it too literally. Three instances so far —
+  the restore point in the sabotage rule, the scope of the rule about counts,
+  and that same rule again when applying it deliberately showed it would
+  strike numbers out of an evidence block. All in this repository, all within
+  one week. Promoting it needs an instance in a different rule system, not
+  another one in this METHOD.md.
 
 ## Known Annoyances
 

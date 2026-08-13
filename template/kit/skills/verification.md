@@ -189,7 +189,7 @@ more. Drive the running application in a real browser, assert on what the DOM
 actually says — computed styles, element counts, the text a user would read —
 and screenshot it to look at.
 
-> Found: six separate traps, four of which are the rules that follow.
+> Found: six separate traps, of which the rules that follow are the ones kept.
 
 <!-- source: METHOD.md 275-278 -->
 

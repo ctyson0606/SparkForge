@@ -67,14 +67,25 @@ real state as if it were the test result.
 
 ### A count of things the repository holds does not belong in a memory file.  `[T0]`  `[2026-08-13]`
 
+The test is whether a later change can make the number wrong. If nothing that
+lands afterwards can falsify it, it stays; if the next commit can, it does not
+belong here.
+
 A number that describes the contents of the repository — how many skills, how
 many checks, how many components — is answered by one command and falsified by
 the next change that adds or removes one. Writing it down creates an entry that
 must be maintained in step with the thing it counts, and nothing reports when
-the two diverge. This covers counts of what the repository contains. A count of
-incidents or of work still outstanding is not in scope: no command answers it,
-the next change only adds to it, and the number is part of the claim rather
-than a description of the layout. Name the things or point at the command.
+the two diverge.
+
+Three kinds of number pass the test and are out of scope. A count of incidents:
+no command answers it and the next change only adds to it. A count of work
+still outstanding: the same, and the number is what the entry exists to reduce.
+A count recording what the repository held at a past moment, inside an incident
+being described: it is a fact about that moment rather than a claim about the
+present, so removing it destroys the evidence instead of preventing a stale
+line.
+
+Name the things or point at the command.
 
 > Evidence: An invariant count in this project's own state file went stale
 > twice in three commits, corrected in place both times before it was
