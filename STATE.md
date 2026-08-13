@@ -64,7 +64,7 @@ of them has ever been walked. The first real project ticks this list off.
 - Live data, a timing-sensitive probe, subagents, translated documentation,
   TEAM > 1, MODE sprint: 5 rules and 2 modes needing a project shaped for them.
 
-Three more, none of them rules:
+Also, none of them rules:
 
 - The tier system has never been executed. MODE has been project throughout,
   the T1/T2 degradation path has never been taken, and the 38 tags are
@@ -76,6 +76,13 @@ Three more, none of them rules:
   unproven. To settle it: put one recognisable line in template/GOTCHAS.md,
   open a session, and see whether it arrives in context. That is a next-time
   errand, not something to schedule.
+- A candidate rule, not yet written: a rule's boundary only becomes visible
+  the first time it is actually applied, and that boundary has to be written
+  back or the next reader applies it too literally. Two instances so far —
+  the restore point in the sabotage rule, and the scope of the rule about
+  counts — both in this repository, both within one week. Promoting it needs
+  a second instance in a different rule system, not another one in this
+  METHOD.md.
 
 ## Known Annoyances
 
