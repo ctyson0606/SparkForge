@@ -71,7 +71,10 @@ A number that describes the contents of the repository — how many skills, how
 many checks, how many components — is answered by one command and falsified by
 the next change that adds or removes one. Writing it down creates an entry that
 must be maintained in step with the thing it counts, and nothing reports when
-the two diverge. Name the things or point at the command.
+the two diverge. This covers counts of what the repository contains. A count of
+incidents or of work still outstanding is not in scope: no command answers it,
+the next change only adds to it, and the number is part of the claim rather
+than a description of the layout. Name the things or point at the command.
 
 > Evidence: An invariant count in this project's own state file went stale
 > twice in three commits, corrected in place both times before it was
