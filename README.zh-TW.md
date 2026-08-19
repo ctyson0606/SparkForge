@@ -1,0 +1,170 @@
+# 🔥 SparkForge
+
+[English](README.md) · **繁體中文** · [简体中文](README.zh-CN.md)
+
+給 AI coding agent 用的工作流框架層，複製進一個新專案裡使用。它本身不帶任何
+專案知識 —— 只帶兩樣東西：🧠 一套累積專案知識的機制，以及 🔬 一套判斷證據到底
+成不成立的方法論。
+
+## 📦 你會拿到什麼
+
+把 `template/` 複製進新專案，裡面的內容就是那個專案的根目錄：
+
+```text
+my-project/
+├── AGENTS.md
+├── CLAUDE.md
+├── METHOD.md
+├── STATE.md
+├── GOTCHAS.md
+├── .gitattributes
+├── .claude/
+│   ├── skills/
+│   └── agents/
+├── kit/
+│   ├── VERSION
+│   ├── skills/
+│   └── agents/
+└── scripts/
+    ├── check.sh
+    └── update-kit.sh
+```
+
+| 檔案 | 用途 |
+|---|---|
+| ⚙️ `AGENTS.md` | 入口。放 `MODE`、`TEAM`、你這個專案的環境指令、硬規則，以及把 agent 導向某個 skill 的路由表。 |
+| 🔗 `CLAUDE.md` | 只有一行：`@AGENTS.md`。工具專屬的那道門，通往其餘一切。 |
+| 🧠 `METHOD.md` | 這個專案自己掙來的長效規則。**開始是空的，而且會一直空著**，直到真的踩到坑才填。 |
+| 📌 `STATE.md` | 當前工作狀態。整份替換，絕不往後追加。 |
+| 🐛 `GOTCHAS.md` | 綁定版本的陷阱，每條都有日期。相依套件消失後可以隨手刪掉。 |
+| 📚 `kit/` | 框架的正典內容。**在消費端專案裡絕對不要改這裡** —— 更新時會被整個覆蓋。 |
+| 🪝 `.claude/` | 薄殼 stub。每個都是一段 frontmatter 加一行指向 `kit/` 的路徑。 |
+| ✅ `scripts/check.sh` | 對整個目錄結構做的結構檢查。 |
+| 🔄 `scripts/update-kit.sh` | 從上游拉一份新的 `kit/` 下來。 |
+
+分成兩層正是重點：📚 `kit/` 把每條規則只寫一次，每個 AI 工具各自拿到一個目錄的
+🪝 薄殼 stub 指過去。要支援第二個工具，是再生一組 stub，而不是把規則再抄一遍。
+
+## 🚀 安裝
+
+```bash
+# 1. 把整個 template 複製進去。要用 "template/." 而不是 "template/*"，
+#    否則會不聲不響地漏掉 .claude/ 和 .gitattributes
+cp -R /path/to/SparkForge/template/. /path/to/my-project/
+
+cd /path/to/my-project
+git init
+git add -A
+
+# 2. 在 git index 裡把腳本標記成可執行。
+#    Windows 上工作樹的 file mode 是假的，所以光靠 chmod 不夠
+git update-index --chmod=+x scripts/check.sh scripts/update-kit.sh
+
+# 3. 打開 AGENTS.md，把第一行的 "# SparkForge"
+#    換成你自己的專案名稱
+
+# 4. commit 之前先驗證結構
+bash scripts/check.sh
+
+git commit -m "Adopt SparkForge"
+```
+
+接著打開你的 agent，**主動要它跑 bootstrap** —— 它不會自己觸發。🥾 Bootstrap
+只跑一次，而且只在 `METHOD.md` 和 `STATE.md` 都還是空的時候跑，它會：
+
+1. 問你 `MODE` 和 `TEAM`，然後寫進 `AGENTS.md`。
+2. 一項一項把環境指令填進去。如果這個專案真的沒有某個指令，它會寫 `none` ——
+   缺席本身就是一項發現，不是一格空白。
+3. 依 `MODE` 選定的深度跑一次規格門。
+4. 把結果寫進 `STATE.md` 的 `Current Focus`。
+5. **讓 `METHOD.md` 保持空白。** 這是硬規則。規則要從專案真正踩到的坑掙來，
+   絕不能事先用猜的。
+
+## 🧭 日常使用
+
+記憶會自己載入：`CLAUDE.md` 匯入 `AGENTS.md`，後者再匯入 `METHOD.md`、
+`STATE.md` 和 `GOTCHAS.md`。每個 session 一開場，這個專案學到的所有東西都已經
+在 context 裡了。
+
+| 當你正在… | 讀這份 | 一句話版本 |
+|---|---|---|
+| 🚪 準備開一個新功能 | `kit/skills/spec-gate.md` | 把需求重述成一個*問題*，只問會卡住的問題，產出目標、非目標、驗收條件和資料／API 契約 —— 然後**停下來等人批准**。 |
+| 🧪 看著一次全綠的測試 | `kit/skills/verification.md` | 第一次跑就全過的套件是未經驗證，不是正確。故意把程式碼弄壞，確認該失敗的那幾條真的失敗了。 |
+| 🔍 在追一個失敗 | `kit/skills/diagnosis.md` | 間歇性失敗有它的*發生率*，跑一次量不出來。從結果讀出任何結論之前，先確認不是測試框架自己壞了。 |
+| 👥 和其他人一起做 | `kit/skills/team-contract.md` | 一次講定資料／API 契約，以及哪些目錄歸誰負責。除此之外什麼都不要加。 |
+| 💾 被要求存記憶 | `kit/skills/memory-update.md` | 重讀*整份*檔案，不是只讀你動過的段落。過期那一行永遠不在你剛才工作的地方。 |
+
+### 🚨 規格門在這幾種情況不是選配
+
+不管 `MODE` 寫什麼，只要改動碰到 🔐 認證、🛡️ 授權、💳 金流、🔑 secrets、
+🗄️ 資料庫 migration，或 🌐 跨越一個以上的服務，就一定要先過規格門。其他地方才是
+你自己判斷。
+
+### 🧠 記憶的行為方式
+
+- ✍️ **記憶只在被要求時才寫。** 主對話絕不自己動筆 —— 你得開口。唯一的例外是被
+  委派出去的 subagent，它結束時會自己寫，因為它握有主線永遠看不到的 context。
+- 🔁 **`METHOD.md` 是累積的。** 要修一條規則就在原地改，而不是追加一條和它牴觸
+  的。刪除則必須附上理由。
+- 🧹 **`STATE.md` 是被整份替換的。** 不再為真的東西直接刪掉，不做封存。歷史由
+  git 保管。
+- ⚡ **被你自己的改動弄成假的那句話，當場就要修**，不必等人來要求。往記錄裡加東
+  西是一個請求；讓記錄保持為真則是工作的一部分。
+
+### 🕵️ 證據審查員
+
+`kit/agents/evidence-reviewer.md` 是一個唯讀的 subagent，它的工具清單短得刻意
+—— `Read`、`Grep`、`Glob`。它不能執行指令，因為一個能執行的 agent 會變成第二個
+實作者，而不是第二雙眼睛。它只會用三句話之一回答：**Evidence holds.** ／
+**Evidence insufficient.** 並指名是哪幾條規則沒過 ／ **Cannot judge.** 並指名
+缺了什麼。
+
+## 🔄 更新
+
+```bash
+# 從上游覆蓋 kit/。METHOD.md、STATE.md、GOTCHAS.md
+# 以及 AGENTS.md 的每一個段落都是你的，永遠不會被碰
+scripts/update-kit.sh
+
+# 上游新增或移除一個 skill，對應的 stub 也要跟著加或刪，
+# 而這支腳本就是負責回報這件事的
+bash scripts/check.sh
+```
+
+用的過程中想到改進？把它送回上游，不要在本地改 `kit/`。而且送的時候，順手讀一
+下上游 `STATE.md` 裡的 `Unverified` 區塊 —— 🏅 一條被你的專案真正走過的規則，
+價值比那個改進本身還高。
+
+## 🌡️ 成熟度
+
+明講，因為這個框架自己的方法論就要求這樣。**這裡面沒有任何一部分在真實專案上
+用過。**
+
+| 元件 | 狀態 |
+|---|---|
+| 🧪 `verification.md` | ✅ 規則萃取自真實事故，多數都附著一筆有記錄的。 |
+| 🔍 `diagnosis.md` | ✅ 同上 —— 萃取自一套在用的方法論，不是照規格寫出來的。 |
+| 💾 `memory-update.md` | ✅ 同上。 |
+| ✅ `check.sh` | ✅ 跑得起來，而且在這個 repo 裡抓出過真的漏洞。 |
+| 🚪 `spec-gate.md` | ⚠️ 照規格寫的。零執行。 |
+| 👥 `team-contract.md` | ⚠️ 照規格寫的。零執行。 |
+| 🥾 `bootstrap.md` | ⚠️ 照規格寫的。零執行。 |
+| 🕵️ `evidence-reviewer.md` | ⚠️ 照規格寫的。零執行。 |
+| 🔄 `update-kit.sh` | ⚠️ 照規格寫的。零執行。 |
+| 🎚️ `T0`／`T1`／`T2` 分級系統 | ⚠️ 從未被執行過。到目前為止那些標籤只是註解。 |
+
+上面那段安裝流程是從目錄結構推導出來的，不是誰真的走過一遍。🧗 第一個照著跑的
+人是在開路 —— 把摩擦記下來，因為那份記錄才是這一節本來該有的樣子。
+
+## 🚫 SparkForge 不包含什麼
+
+以下描述的是框架本身的邊界 —— SparkForge 不出貨什麼。它們對「用 SparkForge 的
+專案可以做什麼」不作任何限制。
+
+- ❌ 沒有內建的任務追蹤、看板或任務卡。
+- ❌ 不對既有的程式碼庫做冷啟動掃描。SparkForge 的設計對象只有從第一個 commit
+  就採用它的專案。
+- ❌ 沒有為非軟體工作做的設計。
+- ❌ 沒有 UI 設計系統，也沒有 mockup 關卡。
+- ❌ 不收任何價值取決於全隊都採用的模組。這是新模組的入場考題：如果團隊裡剛好
+  只有一個人用它，它還值得存在嗎？
