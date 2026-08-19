@@ -1,6 +1,6 @@
 # STATE
 
-> Last updated: 2026-08-13
+> Last updated: 2026-08-19
 
 Current working state. Superseded content is deleted, not archived.
 For durable rules see METHOD.md.
@@ -28,7 +28,9 @@ has been tested in the shape it now has.
 ## Next Steps
 
 - Run the framework on a project from its first commit and find out which
-  rules earn their place and which are never reached.
+  rules earn their place and which are never reached. Record the friction of
+  the install itself: that record is what the README's install section will
+  be.
 - Design controls for the rules labelled `Rationale:` in
   kit/skills/verification.md — they are the ones no incident has tested.
 
@@ -84,6 +86,12 @@ Also, none of them rules:
   strike numbers out of an evidence block. All in this repository, all within
   one week. Promoting it needs an instance in a different rule system, not
   another one in this METHOD.md.
+- Everything to watch for at the first install is an instance of one question,
+  whether the condition was put in the right place: whether bootstrap fires by
+  itself, whether anyone thinks to change the title in AGENTS.md, whether the
+  agent goes and reads spec-gate on its own when it touches auth or a
+  migration. All three are the shape of the same candidate rule, and what that
+  rule needs is exactly a different rule system.
 
 ## Known Annoyances
 
@@ -92,6 +100,10 @@ Also, none of them rules:
 - `template/.gitattributes` cannot be verified in place, because the root
   file's attributes are inherited by everything under it. The checker copies
   it to a throwaway repository to get an answer that can differ.
+- Nothing checks the tier tags or the evidence labels in the root METHOD.md.
+  Those two checks scan template/kit/skills only, while the root file uses the
+  same grammar and now carries three rules. A consuming project does not have
+  this file, so no number of real projects will ever run into it.
 
 ## Recent Decisions
 
