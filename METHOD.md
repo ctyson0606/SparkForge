@@ -92,6 +92,40 @@ Name the things or point at the command.
 > recognised as a line that should not exist. Two smaller counts of the same
 > shape were still present after the second correction.
 
+### An opt-out and an omission look identical to a checker.  `[T1]`  `[2026-08-20]`
+
+Where a structure is allowed to be legitimately absent, nothing reading the
+current state can report the case where it is wrongly absent. Tightening the
+check removes the opt-out; leaving it silent lets the wrong absence through.
+Neither is available to a reader of the state, because the two states are the
+same state. The difference is in the transition, so it has to be drawn wherever
+the before and the after are both in hand — whatever performs the change, not
+whatever inspects the result.
+
+Report only what the transition introduced, never every absence. A warning that
+fires on every deliberate opt-out is read twice and ignored from then on, which
+costs more than the silence it replaced.
+
+> Evidence: The per-tool entry files may each be deleted, since that is how a
+> project declines a tool it does not use, so the checker has to read a missing
+> one as intended. Their list ships inside kit/, so an update can begin naming
+> a tool the project has no entry for, and that arrival is indistinguishable
+> from the deletion. The update script held the old list and the new one at
+> once and was the only place the two could be separated.
+
+### A checker scoped to a subtree reports nothing about the same structure outside it.  `[T0]`  `[2026-08-20]`
+
+A check written against a root argues only about that root. Anything of the
+same shape one level above it passes unexamined, and the output is identical to
+the output of a check that looked and approved. Before trusting one, ask what
+its root excludes.
+
+> Evidence: Two checks in this repository take the template directory as their
+> root. The tier tag and evidence label checks read only the skills beneath it,
+> while the root METHOD.md is written in the same grammar and is never opened.
+> The README check globs that same root and reports "only one README, nothing
+> to compare" while three translated READMEs sit one level above it.
+
 ## Anti-Patterns
 
 (empty)
