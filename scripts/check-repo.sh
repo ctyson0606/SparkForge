@@ -38,6 +38,31 @@ done
 if [ -n "$bad" ]; then fail "template memory files carry content${bad}"
 else pass "template memory files are still empty shells"; fi
 
+# --- this repository's own tool entry points ------------------------------
+# The shipped checker reads template/kit/entry-points.txt and applies it to the
+# template. SparkForge uses the same arrangement at its own root, and that copy
+# is outside the shipped checker's reach. The list is read from the template
+# rather than restated here: a tool added there has to be covered here without
+# anyone remembering to edit two files.
+LIST="$ROOT/template/kit/entry-points.txt"
+if [ ! -f "$LIST" ]; then
+  fail "root entry points: $LIST is missing, so the list cannot be read"
+else
+  present=0
+  bad=""
+  while read -r e; do
+    case "$e" in ''|\#*) continue ;; esac
+    if [ -f "$ROOT/$e" ]; then
+      present=$((present + 1))
+      grep -q 'AGENTS\.md' "$ROOT/$e" || bad="$bad; $e does not name AGENTS.md"
+    else
+      bad="$bad; $e is missing"
+    fi
+  done < "$LIST"
+  if [ -n "$bad" ]; then fail "root entry points${bad}"
+  else pass "root entry points reach AGENTS.md ($present present)"; fi
+fi
+
 # --- repository-only scripts are executable in the index ------------------
 # The shipped checker holds this rule too, but it can only see inside the
 # template. Anything under this repository's own scripts/ is out of its reach

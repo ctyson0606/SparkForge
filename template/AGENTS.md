@@ -47,6 +47,17 @@ diagnosis — Chasing a failure to its cause: reproduction, rates, confounds,
 memory-update — When memory is written, by whom, and what an update has to
   re-read before it writes.
 
+## Entry points
+
+This file is the entry point for every tool. Each tool that will not read it on
+its own has a small file at the path it does read, and that file says to come
+here. kit/entry-points.txt lists them, and scripts/check.sh reads that list to
+confirm each one still points here.
+
+Never put an instruction in one of those files. Two tools reading two different
+sets of rules is the failure the whole arrangement exists to prevent. If a
+project does not use a tool, delete its entry.
+
 ## Canonical content
 
 kit/ holds the canonical content. Each tool-specific directory

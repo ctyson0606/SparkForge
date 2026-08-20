@@ -23,10 +23,13 @@ na()   { echo "n/a   $1"; }
 
 # --- required files -------------------------------------------------------
 REQUIRED=(
-  AGENTS.md CLAUDE.md METHOD.md STATE.md GOTCHAS.md
-  .gitattributes kit/VERSION
+  AGENTS.md METHOD.md STATE.md GOTCHAS.md
+  .gitattributes kit/VERSION kit/entry-points.txt
   scripts/check.sh scripts/update-kit.sh
 )
+# CLAUDE.md is deliberately not in this list. It is one tool's entry file among
+# several, and a project using none of the tools that need one may delete it.
+# The entry-point check below is what governs those files.
 missing=""
 for f in "${REQUIRED[@]}"; do
   [ -f "$ROOT/$f" ] || missing="$missing $f"
@@ -137,6 +140,40 @@ else
   else pass "every .sh is 100755 in the index"; fi
 fi
 
+# --- every tool entry file points at AGENTS.md ----------------------------
+# The entry files are what make AGENTS.md load without anyone asking for it,
+# and each one lives at a path its tool hardcodes, so they cannot be one file.
+# A tool whose entry has drifted into holding instructions of its own is the
+# failure this catches: the project then has two sources of truth and no
+# symptom until they disagree.
+#
+# A missing entry is not a failure. Deleting the entry for a tool the project
+# does not use is expected, and a check that demanded all of them would force
+# every project to carry every tool. All of them missing is a different thing
+# and is reported, because then nothing loads AGENTS.md anywhere.
+if [ ! -f "$ROOT/kit/entry-points.txt" ]; then
+  fail "entry points: kit/entry-points.txt is missing, so the list cannot be read"
+else
+  present=0
+  bad=""
+  while read -r e; do
+    case "$e" in ''|\#*) continue ;; esac
+    [ -f "$ROOT/$e" ] || continue
+    present=$((present + 1))
+    grep -q 'AGENTS\.md' "$ROOT/$e" || bad="$bad; $e does not name AGENTS.md"
+  done < "$ROOT/kit/entry-points.txt"
+  # Cursor loads a rule unasked only when the frontmatter says so. Without this
+  # the file is present, correct, and silently inert.
+  mdc="$ROOT/.cursor/rules/sparkforge.mdc"
+  if [ -f "$mdc" ] && ! grep -q '^alwaysApply: true$' "$mdc"; then
+    bad="$bad; .cursor/rules/sparkforge.mdc is not alwaysApply: true"
+  fi
+  if [ -n "$bad" ]; then fail "tool entry points${bad}"
+  elif [ "$present" -eq 0 ]; then
+    fail "tool entry points: every entry in kit/entry-points.txt is missing, so no tool is pointed at AGENTS.md"
+  else pass "tool entry points reach AGENTS.md ($present present)"; fi
+fi
+
 # --- tier tag grammar -----------------------------------------------------
 bad="$(grep -rhoE '`\[T[^]]*\]`' "$ROOT/kit/skills" 2>/dev/null \
        | grep -vE '^`\[T[0-2]( \| T[0-2] if: [^]]+)*\]`$')"
@@ -174,7 +211,11 @@ expect_eol() {
 }
 attr_bad="$( { expect_eol sample.sh lf
                expect_eol sample.md lf
+               expect_eol sample.mdc lf
                expect_eol VERSION   lf
+               expect_eol kit/entry-points.txt lf
+               expect_eol .clinerules lf
+               expect_eol .windsurfrules lf
                expect_eol sample.bat crlf
                expect_eol sample.ps1 crlf; } )"
 rm -rf "$tmp"
