@@ -137,7 +137,11 @@ Also, none of them rules:
   the template directory, finds no README there at all, and reports that there
   is only one and nothing to compare, while the translations that do exist sit
   at the repository root outside its reach. Their agreement is asserted by
-  hand.
+  hand, against the contract that check would have applied.
+- The README also restates the project layout, the bootstrap procedure and
+  the execution record of several components, and nothing diffs any of them
+  against the files they describe. They are checked by hand when someone
+  remembers to, which is how all three went false at once.
 
 ## Recent Decisions
 
@@ -146,9 +150,10 @@ in METHOD.md, or visible in the code itself, has been dropped from here.
 
 - Every hole found so far has been a check that could not fail, and each sat
   where a check or a procedure depended on someone remembering a convention.
-  That is still where to look for the next one. The two most recent were
-  found by asking what a checker's root excludes and by asking what a check
-  is forbidden to complain about, and both of those questions are now rules.
+  That is still where to look for the next one. Three questions have each
+  produced a rule and are worth asking again: what does this checker's root
+  exclude, what is this check forbidden to complain about, and what did this
+  document restate.
 - A gap that only appears when two versions meet cannot be closed by anything
   that inspects one version. That is why the entry point warning lives in
   update-kit.sh and not in check.sh, and it is worth remembering the next time
