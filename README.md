@@ -15,15 +15,23 @@ Copy `template/` into a new project and its contents become the project root:
 my-project/
 ├── AGENTS.md
 ├── CLAUDE.md
+├── GEMINI.md
 ├── METHOD.md
 ├── STATE.md
 ├── GOTCHAS.md
+├── .clinerules
+├── .windsurfrules
 ├── .gitattributes
 ├── .claude/
 │   ├── skills/
 │   └── agents/
+├── .cursor/
+│   └── rules/
+├── .github/
+│   └── copilot-instructions.md
 ├── kit/
 │   ├── VERSION
+│   ├── entry-points.txt
 │   ├── skills/
 │   └── agents/
 └── scripts/
@@ -33,8 +41,9 @@ my-project/
 
 | File | What it is for |
 |---|---|
-| ⚙️ `AGENTS.md` | The entry point. Holds `MODE`, `TEAM`, your project's environment commands, the hard rules, and the routing table that sends the agent to a skill. |
-| 🔗 `CLAUDE.md` | One line: `@AGENTS.md`. The tool-specific door into everything else. |
+| ⚙️ `AGENTS.md` | The entry point, and the only file that routes. Holds `MODE`, `TEAM`, your project's environment commands, the hard rules, and the table that sends the agent to a skill. |
+| 🚪 The per-tool entry files | `CLAUDE.md`, `GEMINI.md`, `.clinerules`, `.windsurfrules`, `.cursor/rules/`, `.github/`. Each says one thing: read `AGENTS.md` first. See below. |
+| 🗂️ `kit/entry-points.txt` | The list of those entry files. Both checkers read it, so a tool cannot be covered in one place and missed in another. |
 | 🧠 `METHOD.md` | Durable rules this project earned. **Starts empty and stays empty** until a real trap fills it. |
 | 📌 `STATE.md` | Current working state. Replaced wholesale, never appended to. |
 | 🐛 `GOTCHAS.md` | Version-bound traps, each dated. Delete freely once the dependency is gone. |
@@ -47,11 +56,37 @@ The two-layer split is the point: 📚 `kit/` holds each rule once, and every AI
 tool gets a directory of 🪝 thin stubs pointing at them. Supporting a second
 tool means generating another set of stubs, not copying the rules again.
 
+## 🚪 One instruction, every tool
+
+You never have to tell an agent which file to read. Whichever tool opens the
+project, its first instruction is the same: **read `AGENTS.md`**. Each tool
+that will not find that file on its own has a small file at the path it does
+read, and that file says nothing except where to go.
+
+| Tool | Its file | How it loads |
+|---|---|---|
+| 🤖 Claude Code | `CLAUDE.md` | ⚙️ `@AGENTS.md`, a real import |
+| ✏️ Cursor | `.cursor/rules/sparkforge.mdc` | ⚙️ `alwaysApply: true` in the frontmatter |
+| 🐙 GitHub Copilot | `.github/copilot-instructions.md` | 📄 a path it always reads |
+| 💠 Gemini CLI | `GEMINI.md` | 📄 a path it always reads |
+| 🧵 Cline | `.clinerules` | 📄 a path it always reads |
+| 🏄 Windsurf | `.windsurfrules` | 📄 a path it always reads |
+| 🌊 Codex CLI, Amp, DeepSeek Harness | `AGENTS.md` itself | ✅ read natively, no entry needed |
+
+Two of those are mechanisms the loader itself honours; the rest work by putting
+the words where the tool is certain to see them. ⚠️ Never write an instruction
+into one of these files. Two tools reading two different sets of rules is the
+failure the whole arrangement exists to prevent.
+
+🗑️ Not using a tool? Delete its entry. That is the supported way to opt out,
+and it is why `check.sh` treats a missing entry as deliberate rather than
+broken.
+
 ## 🚀 Install
 
 ```bash
 # 1. Copy the whole template in. Use "template/." and not "template/*",
-#    or you will silently miss .claude/ and .gitattributes
+#    or you will silently miss .claude/, .cursor/, .github/ and .gitattributes
 cp -R /path/to/SparkForge/template/. /path/to/my-project/
 
 cd /path/to/my-project
@@ -75,19 +110,21 @@ Then open your agent and **ask it to run bootstrap** — it does not fire by
 itself. 🥾 Bootstrap runs exactly once, while `METHOD.md` and `STATE.md` are both
 still empty, and it will:
 
-1. Ask you for `MODE` and `TEAM`, and write them into `AGENTS.md`.
-2. Fill in the environment commands one by one. Where the project genuinely has
+1. Put the scripts into the index carrying the executable bit — the same thing
+   step 2 above did, for the case where bootstrap is driving the setup itself.
+2. Ask you for `MODE` and `TEAM`, and write them into `AGENTS.md`.
+3. Fill in the environment commands one by one. Where the project genuinely has
    no such command it writes `none` — an absence is a finding, not a blank.
-3. Run the spec gate at the depth `MODE` selects.
-4. Write the result into `Current Focus` in `STATE.md`.
-5. **Leave `METHOD.md` empty.** This is a hard rule. Rules are earned from traps
+4. Run the spec gate at the depth `MODE` selects.
+5. Write the result into `Current Focus` in `STATE.md`.
+6. **Leave `METHOD.md` empty.** This is a hard rule. Rules are earned from traps
    the project actually hits, never guessed in advance.
 
 ## 🧭 Daily use
 
-Memory loads itself: `CLAUDE.md` imports `AGENTS.md`, which imports `METHOD.md`,
-`STATE.md` and `GOTCHAS.md`. Every session opens with everything the project has
-learned already in context.
+Memory loads itself: the entry file imports `AGENTS.md`, which imports
+`METHOD.md`, `STATE.md` and `GOTCHAS.md`. Every session opens with everything
+the project has learned already in context.
 
 | When you are… | Read | The one-line version |
 |---|---|---|
@@ -137,6 +174,11 @@ scripts/update-kit.sh
 bash scripts/check.sh
 ```
 
+📣 If an update starts supporting a tool you have no entry file for,
+`update-kit.sh` names it. It reports only what that update introduced, never
+every absent entry — a warning that fires on each tool you deliberately do not
+use is read twice and ignored afterwards.
+
 Found an improvement while using it? Send it upstream instead of editing `kit/`
 locally. And when you do, read the `Unverified` block in the upstream
 `STATE.md` — 🏅 a rule your project has now actually walked is worth more than
@@ -153,11 +195,12 @@ part of this has been used on a real project yet.**
 | 🔍 `diagnosis.md` | ✅ Same — extracted from a working methodology, not written from spec. |
 | 💾 `memory-update.md` | ✅ Same. |
 | ✅ `check.sh` | ✅ Runs, and has caught real holes in this repository. |
+| 🔄 `update-kit.sh` | 🟡 Driven through four cases against a throwaway upstream. Never against a real remote, and its destructive half has never run over content anyone would miss. |
+| 🚪 The tool entry files | 🟡 Two load by a mechanism the tool honours. The other four are prose in a file the tool is expected to read, and none of the four has been watched loading. |
 | 🚪 `spec-gate.md` | ⚠️ Written from spec. Zero executions. |
 | 👥 `team-contract.md` | ⚠️ Written from spec. Zero executions. |
 | 🥾 `bootstrap.md` | ⚠️ Written from spec. Zero executions. |
 | 🕵️ `evidence-reviewer.md` | ⚠️ Written from spec. Zero executions. |
-| 🔄 `update-kit.sh` | ⚠️ Written from spec. Zero executions. |
 | 🎚️ The `T0`/`T1`/`T2` tier system | ⚠️ Never exercised. The tags are annotation so far. |
 
 The install above is derived from the layout, not from an install anyone has

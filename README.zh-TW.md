@@ -14,15 +14,23 @@
 my-project/
 ├── AGENTS.md
 ├── CLAUDE.md
+├── GEMINI.md
 ├── METHOD.md
 ├── STATE.md
 ├── GOTCHAS.md
+├── .clinerules
+├── .windsurfrules
 ├── .gitattributes
 ├── .claude/
 │   ├── skills/
 │   └── agents/
+├── .cursor/
+│   └── rules/
+├── .github/
+│   └── copilot-instructions.md
 ├── kit/
 │   ├── VERSION
+│   ├── entry-points.txt
 │   ├── skills/
 │   └── agents/
 └── scripts/
@@ -32,8 +40,9 @@ my-project/
 
 | 檔案 | 用途 |
 |---|---|
-| ⚙️ `AGENTS.md` | 入口。放 `MODE`、`TEAM`、你這個專案的環境指令、硬規則，以及把 agent 導向某個 skill 的路由表。 |
-| 🔗 `CLAUDE.md` | 只有一行：`@AGENTS.md`。工具專屬的那道門，通往其餘一切。 |
+| ⚙️ `AGENTS.md` | 入口，也是唯一做路由的檔案。放 `MODE`、`TEAM`、你這個專案的環境指令、硬規則，以及把 agent 導向某個 skill 的那張表。 |
+| 🚪 各工具的入口檔 | `CLAUDE.md`、`GEMINI.md`、`.clinerules`、`.windsurfrules`、`.cursor/rules/`、`.github/`。每一個都只說一件事：先讀 `AGENTS.md`。詳見下一節。 |
+| 🗂️ `kit/entry-points.txt` | 那些入口檔的清單。兩支檢查器都讀它，所以一個工具不會在這裡有、在那裡漏。 |
 | 🧠 `METHOD.md` | 這個專案自己掙來的長效規則。**開始是空的，而且會一直空著**，直到真的踩到坑才填。 |
 | 📌 `STATE.md` | 當前工作狀態。整份替換，絕不往後追加。 |
 | 🐛 `GOTCHAS.md` | 綁定版本的陷阱，每條都有日期。相依套件消失後可以隨手刪掉。 |
@@ -45,11 +54,34 @@ my-project/
 分成兩層正是重點：📚 `kit/` 把每條規則只寫一次，每個 AI 工具各自拿到一個目錄的
 🪝 薄殼 stub 指過去。要支援第二個工具，是再生一組 stub，而不是把規則再抄一遍。
 
+## 🚪 一道指令，所有工具
+
+你永遠不需要告訴 agent 要讀哪個檔案。不管是哪個工具打開這個專案，它的第一道
+指令都一樣：**去讀 `AGENTS.md`**。凡是不會自己找到那個檔案的工具，都在它一定
+會讀的位置上有一個小檔案，而那個檔案除了指路之外什麼都不說。
+
+| 工具 | 它的檔案 | 怎麼載入 |
+|---|---|---|
+| 🤖 Claude Code | `CLAUDE.md` | ⚙️ `@AGENTS.md`，真的匯入 |
+| ✏️ Cursor | `.cursor/rules/sparkforge.mdc` | ⚙️ frontmatter 裡的 `alwaysApply: true` |
+| 🐙 GitHub Copilot | `.github/copilot-instructions.md` | 📄 它一定會讀的路徑 |
+| 💠 Gemini CLI | `GEMINI.md` | 📄 它一定會讀的路徑 |
+| 🧵 Cline | `.clinerules` | 📄 它一定會讀的路徑 |
+| 🏄 Windsurf | `.windsurfrules` | 📄 它一定會讀的路徑 |
+| 🌊 Codex CLI、Amp、DeepSeek Harness | `AGENTS.md` 本身 | ✅ 原生就讀，不需要入口 |
+
+其中兩個是載入器自己認的機制，其餘是把話放在工具一定看得到的地方。⚠️ 絕對不要
+把任何指令寫進這些檔案裡。兩個工具讀到兩套不同的規則，正是這整個安排要防的
+那種失敗。
+
+🗑️ 不用某個工具？把它的入口刪掉。那就是官方的退出方式，也正是為什麼
+`check.sh` 把缺席的入口當成「刻意的」而不是「壞掉的」。
+
 ## 🚀 安裝
 
 ```bash
 # 1. 把整個 template 複製進去。要用 "template/." 而不是 "template/*"，
-#    否則會不聲不響地漏掉 .claude/ 和 .gitattributes
+#    否則會不聲不響地漏掉 .claude/、.cursor/、.github/ 和 .gitattributes
 cp -R /path/to/SparkForge/template/. /path/to/my-project/
 
 cd /path/to/my-project
@@ -72,19 +104,21 @@ git commit -m "Adopt SparkForge"
 接著打開你的 agent，**主動要它跑 bootstrap** —— 它不會自己觸發。🥾 Bootstrap
 只跑一次，而且只在 `METHOD.md` 和 `STATE.md` 都還是空的時候跑，它會：
 
-1. 問你 `MODE` 和 `TEAM`，然後寫進 `AGENTS.md`。
-2. 一項一項把環境指令填進去。如果這個專案真的沒有某個指令，它會寫 `none` ——
+1. 把腳本帶著可執行位元放進 index —— 跟上面第 2 步做的是同一件事，為的是
+   bootstrap 自己在主導安裝的那種情況。
+2. 問你 `MODE` 和 `TEAM`，然後寫進 `AGENTS.md`。
+3. 一項一項把環境指令填進去。如果這個專案真的沒有某個指令，它會寫 `none` ——
    缺席本身就是一項發現，不是一格空白。
-3. 依 `MODE` 選定的深度跑一次規格門。
-4. 把結果寫進 `STATE.md` 的 `Current Focus`。
-5. **讓 `METHOD.md` 保持空白。** 這是硬規則。規則要從專案真正踩到的坑掙來，
+4. 依 `MODE` 選定的深度跑一次規格門。
+5. 把結果寫進 `STATE.md` 的 `Current Focus`。
+6. **讓 `METHOD.md` 保持空白。** 這是硬規則。規則要從專案真正踩到的坑掙來，
    絕不能事先用猜的。
 
 ## 🧭 日常使用
 
-記憶會自己載入：`CLAUDE.md` 匯入 `AGENTS.md`，後者再匯入 `METHOD.md`、
-`STATE.md` 和 `GOTCHAS.md`。每個 session 一開場，這個專案學到的所有東西都已經
-在 context 裡了。
+記憶會自己載入：入口檔匯入 `AGENTS.md`，後者再匯入 `METHOD.md`、`STATE.md`
+和 `GOTCHAS.md`。每個 session 一開場，這個專案學到的所有東西都已經在 context
+裡了。
 
 | 當你正在… | 讀這份 | 一句話版本 |
 |---|---|---|
@@ -131,6 +165,10 @@ scripts/update-kit.sh
 bash scripts/check.sh
 ```
 
+📣 如果某次更新開始支援一個你沒有入口檔的工具，`update-kit.sh` 會把它列出來。
+它只報那次更新帶進來的，絕不報所有缺席的入口 —— 一個對每個你刻意不用的工具都
+叫一次的警告，看兩次之後就沒人讀了。
+
 用的過程中想到改進？把它送回上游，不要在本地改 `kit/`。而且送的時候，順手讀一
 下上游 `STATE.md` 裡的 `Unverified` 區塊 —— 🏅 一條被你的專案真正走過的規則，
 價值比那個改進本身還高。
@@ -146,11 +184,12 @@ bash scripts/check.sh
 | 🔍 `diagnosis.md` | ✅ 同上 —— 萃取自一套在用的方法論，不是照規格寫出來的。 |
 | 💾 `memory-update.md` | ✅ 同上。 |
 | ✅ `check.sh` | ✅ 跑得起來，而且在這個 repo 裡抓出過真的漏洞。 |
+| 🔄 `update-kit.sh` | 🟡 對著一個拋棄式上游跑過四個案例。從未對真實 remote 跑過，破壞性的那半也從沒在有人會心疼的內容上跑過。 |
+| 🚪 各工具的入口檔 | 🟡 其中兩個靠的是工具自己認的機制。另外四個是放在工具應該會讀的位置上的散文，而那四個都沒有被看著載入過。 |
 | 🚪 `spec-gate.md` | ⚠️ 照規格寫的。零執行。 |
 | 👥 `team-contract.md` | ⚠️ 照規格寫的。零執行。 |
 | 🥾 `bootstrap.md` | ⚠️ 照規格寫的。零執行。 |
 | 🕵️ `evidence-reviewer.md` | ⚠️ 照規格寫的。零執行。 |
-| 🔄 `update-kit.sh` | ⚠️ 照規格寫的。零執行。 |
 | 🎚️ `T0`／`T1`／`T2` 分級系統 | ⚠️ 從未被執行過。到目前為止那些標籤只是註解。 |
 
 上面那段安裝流程是從目錄結構推導出來的，不是誰真的走過一遍。🧗 第一個照著跑的
