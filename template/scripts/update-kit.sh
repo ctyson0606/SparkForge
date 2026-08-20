@@ -36,10 +36,44 @@ fi
 OLD_VERSION="$(cat "$ROOT/kit/VERSION" 2>/dev/null || echo "unknown")"
 NEW_VERSION="$(cat "$SRC/VERSION" 2>/dev/null || echo "unknown")"
 
+# kit/entry-points.txt travels with kit/, so an update can start listing a tool
+# this project has no entry file for. check.sh cannot report that: it reads a
+# missing entry as a deliberate deletion, which is exactly what lets a project
+# drop the tools it does not use. Only here are both lists in hand, so only
+# here can the two be told apart. Keep the old one before it is overwritten.
+OLD_LIST="$tmp/old-entry-points.txt"
+if [ -f "$ROOT/kit/entry-points.txt" ]; then
+  cp "$ROOT/kit/entry-points.txt" "$OLD_LIST"
+else
+  : > "$OLD_LIST"
+fi
+
 rm -rf "$ROOT/kit"
 cp -R "$SRC" "$ROOT/kit"
 
 echo "kit/ updated: $OLD_VERSION -> $NEW_VERSION"
+
+arrived=""
+if [ -f "$ROOT/kit/entry-points.txt" ]; then
+  while read -r e; do
+    case "$e" in ''|\#*) continue ;; esac
+    grep -qxF "$e" "$OLD_LIST" && continue
+    [ -f "$ROOT/$e" ] && continue
+    arrived="$arrived $e"
+  done < "$ROOT/kit/entry-points.txt"
+fi
+
+if [ -n "$arrived" ]; then
+  echo
+  echo "This update supports tools you have no entry file for:"
+  for e in $arrived; do echo "    $e"; done
+  echo
+  echo "Each of those is the file that makes one tool read AGENTS.md without"
+  echo "being asked. Create the ones you use, copying the body of an entry you"
+  echo "already have. A tool you do not use needs nothing — an absent entry is"
+  echo "how a project opts out, which is also why check.sh cannot raise this."
+fi
+
 echo
 echo "Nothing outside kit/ was written."
 echo "Run scripts/check.sh: a skill added or removed upstream needs its stub"
