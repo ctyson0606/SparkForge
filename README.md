@@ -86,24 +86,43 @@ broken.
 
 ```bash
 # 1. Copy the whole template in. Use "template/." and not "template/*",
-#    or you will silently miss .claude/, .cursor/, .github/ and .gitattributes
-cp -R /path/to/SparkForge/template/. /path/to/my-project/
+#    or you will silently miss .claude/, .cursor/, .github/ and .gitattributes.
+#    Quote both paths: one space anywhere in them breaks the command
+cp -R "/path/to/SparkForge/template/." "/path/to/my-project/"
 
-cd /path/to/my-project
+cd "/path/to/my-project"
 git init
-git add -A
 
-# 2. Mark the scripts executable in the git index.
-#    On Windows the working-tree mode is not real, so chmod is not enough
+# 2. Open AGENTS.md and replace its first line, "# SparkForge", with your
+#    own project name. Do this BEFORE staging anything: stage first and the
+#    commit below carries the old title while your tree shows the new one
+
+# 3. Stage, then set the executable bit in the index. On Windows the mode
+#    in the working tree is not real, so chmod cannot do this
+git add -A
 git update-index --chmod=+x scripts/check.sh scripts/update-kit.sh
 
-# 3. Open AGENTS.md and replace the first line, "# SparkForge",
-#    with your own project name
+#    Both lines this prints must begin with 100755
+git ls-files -s scripts/check.sh scripts/update-kit.sh
 
-# 4. Verify the layout before committing
+# 4. Verify the layout, then commit
 bash scripts/check.sh
-
 git commit -m "Adopt SparkForge"
+```
+
+⚠️ On Windows, run that in **Git Bash**, not PowerShell. `bash` typed into
+PowerShell resolves to `C:\Windows\System32\bash.exe`, which is WSL's launcher
+and not Git Bash at all; with no distribution installed it fails with
+`execvpe(/bin/bash) failed`, a message pointing nowhere near the real cause.
+To stay in PowerShell, call Git's own bash by its full path:
+
+```powershell
+# Find where Git actually lives — it is not always on the C: drive
+(Get-Command git).Source
+
+# Then call the bash that ships beside it. The & is required: without it
+# PowerShell treats a quoted path as a string and prints it instead
+& "C:\Program Files\Git\bin\bash.exe" scripts/check.sh
 ```
 
 Then open your agent and **ask it to run bootstrap** — it does not fire by

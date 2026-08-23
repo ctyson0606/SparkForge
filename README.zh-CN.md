@@ -81,24 +81,43 @@ my-project/
 
 ```bash
 # 1. 把整个 template 复制进去。要用 "template/." 而不是 "template/*"，
-#    否则会不声不响地漏掉 .claude/、.cursor/、.github/ 和 .gitattributes
-cp -R /path/to/SparkForge/template/. /path/to/my-project/
+#    否则会不声不响地漏掉 .claude/、.cursor/、.github/ 和 .gitattributes。
+#    两个路径都要加引号：里面只要有一个空格就会整行坏掉
+cp -R "/path/to/SparkForge/template/." "/path/to/my-project/"
 
-cd /path/to/my-project
+cd "/path/to/my-project"
 git init
-git add -A
 
-# 2. 在 git index 里把脚本标记成可执行。
-#    Windows 上工作树的 file mode 是假的，所以光靠 chmod 不够
+# 2. 打开 AGENTS.md，把第一行的 "# SparkForge" 换成你自己的项目名称。
+#    这件事一定要在 stage 之前做：先 stage 的话，下面那个 commit 进去的
+#    会是旧标题，而工作目录显示的是新的，两边不一致又不会有提示
+
+# 3. 先 stage，再把可执行位写进 index。Windows 上工作树里的
+#    mode 是假的，所以 chmod 做不到这件事
+git add -A
 git update-index --chmod=+x scripts/check.sh scripts/update-kit.sh
 
-# 3. 打开 AGENTS.md，把第一行的 "# SparkForge"
-#    换成你自己的项目名称
+#    下面这行印出来的两行，开头都必须是 100755
+git ls-files -s scripts/check.sh scripts/update-kit.sh
 
-# 4. commit 之前先验证结构
+# 4. 验证结构，然后 commit
 bash scripts/check.sh
-
 git commit -m "Adopt SparkForge"
+```
+
+⚠️ 在 Windows 上，请用 **Git Bash** 跑上面那段，不要用 PowerShell。在
+PowerShell 打 `bash` 会命中 `C:\Windows\System32\bash.exe`，那是 WSL 的启动器
+而不是 Git Bash；没装发行版的话会喷 `execvpe(/bin/bash) failed`，而那个信息
+跟真正的原因完全沾不上边。想留在 PowerShell 的话，用完整路径调用 Git 自己的
+bash：
+
+```powershell
+# 先找出 Git 实际装在哪 —— 它不一定在 C 盘
+(Get-Command git).Source
+
+# 然后调用它旁边那个 bash。前面的 & 不能省：少了它，PowerShell 会把
+# 加引号的路径当成字符串直接打印，而不是执行它
+& "C:\Program Files\Git\bin\bash.exe" scripts/check.sh
 ```
 
 接着打开你的 agent，**主动要它跑 bootstrap** —— 它不会自己触发。🥾 Bootstrap
