@@ -1,6 +1,6 @@
 # STATE
 
-> Last updated: 2026-08-20
+> Last updated: 2026-08-23
 
 Current working state. Superseded content is deleted, not archived.
 For durable rules see METHOD.md.
@@ -20,23 +20,25 @@ Do not write into this file:
 SparkForge uses its own method: this file and METHOD.md at the repository root
 are its memory, kept separate from the empty shells under template/.
 
-The framework is structurally finished and has never been used. What remains
-before a real project is nothing; what a real project will find is everything.
+The framework has been installed on its first real project, on Windows. That
+install is where everything below that is no longer a guess came from, and it
+produced the first change to the framework driven by use rather than by
+reading. Three of its four findings were assumptions about the reader's machine
+that nobody had thought to write down, which is now a rule.
 
 kit/ has two halves with different standing, and the split is by how each was
 written rather than by what it covers. verification, diagnosis and
 memory-update were transformed from a previous project's methodology and carry
 its incidents. spec-gate, team-contract, bootstrap and evidence-reviewer were
-written from a specification and have never run. An earlier version of this
-section claimed every rule in kit/skills/ came from the methodology, which was
-never true.
+written from a specification; bootstrap and spec-gate have now been entered
+once each, the other two never. An earlier version of this section claimed
+every rule in kit/skills/ came from the methodology, which was never true.
 
 ## Next Steps
 
-- Run the framework on a project from its first commit and find out which
-  rules earn their place and which are never reached. Record the friction of
-  the install itself: that record is what the README's install section will
-  be.
+- Carry that first project past the spec gate to something actually built, and
+  find out which rules earn their place and which are never reached. The
+  install is answered; everything after it is not.
 - Design controls for the rules labelled `Rationale:` in
   kit/skills/verification.md — they are the ones no incident has tested.
 - Settle the two loading questions below by opening the tools, not by reading
@@ -84,8 +86,16 @@ Also, none of them rules:
 - The tier system has never been executed. MODE has been project throughout,
   the T1/T2 degradation path has never been taken, and the tier tags are
   annotation so far.
-- These components have zero executions: spec-gate, team-contract, bootstrap,
-  evidence-reviewer.
+- These components have zero executions: team-contract, evidence-reviewer.
+- bootstrap ran once, on the first install, and its six steps were followed in
+  order. It stopped at the spec gate for want of a requirement, which is the
+  hard rule about vague requirements firing rather than a fault. It also held
+  the distinction the environment block asks for, leaving the commands blank
+  for "not decided yet" rather than writing none, without being told to.
+- spec-gate has been entered but has produced nothing. It blocked at its first
+  step and the four artifacts it exists to produce — goals, non-goals,
+  acceptance criteria, the data and API contract — have still never been
+  written by it.
 - update-kit.sh has now run, but only against a throwaway upstream and a
   throwaway project built for the occasion. It has never pulled a real change
   from a real remote into a project that was using it, and the destructive
@@ -94,8 +104,10 @@ Also, none of them rules:
 - Four of the six tool entries work by putting a file where the tool is
   expected to look and trusting it to obey the prose inside. Only the Claude
   Code import and the Cursor alwaysApply flag are mechanisms the loader
-  itself honours. None of the four has been watched loading, and a tool that
-  silently ignores its entry is indistinguishable from one that has no entry.
+  itself honours. Claude Code's chain has now been watched carrying in a real
+  project — a session opened there knew the project's rules with nothing
+  pointed at it — but the other five entries have never been opened, and a
+  tool that silently ignores its entry looks exactly like one that has none.
 - The `@GOTCHAS.md` import in AGENTS.md has not been tested on its own. The
   import mechanism works here, but that line is written correctly and
   unproven. To settle it: put one recognisable line in template/GOTCHAS.md,
@@ -115,12 +127,14 @@ Also, none of them rules:
   later by someone applying it. Keeping design-time decisions out is what
   stops the rule widening into "write down your edge cases", which would make
   it true of everything and useful for nothing.
-- Everything to watch for at the first install is an instance of one question,
-  whether the condition was put in the right place: whether bootstrap fires by
-  itself, whether anyone thinks to change the title in AGENTS.md, whether the
-  agent goes and reads spec-gate on its own when it touches auth or a
-  migration. All three are the shape of the same candidate rule, and what that
-  rule needs is exactly a different rule system.
+- The first install answered one of the three watch-for questions and left the
+  others standing. Bootstrap does not fire by itself: it had to be asked for by
+  name, and no entry file can change that, since the entries carry a pointer
+  and not a trigger. Whether anyone changes the title in AGENTS.md unprompted
+  is still unknown, because this reader was told to. Whether an agent reaches
+  for spec-gate on its own when it touches auth or a migration is untouched —
+  that project has no code yet. All three remain the shape of the same
+  candidate rule, and what it needs is still a different rule system.
 
 ## Known Annoyances
 
@@ -154,6 +168,15 @@ in METHOD.md, or visible in the code itself, has been dropped from here.
   produced a rule and are worth asking again: what does this checker's root
   exclude, what is this check forbidden to complain about, and what did this
   document restate.
+- The first use-driven change came from one install on one machine, and three
+  of its four findings were assumptions about the reader's environment. Expect
+  the next batch to have that shape too, and to arrive from the first machine
+  that is not this one.
+- The consuming project's agent checked a claim sent downstream from here,
+  found it did not hold, and said why with the command that showed it. The
+  arrangement runs in that direction as well as the intended one, so a claim
+  worth sending down is worth phrasing so it can be checked rather than
+  believed.
 - A gap that only appears when two versions meet cannot be closed by anything
   that inspects one version. That is why the entry point warning lives in
   update-kit.sh and not in check.sh, and it is worth remembering the next time

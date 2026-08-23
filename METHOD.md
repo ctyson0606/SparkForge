@@ -146,6 +146,23 @@ problem and this rule does not reach them.
 > copies; and memory-update.md refuses the copy outright, on the stated grounds
 > that a second copy would drift from the first.
 
+### What the instructions were written in becomes a requirement nobody stated.  `[T1]`  `[2026-08-23]`
+
+An instruction set carries the environment of whoever wrote it — the language
+of its prose, the shell its commands assume, the shape its paths take — and
+none of it is declared, because to the author none of it was a choice. The
+reader inherits all of it and cannot separate an accident from a rule: asking
+whether it is required turns up nothing, since nothing was written either way.
+Ask what a document assumes about its reader, not only what it says.
+
+> Evidence: The first real install, onto Windows. Every file being English made
+> the agent answer in English, and the reader's question was whether English
+> was required — no rule said it was and none said it was not. The same install
+> broke three more times on assumptions the text never made: bash, which in
+> PowerShell resolves to WSL's launcher and fails while naming a path nobody
+> chose; unquoted paths, which the first directory name containing a space
+> breaks; and Unix tools in the verification steps that PowerShell lacks.
+
 ## Anti-Patterns
 
 (empty)
