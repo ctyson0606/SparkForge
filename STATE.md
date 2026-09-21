@@ -68,18 +68,18 @@ every rule in kit/skills/ came from the methodology, which was never true.
 This repository does not contain the situations these rules describe, so none
 of them has ever been walked. The first real project ticks this list off.
 
-- A UI that can be driven: 6 — selectors, text scoping, stale coordinates,
+- A UI that can be driven — selectors, text scoping, stale coordinates,
   waiting on a loaded-only signal, which render variant is mounted.
-- A test suite: 3 — what a green run covers, shape over presence, thresholds
+- A test suite — what a green run covers, shape over presence, thresholds
   the codebase can defend.
-- A deployment, a network, a second machine: 5 — production numbers,
+- A deployment, a network, a second machine — production numbers,
   transport floors, a toolchain version invisible in the diff.
-- Intermittent failure: 4 — measuring a rate, a flake beside your own change,
+- Intermittent failure — measuring a rate, a flake beside your own change,
   fixing timing rather than retrying, rates differing across machines.
-- A scheduled job, an external service, concurrent writes, runtime logs: 4 —
+- A scheduled job, an external service, concurrent writes, runtime logs —
   observation windows, credential provenance, who is awake, logging the call.
 - Live data, a timing-sensitive probe, subagents, translated documentation,
-  TEAM > 1, MODE sprint: 5 rules and 2 modes needing a project shaped for them.
+  TEAM > 1, MODE sprint — rules and modes needing a project shaped for them.
 
 Also, none of them rules:
 

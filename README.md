@@ -130,7 +130,7 @@ itself. 🥾 Bootstrap runs exactly once, while `METHOD.md` and `STATE.md` are b
 still empty, and it will:
 
 1. Put the scripts into the index carrying the executable bit — the same thing
-   step 2 above did, for the case where bootstrap is driving the setup itself.
+   step 3 above did, for the case where bootstrap is driving the setup itself.
 2. Ask you for `MODE` and `TEAM`, and write them into `AGENTS.md`.
 3. Fill in the environment commands one by one. Where the project genuinely has
    no such command it writes `none` — an absence is a finding, not a blank.
@@ -205,8 +205,9 @@ the improvement itself.
 
 ## 🌡️ Maturity
 
-Stated plainly, because this framework's own methodology insists on it. **No
-part of this has been used on a real project yet.**
+Stated plainly, because this framework's own methodology insists on it. **It has
+been installed on one real project, on Windows, and nothing has yet been built
+past the spec gate.**
 
 | Component | Standing |
 |---|---|
@@ -215,16 +216,17 @@ part of this has been used on a real project yet.**
 | 💾 `memory-update.md` | ✅ Same. |
 | ✅ `check.sh` | ✅ Runs, and has caught real holes in this repository. |
 | 🔄 `update-kit.sh` | 🟡 Driven through four cases against a throwaway upstream. Never against a real remote, and its destructive half has never run over content anyone would miss. |
-| 🚪 The tool entry files | 🟡 Two load by a mechanism the tool honours. The other four are prose in a file the tool is expected to read, and none of the four has been watched loading. |
-| 🚪 `spec-gate.md` | ⚠️ Written from spec. Zero executions. |
+| 🚪 The tool entry files | 🟡 Two load by a mechanism the tool honours, and Claude Code's has been watched carrying a real project's rules into a session. Cursor's has never been opened, and neither have the other four, which are prose in a file the tool is expected to read. |
+| 🚪 `spec-gate.md` | ⚠️ Written from spec. Entered once, on the first install, and blocked at its first step for want of a requirement. It has never produced the four artifacts it exists to produce. |
 | 👥 `team-contract.md` | ⚠️ Written from spec. Zero executions. |
-| 🥾 `bootstrap.md` | ⚠️ Written from spec. Zero executions. |
+| 🥾 `bootstrap.md` | 🟡 Written from spec. Ran once, on the first install: its six steps in order, stopping at the spec gate for want of a requirement. |
 | 🕵️ `evidence-reviewer.md` | ⚠️ Written from spec. Zero executions. |
 | 🎚️ The `T0`/`T1`/`T2` tier system | ⚠️ Never exercised. The tags are annotation so far. |
 
-The install above is derived from the layout, not from an install anyone has
-walked. 🧗 Whoever runs it first is on new ground — record the friction, because
-that record is what this section should have been.
+The install above has been walked once, on Windows, and corrected by what that
+walk broke. It has not been walked on macOS or Linux. 🧗 Whoever runs it on a new
+platform is on new ground — record the friction, because that record is how this
+section was corrected the first time.
 
 ## 🚫 What SparkForge does not include
 
