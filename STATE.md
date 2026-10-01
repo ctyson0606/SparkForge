@@ -40,16 +40,12 @@ projects, the other two in none.
 
 - Memory does not load in DeepSeek Harness; see Open Questions. Unsolved. The
   obvious patch is rejected in METHOD.md, Anti-Patterns.
-- The path-reference check in template/scripts/check.sh matches only md, sh,
-  json, yaml and txt. GameBrake's AGENTS.md names scripts/e2e.ps1 and
-  scripts/pack.ps1, and a Windows project's commands will mostly be .ps1.
-  GameBrake marked it "worth sending upstream", and it never arrived.
-- Bootstrap's Environment facts step. GameBrake needed a key the block does not
-  name (pack). "none" carries two meanings, not applicable (typecheck in C#) and
-  not set up (lint), which GameBrake had to separate with comments. dsh filled
-  test with scripts/check.sh and made "check.sh green" an acceptance criterion,
-  though that script checks the framework's layout and cannot fail for any
-  defect in the project.
+- scripts/check.sh and scripts/update-kit.sh have no update path. update-kit.sh
+  writes only kit/, so a fix to either script reaches projects installed after
+  it and none installed before. The .ps1 path check found in GameBrake does
+  not reach GameBrake, and dsh keeps check.sh as its test command. The
+  Environment facts comment in AGENTS.md has the same standing, by design,
+  since AGENTS.md belongs to the project.
 - Promotion candidates, under the rule in Recent Decisions:
   - The platform rule has its second project. dsh's GOTCHAS.md holds OpenSSL in
     Git Bash ending its output with CRLF, and Docker Desktop bind mounts
@@ -207,9 +203,10 @@ Also, none of them rules:
 - Claude Code drops HTML comments from a file it loads through an import, so
   the comment at the top of this file is not in the session's opening context
   and is seen only when the file is opened to edit. That is when it is needed.
-- Nothing carries a finding upstream. GameBrake marked one for sending and it
-  never arrived, and for over a month this file and the README said nothing had
-  crossed the spec gate while GameBrake was finished. The return path is a
+- Nothing carries a finding upstream. GameBrake marked one for sending and
+  never sent it; it reached this repository only because a survey went and
+  read GameBrake's STATE.md. For over a month before that, this file and the
+  README said nothing had crossed the spec gate while GameBrake was finished. The return path is a
   paragraph in AGENTS.md: a procedure that depends on someone remembering,
   which is where every hole so far has been found.
 

@@ -14,7 +14,16 @@ build:
 e2e:
 # Leave blank if not yet established. Write "none" if this project
 # genuinely has no such command — "none" is itself a finding and must
-# be reported in any verification, not silently skipped.
+# be reported in any verification, not silently skipped. Put the reason
+# after it as a comment: "not applicable" (a language whose type check is
+# its build) and "not set up yet" (no linter chosen) both read as a bare
+# "none", and only the second is a gap.
+# Add a line for any other command the project depends on, such as a
+# packaging step. A command nobody lists is one the next session does not
+# know exists.
+# scripts/check.sh is never a value here, nor an acceptance criterion. It
+# checks this framework's layout, so no defect in the project can make it
+# fail.
 
 ## Hard rules (always apply, regardless of tier)
 - Stop and ask when a requirement is vague. Do not fill the gap with an assumption.

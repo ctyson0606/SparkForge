@@ -19,8 +19,8 @@ Runs only when METHOD.md and STATE.md are both still empty shells. Runs once.
    symptom on the one that produced it. scripts/check.sh reads the index
    rather than the tree, so it is what confirms this landed.
 2. Ask for MODE and TEAM. Write them into AGENTS.md.
-3. Ask for or infer the Environment facts and fill them in one by one. Where
-   the project genuinely has no such command, write "none".
+3. Ask for or infer the Environment facts and fill them in one by one,
+   following the comment beneath that block in AGENTS.md.
 4. Run the spec gate at the depth MODE selects.
 5. Write what the spec gate produced into Current Focus in STATE.md.
 6. Leave METHOD.md empty.

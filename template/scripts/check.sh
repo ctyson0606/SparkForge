@@ -106,7 +106,12 @@ else pass "AGENTS.md routing resolves ($(echo $routed | wc -w) entries)"; fi
 # --- every file path mentioned anywhere in AGENTS.md exists ---------------
 # Forward references such as scripts/update-kit.sh are caught here rather than
 # relying on anyone remembering to keep a renamed file in step.
-paths="$(grep -oE '[A-Za-z0-9_./-]+\.(md|sh|json|ya?ml|txt)' "$ROOT/AGENTS.md" | sort -u)"
+#
+# The extensions are the ones an Environment facts command names. A project on
+# Windows writes its scripts as .ps1, .bat or .cmd, and a list without them
+# passes a renamed script without looking at it. js and ts are left out on
+# purpose: prose names Node.js and Next.js, and neither is a path.
+paths="$(grep -oE '[A-Za-z0-9_./-]+\.(md|sh|json|ya?ml|txt|ps1|bat|cmd|py)' "$ROOT/AGENTS.md" | sort -u)"
 missing=""
 for p in $paths; do
   [ -e "$ROOT/$p" ] || missing="$missing $p"
