@@ -45,7 +45,11 @@ projects, the other two in none.
   writer, and STATE.md is replaced on each write, so two people's agents
   writing as they go on separate branches meet as a merge conflict in it.
   Waiting on the user for the project's shape: how many people, one repository
-  or several, branches, which agent tools.
+  or several, branches, which agent tools. The user's people work at different
+  times, not together, so the conflicts come from starting on a stale copy.
+  Pulling before a session starts is an action at session start, the shape of
+  METHOD.md's anti-pattern, so it needs a mechanism (a SessionStart hook in
+  Claude Code) rather than a line in AGENTS.md. Untried.
 - Memory does not load in DeepSeek Harness; see Open Questions. Unsolved. The
   obvious patch is rejected in METHOD.md, Anti-Patterns.
 - The three installed projects are at 0.2.1. They were brought to 0.2.0 on
