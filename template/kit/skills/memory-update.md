@@ -82,3 +82,24 @@ not a separate write.
 > only because the agent raised the question.
 
 <!-- source: none; first recorded in this project -->
+
+### What the session opened with is a snapshot; read the current value when you act on it.  `[T0]`  `[2026-10-01]`
+
+The memory files, the git state and the time a session starts with describe
+the moment it started. Commits land, other sessions write, this session writes,
+and the clock moves; the copy in context does not. Before stating anything
+about the memory files or the repository, or acting on it, open the file or run
+the command. Every date or time written into a file comes from the clock at the
+moment of writing. The cost is one read. The failure is telling someone
+something false about their own repository with the confidence of something
+just looked at.
+
+> Evidence: Two projects. In one, the METHOD.md, STATE.md and git log supplied
+> as opening context were behind: HEAD was three commits further on, STATE.md
+> on disk several revisions newer, and an answer given from the snapshot
+> claimed the state file's test counts were stale when the file already
+> carried the right numbers. In the other, a handoff file was stamped 23:40
+> when it was written at 23:05, because the time had not been read at the
+> moment of writing.
+
+<!-- source: two consuming projects; recorded 2026-10-01 -->

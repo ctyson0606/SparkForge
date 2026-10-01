@@ -57,10 +57,6 @@ projects, the other two in none.
     READMEs carry test counts nothing keeps in step, and it recorded that as a
     gap itself. TempTime arrived independently at "a key is computed by the
     code that colours, never restated".
-  - GameBrake's "Read memory and git state from disk before acting on it". The
-    opening context was a snapshot several commits behind, and an answer given
-    from it was confidently false. It describes this framework's loading
-    mechanism, not GameBrake.
 - `diff source/METHOD.md ../TempTime/METHOD.md` shows what TempTime learned
   after the copy was taken. The verification-shaped part: aim the scenario as
   well as the sabotage; give a selective change a neighbour it must not touch;
@@ -161,8 +157,9 @@ Also, none of them rules:
   it true of everything and useful for nothing.
 - Two of the three watch-for questions are still open. Whether anyone changes
   the title in AGENTS.md unprompted is unknown: the first reader was told to,
-  and the other two installs left no record either way. Whether an agent reaches for spec-gate on its own when it touches
-  auth or a migration is unanswered: GameBrake touched neither, and dsh's whole
+  and the other two installs left no record either way. Whether an agent
+  reaches for spec-gate on its own when it touches auth or a migration is
+  unanswered: GameBrake touched neither, and dsh's whole
   subject is auth and secrets but its gate ran inside bootstrap. Both remain
   the shape of the same candidate rule.
 
@@ -202,8 +199,9 @@ Also, none of them rules:
 - Nothing carries a finding upstream. GameBrake marked one for sending and
   never sent it; it reached this repository only because a survey went and
   read GameBrake's STATE.md. For over a month before that, this file and the
-  README said nothing had crossed the spec gate while GameBrake was finished. The return path is a
-  paragraph in AGENTS.md: a procedure that depends on someone remembering,
+  README said nothing had crossed the spec gate while GameBrake was finished.
+  The return path is a paragraph in AGENTS.md: a procedure that depends on
+  someone remembering,
   which is where every hole so far has been found.
 
 ## Recent Decisions
