@@ -222,27 +222,30 @@ than most improvements.
 ## 🌡️ Maturity
 
 Stated plainly, because this framework's own methodology insists on it. **It has
-been installed on one real project, on Windows, and nothing has yet been built
-past the spec gate.**
+been installed on three real projects, all on Windows. One, a desktop tool, was
+built through every acceptance criterion of its spec and is in daily use; the
+other two passed the spec gate and have been built on since.** `STATE.md` in
+this repository records the detail, and what has still never been exercised.
 
 | Component | Standing |
 |---|---|
-| 🧪 `verification.md` | ✅ Rules extracted from real incidents, most carrying a recorded one. |
+| 🧪 `verification.md` | ✅ Rules extracted from real incidents, most carrying a recorded one. Several now carry incidents from two or three projects. |
 | 🔍 `diagnosis.md` | ✅ Same — extracted from a working methodology, not written from spec. |
-| 💾 `memory-update.md` | ✅ Same. |
-| ✅ `check.sh` | ✅ Runs, and has caught real holes in this repository. |
-| 🔄 `update-kit.sh` | 🟡 Driven through four cases against a throwaway upstream. Never against a real remote, and its destructive half has never run over content anyone would miss. |
-| 🚪 The tool entry files | 🟡 Two load by a mechanism the tool honours, and Claude Code's has been watched carrying a real project's rules into a session. Cursor's has never been opened, and neither have the other four, which are prose in a file the tool is expected to read. |
-| 🚪 `spec-gate.md` | ⚠️ Written from spec. Entered once, on the first install, and blocked at its first step for want of a requirement. It has never produced the four artifacts it exists to produce. |
+| 💾 `memory-update.md` | ✅ Same. Writing memory as you go was measured before it shipped: with nothing said about memory, the agent recorded what came next, and under the old rule it did not. |
+| ✅ `check.sh` | ✅ Runs, and has caught real holes, in this repository and in a project using it. |
+| 🔄 `update-kit.sh` | 🟡 Run end to end against a throwaway upstream, carrying the scripts with `kit/` and replacing itself mid-run on Windows. It has never pulled a real change into a real project. |
+| 🚪 The tool entry files | 🟡 Claude Code's is an import its loader honours, and it has been watched carrying a real project's rules into a session. The others work by asking the agent to open `AGENTS.md`, the kind of request an experiment here found agents ignoring. None of them has been opened. |
+| 📐 `SPEC.md` | ⚠️ New. No project has kept its spec there yet. |
+| 🚪 `spec-gate.md` | 🟡 Written from spec. It has produced its four artifacts in all three projects, each time as bootstrap's fourth step. It has never been seen firing on its own. |
 | 👥 `team-contract.md` | ⚠️ Written from spec. Zero executions. |
-| 🥾 `bootstrap.md` | 🟡 Written from spec. Ran once, on the first install: its six steps in order, stopping at the spec gate for want of a requirement. |
+| 🥾 `bootstrap.md` | ✅ Written from spec, and run in all three projects. It does not start by itself: ask for it by name. |
 | 🕵️ `evidence-reviewer.md` | ⚠️ Written from spec. Zero executions. |
 | 🎚️ The `T0`/`T1`/`T2` tier system | ⚠️ Never exercised. The tags are annotation so far. |
 
-The install above has been walked once, on Windows, and corrected by what that
-walk broke. It has not been walked on macOS or Linux. 🧗 Whoever runs it on a new
-platform is on new ground — record the friction, because that record is how this
-section was corrected the first time.
+The install above has been walked three times, all on Windows, and corrected by
+what the first walk broke. It has not been walked on macOS or Linux. 🧗 Whoever
+runs it on a new platform is on new ground — record the friction, because that
+record is how this section was corrected the first time.
 
 ## 🚫 What SparkForge does not include
 

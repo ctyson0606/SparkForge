@@ -176,10 +176,11 @@ Also, none of them rules:
 - The README also restates the project layout, the bootstrap procedure and
   the execution record of several components, and nothing diffs any of them
   against the files they describe. They are checked by hand when someone
-  remembers to, which is how all three went false at once. Two are false now:
-  its maturity section says nothing has crossed the spec gate, and it says
-  memory loads by itself, which is not so in DeepSeek Harness. The second is
-  deliberately left out of the README; see Recent Decisions.
+  remembers to, which is how all three went false at once. The maturity
+  section was brought up to date on 2026-10-01. One claim is false and stays:
+  it says memory loads by itself, which is not so in DeepSeek Harness, and
+  that is left out of the README by decision; see Recent Decisions. The
+  translations, at least, are now compared by check-repo.sh.
 - Reading a file under template/ makes Claude Code load template/CLAUDE.md
   and its import chain into the session working on this repository. That
   brings in a second AGENTS.md titled "# SparkForge", whose rules include not
