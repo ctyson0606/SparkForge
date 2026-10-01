@@ -47,11 +47,6 @@ projects, the other two in none.
   Environment facts comment in AGENTS.md has the same standing, by design,
   since AGENTS.md belongs to the project.
 - Promotion candidates, under the rule in Recent Decisions:
-  - The platform rule has its second project. dsh's GOTCHAS.md holds OpenSSL in
-    Git Bash ending its output with CRLF, and Docker Desktop bind mounts
-    ignoring file modes, so a permission failure cannot be reproduced on
-    Windows. GameBrake's holds a Windows path losing a level of escaping
-    through an inline heredoc. Still one platform.
   - The count rule and the restatement rule exist only in this repository's
     METHOD.md, so no project has received them. GameBrake's STATE.md and
     READMEs carry test counts nothing keeps in step, and it recorded that as a
@@ -230,8 +225,10 @@ in METHOD.md, or visible in the code itself, has been dropped from here.
   a check looks like it ought to catch something and cannot.
 - A rule earns a place in kit/ when its evidence spans more than one project
   and it describes the framework rather than a stack; otherwise it stays in
-  this repository's own METHOD.md. The platform rule now meets the first half,
-  with dsh as its second project, though every instance is still on Windows.
+  this repository's own METHOD.md. Promoting one moves it: the kit copy holds
+  the rule and the evidence, and the entry here shrinks to a pointer, so there
+  is never a second copy to drift. The platform rule went first, on evidence
+  from TempTime, dsh and this repository, every instance of it on Windows.
 - Memory loading in tools that do not resolve @ imports stays unsolved rather
   than patched with prose. The patch was built, measured, rejected and
   reverted on 2026-10-01; the reasons are in METHOD.md. By the user's decision

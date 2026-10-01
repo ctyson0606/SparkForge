@@ -36,18 +36,11 @@ task touched. The stale entry is never in those sections.
 
 ### The platform that produces a file cannot report that the file is broken on another platform.  `[T0]`  `[2026-08-12]`
 
-Anything a build writes carries properties the producing machine does not
-enforce and therefore cannot check: line endings, an executable bit, a
-lockfile's platform. Assert those against the repository index rather than the
-working tree, since the index is what other platforms will receive.
-
-> Evidence: Three instances in this project's first four commits. A CRLF
-> script that runs on the machine that wrote it and fails elsewhere with a bad
-> interpreter. A version file with no extension that came out with a trailing
-> carriage return, which a string comparison would have read as a permanent
-> mismatch without ever failing. An executable bit that git recorded as absent
-> because the producing platform does not carry one, leaving the scripts
-> unrunnable on the platforms that do.
+Promoted on 2026-10-01 to template/kit/skills/verification.md, once dsh and
+TempTime had reproduced it; the rule and all its evidence, this repository's
+three instances included, live there now. Only the heading stays here, because
+this repository is written on Windows and ships to every platform, which makes
+it the rule most often needed while working on it.
 
 ### A sabotage is not complete until the restore is verified.  `[T0]`  `[2026-08-12]`
 

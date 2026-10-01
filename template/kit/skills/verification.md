@@ -281,3 +281,27 @@ catches a section dropped during translation.
 > without suspecting the document. Both checks together took one command.
 
 <!-- source: METHOD.md 337-344 -->
+
+### The platform that produces a file cannot report that the file is broken on another platform.  `[T0]` `[2026-08-12]`
+
+Anything written on one machine carries properties that machine does not
+enforce and therefore cannot check: line endings, an executable bit, file
+permissions, a lockfile's platform. A check run where the file was produced
+passes whatever those properties are. Assert what the repository records
+against the index rather than the working tree, since the index is what other
+platforms receive. Prove the rest on the platform that enforces it, and say so
+where that has not happened.
+
+> Evidence: Three projects, all produced on Windows. A lockfile written there
+> omitted a dependency only macOS installs, and the first clean install on
+> macOS refused outright. A script committed with CRLF ran where it was
+> written and failed elsewhere with a bad interpreter; a version file came out
+> with a trailing carriage return that a string comparison would have read as
+> a permanent mismatch; an executable bit was recorded as absent, leaving the
+> scripts unrunnable on every platform that honours it. A generated password
+> kept a carriage return nobody could see, so it could never be typed back.
+> And a permission failure the project had to guard against could not be
+> reproduced there at all, because Docker Desktop shows every bind-mounted
+> file with every permission set.
+
+<!-- source: SparkForge METHOD.md; promoted 2026-10-01 -->
