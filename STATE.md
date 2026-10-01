@@ -47,14 +47,19 @@ projects, the other two in none.
   collect-upstream.sh reports all three current. One thing is left to dsh's
   own spec gate: its acceptance criterion 5 still names scripts/check.sh,
   which the framework now rules out, and changing it needs approval.
-- update-kit.sh hangs instead of failing when the upstream needs a login. Its
-  default upstream is the HTTPS URL, chosen because a reader may have no SSH
-  key; on 2026-10-01, run from GameBrake against this repository on GitHub, the
-  clone sat behind Git Credential Manager waiting for a login nobody could
-  give, until it was killed after three minutes. Nothing had been touched yet,
-  since the clone comes first. An agent cannot answer that prompt, so the
-  clone should refuse to ask (GIT_TERMINAL_PROMPT=0, GCM_INTERACTIVE=never)
-  and say what to pass instead. The migration that day passed the SSH URL.
+- Remind the user, at the start of the next session that touches update-kit.sh
+  or the projects: decide whether update-kit.sh's default upstream stays HTTPS.
+  It was chosen for readers without an SSH key, which assumes a public
+  repository, and this one needs a login, so the default reaches nobody
+  as things stand; the user, who has SSH, has to pass the SSH URL every time.
+  On 2026-10-01 they chose to keep HTTPS for now and asked to be reminded.
+  Since 0.2.1 the default at least fails in seconds and prints the SSH
+  command, where it used to wait on a login prompt until killed.
+- The three projects are at 0.2.0 and 0.2.1 has the fix above. Their copy of
+  update-kit.sh is the 0.2.0 one, which still waits on a login over HTTPS, so
+  the update that brings 0.2.1 has to be given the SSH URL. It will also be
+  the first real run of the self-copying updater. GitHub has to have 0.2.1
+  before any of that, which means pushing this repository first.
 - The count rule is not yet promotable, and should not be promoted early: its
   only incidents are this repository's. GameBrake's STATE.md and READMEs carry
   test counts nothing keeps in step, and GameBrake recorded that as a gap, but
