@@ -40,12 +40,17 @@ projects, the other two in none.
 
 - Memory does not load in DeepSeek Harness; see Open Questions. Unsolved. The
   obvious patch is rejected in METHOD.md, Anti-Patterns.
-- scripts/check.sh and scripts/update-kit.sh have no update path. update-kit.sh
-  writes only kit/, so a fix to either script reaches projects installed after
-  it and none installed before. The .ps1 path check found in GameBrake does
-  not reach GameBrake, and dsh keeps check.sh as its test command. The
-  Environment facts comment in AGENTS.md has the same standing, by design,
-  since AGENTS.md belongs to the project.
+- The three installed projects are behind on everything done on 2026-10-01,
+  and only part of it can reach them through update-kit.sh. The scripts now
+  live in kit/scripts/ behind one-line stubs in scripts/, so update-kit.sh
+  carries them; that was run end to end against a scratch upstream and
+  project, on Windows, with the updater replacing its own file mid-run from a
+  copy it made first. But each project still has the old full scripts, which
+  know nothing of kit/scripts/, so the stubs have to be copied in once by
+  hand. So do the AGENTS.md changes (the write-as-you-go hard rule, the
+  Environment facts comment, the SPEC.md import), SPEC.md itself, and moving
+  GameBrake's spec out of its STATE.md: AGENTS.md and the memory files belong
+  to the project, by design.
 - The count rule is not yet promotable, and should not be promoted early: its
   only incidents are this repository's. GameBrake's STATE.md and READMEs carry
   test counts nothing keeps in step, and GameBrake recorded that as a gap, but

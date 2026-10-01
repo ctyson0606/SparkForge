@@ -11,7 +11,7 @@ Runs only when METHOD.md and STATE.md are both still empty shells. Runs once.
 1. Put the scripts into the index carrying the executable bit:
 
        git add -A
-       git update-index --chmod=+x scripts/check.sh scripts/update-kit.sh
+       git update-index --chmod=+x scripts/check.sh scripts/update-kit.sh kit/scripts/check.sh kit/scripts/update-kit.sh
 
    The mode in the working tree is not the mode anyone else receives. On a
    platform that does not carry the bit, a script committed at 100644 looks

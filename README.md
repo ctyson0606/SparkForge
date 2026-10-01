@@ -34,7 +34,8 @@ my-project/
 │   ├── VERSION
 │   ├── entry-points.txt
 │   ├── skills/
-│   └── agents/
+│   ├── agents/
+│   └── scripts/
 └── scripts/
     ├── check.sh
     └── update-kit.sh
@@ -51,8 +52,8 @@ my-project/
 | 🐛 `GOTCHAS.md` | Version-bound traps, each dated. Delete freely once the dependency is gone. |
 | 📚 `kit/` | The canonical framework content. **Never edit this inside a consuming project** — it is overwritten on update. |
 | 🪝 `.claude/` | Thin stubs. Each is a frontmatter block plus one line pointing into `kit/`. |
-| ✅ `scripts/check.sh` | Structural checks for the whole layout. |
-| 🔄 `scripts/update-kit.sh` | Pulls a newer `kit/` from upstream. |
+| ✅ `scripts/check.sh` | Structural checks for the whole layout. A one-line stub: the checker is `kit/scripts/check.sh`, so its fixes arrive with `kit/`. |
+| 🔄 `scripts/update-kit.sh` | Pulls a newer `kit/` from upstream, the scripts in `kit/scripts/` included. Also a stub, so it updates itself. |
 
 The two-layer split is the point: 📚 `kit/` holds each rule once, and every AI
 tool gets a directory of 🪝 thin stubs pointing at them. Supporting a second
@@ -102,10 +103,10 @@ git init
 # 3. Stage, then set the executable bit in the index. On Windows the mode
 #    in the working tree is not real, so chmod cannot do this
 git add -A
-git update-index --chmod=+x scripts/check.sh scripts/update-kit.sh
+git update-index --chmod=+x scripts/check.sh scripts/update-kit.sh kit/scripts/check.sh kit/scripts/update-kit.sh
 
-#    Both lines this prints must begin with 100755
-git ls-files -s scripts/check.sh scripts/update-kit.sh
+#    All four lines this prints must begin with 100755
+git ls-files -s scripts/check.sh scripts/update-kit.sh kit/scripts/check.sh kit/scripts/update-kit.sh
 
 # 4. Verify the layout, then commit
 bash scripts/check.sh
@@ -203,6 +204,11 @@ bash scripts/check.sh
 `update-kit.sh` names it. It reports only what that update introduced, never
 every absent entry — a warning that fires on each tool you deliberately do not
 use is read twice and ignored afterwards.
+
+📦 A project installed before the scripts moved into `kit/scripts/` still has
+the full scripts in `scripts/`. Copy the two stubs from SparkForge's
+`template/scripts/` over them once. Until then the old copies keep running and
+the fixes that arrive in `kit/scripts/` are never used.
 
 Found an improvement while using it? Send it upstream instead of editing `kit/`
 locally. And when you do, read the `Unverified` block in the upstream

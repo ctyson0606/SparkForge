@@ -78,7 +78,8 @@ project does not use a tool, delete its entry.
 
 kit/ holds the canonical content. Each tool-specific directory
 (.claude/, and one per additional agent tool) holds thin stubs that
-point into kit/. Edit kit/, never the stubs.
+point into kit/, and so does scripts/: its two files hand over to
+kit/scripts/. Edit kit/, never the stubs.
 Do not edit anything under kit/ inside a project that consumes
 this framework — send the change upstream and pull it back with
 scripts/update-kit.sh. This project's own knowledge lives only in

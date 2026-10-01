@@ -33,7 +33,8 @@ my-project/
 │   ├── VERSION
 │   ├── entry-points.txt
 │   ├── skills/
-│   └── agents/
+│   ├── agents/
+│   └── scripts/
 └── scripts/
     ├── check.sh
     └── update-kit.sh
@@ -50,8 +51,8 @@ my-project/
 | 🐛 `GOTCHAS.md` | 綁定版本的陷阱，每條都有日期。相依套件消失後可以隨手刪掉。 |
 | 📚 `kit/` | 框架的正典內容。**在消費端專案裡絕對不要改這裡** —— 更新時會被整個覆蓋。 |
 | 🪝 `.claude/` | 薄殼 stub。每個都是一段 frontmatter 加一行指向 `kit/` 的路徑。 |
-| ✅ `scripts/check.sh` | 對整個目錄結構做的結構檢查。 |
-| 🔄 `scripts/update-kit.sh` | 從上游拉一份新的 `kit/` 下來。 |
+| ✅ `scripts/check.sh` | 對整個目錄結構做的結構檢查。只有一行的薄殼：真正的檢查器是 `kit/scripts/check.sh`，所以它的修正會跟著 `kit/` 一起更新。 |
+| 🔄 `scripts/update-kit.sh` | 從上游拉一份新的 `kit/` 下來，連同 `kit/scripts/` 裡的腳本。它也是薄殼，所以會連自己一起更新。 |
 
 分成兩層正是重點：📚 `kit/` 把每條規則只寫一次，每個 AI 工具各自拿到一個目錄的
 🪝 薄殼 stub 指過去。要支援第二個工具，是再生一組 stub，而不是把規則再抄一遍。
@@ -97,10 +98,10 @@ git init
 # 3. 先 stage，再把可執行位元寫進 index。Windows 上工作樹裡的
 #    mode 是假的，所以 chmod 做不到這件事
 git add -A
-git update-index --chmod=+x scripts/check.sh scripts/update-kit.sh
+git update-index --chmod=+x scripts/check.sh scripts/update-kit.sh kit/scripts/check.sh kit/scripts/update-kit.sh
 
-#    下面這行印出來的兩行，開頭都必須是 100755
-git ls-files -s scripts/check.sh scripts/update-kit.sh
+#    下面這行印出來的四行，開頭都必須是 100755
+git ls-files -s scripts/check.sh scripts/update-kit.sh kit/scripts/check.sh kit/scripts/update-kit.sh
 
 # 4. 驗證結構，然後 commit
 bash scripts/check.sh
@@ -191,6 +192,10 @@ bash scripts/check.sh
 📣 如果某次更新開始支援一個你沒有入口檔的工具，`update-kit.sh` 會把它列出來。
 它只報那次更新帶進來的，絕不報所有缺席的入口 —— 一個對每個你刻意不用的工具都
 叫一次的警告，看兩次之後就沒人讀了。
+
+📦 腳本搬進 `kit/scripts/` 之前就安裝的專案，`scripts/` 裡放的還是完整腳本。請手動
+從 SparkForge 的 `template/scripts/` 複製那兩個薄殼過去覆蓋一次。在那之前，舊的腳
+本會一直被執行，`kit/scripts/` 裡送來的修正永遠用不到。
 
 用的過程中想到改進？把它送回上游，不要在本地改 `kit/`。而且送的時候，順手讀一
 下上游 `STATE.md` 裡的 `Unverified` 區塊 —— 🏅 一條被你的專案真正走過的規則，
