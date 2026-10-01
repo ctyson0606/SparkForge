@@ -217,8 +217,8 @@ Also, none of them rules:
   against the real projects and a scratch set covering current, behind, empty,
   filled and missing. It does not make the survey happen: the root AGENTS.md
   asks for it before choosing work, which is the depends-on-remembering shape
-  every hole so far has had. The three installed projects have no Upstream
-  section yet, so the collector reports them as predating it.
+  every hole so far has had. All three installed projects now carry an
+  Upstream section, and on 2026-10-01 every one of them was empty.
 
 ## Recent Decisions
 
