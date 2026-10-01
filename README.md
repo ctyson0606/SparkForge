@@ -103,10 +103,10 @@ git init
 # 3. Stage, then set the executable bit in the index. On Windows the mode
 #    in the working tree is not real, so chmod cannot do this
 git add -A
-git update-index --chmod=+x scripts/check.sh scripts/update-kit.sh kit/scripts/check.sh kit/scripts/update-kit.sh
+git add --chmod=+x -- 'scripts/*.sh' 'kit/scripts/*.sh'
 
-#    All four lines this prints must begin with 100755
-git ls-files -s scripts/check.sh scripts/update-kit.sh kit/scripts/check.sh kit/scripts/update-kit.sh
+#    Every line this prints must begin with 100755
+git ls-files -s -- 'scripts/*.sh' 'kit/scripts/*.sh'
 
 # 4. Verify the layout, then commit
 bash scripts/check.sh

@@ -14,6 +14,12 @@ FAILED=0
 
 fail() { echo "FAIL  $1"; FAILED=1; }
 pass() { echo "ok    $1"; }
+na()   { echo "n/a   $1"; }
+
+# The rule grammar and README checks the shipped checker applies to the
+# template, applied here to this repository's own root. Sourced rather than
+# copied, so the two cannot come to mean different things.
+. "$ROOT/template/kit/scripts/rule-checks.sh"
 
 echo "--- template/scripts/check.sh ---"
 if ! bash "$ROOT/template/scripts/check.sh"; then
@@ -93,6 +99,13 @@ else
   if [ -n "$bad" ]; then fail "repository scripts not executable in the index${bad}"
   else pass "every repository .sh is 100755 in the index"; fi
 fi
+
+# --- this repository's own METHOD.md and READMEs --------------------------
+# The shipped checker reads only the template, so the root METHOD.md, written
+# in the same grammar, and the three READMEs at the root were checked by
+# nothing and agreed only when someone compared them by hand.
+check_rule_grammar "METHOD.md" "$ROOT/METHOD.md"
+check_readme_translations "$ROOT"
 
 echo
 if [ "$FAILED" -eq 0 ]; then echo "check-repo.sh: all checks passed"; else echo "check-repo.sh: FAILED"; fi

@@ -34,14 +34,6 @@ task touched. The stale entry is never in those sections.
 
 ## Conventions
 
-### The platform that produces a file cannot report that the file is broken on another platform.  `[T0]`  `[2026-08-12]`
-
-Promoted on 2026-10-01 to template/kit/skills/verification.md, once dsh and
-TempTime had reproduced it; the rule and all its evidence, this repository's
-three instances included, live there now. Only the heading stays here, because
-this repository is written on Windows and ships to every platform, which makes
-it the rule most often needed while working on it.
-
 ### A sabotage is not complete until the restore is verified.  `[T0]`  `[2026-08-12]`
 
 Restoring is part of the experiment and can fail silently. Do not hand-roll a
@@ -119,15 +111,6 @@ its root excludes.
 > The README check globs that same root and reports "only one README, nothing
 > to compare" while three translated READMEs sit one level above it.
 
-### A restatement is a copy, and nothing keeps an unguarded copy true.  `[T1]`  `[2026-08-20]`
-
-Promoted on 2026-10-01 to template/kit/skills/verification.md, once TempTime
-had reproduced it with a code comment that went false; the rule and its
-evidence live there now. What stays here is this repository's own two examples
-of the outcomes that work: the agent tools line exists twice because the tool
-reads the stub rather than the canonical file, and a check diffs the copies;
-and memory-update.md refuses to restate METHOD.md's classification at all.
-
 ### What the instructions were written in becomes a requirement nobody stated.  `[T1]`  `[2026-08-23]`
 
 An instruction set carries the environment of whoever wrote it — the language
@@ -144,6 +127,23 @@ Ask what a document assumes about its reader, not only what it says.
 > PowerShell resolves to WSL's launcher and fails while naming a path nobody
 > chose; unquoted paths, which the first directory name containing a space
 > breaks; and Unix tools in the verification steps that PowerShell lacks.
+
+## Promoted to kit
+
+Rules that began here and now live in template/kit/skills/, with their
+evidence. Only a pointer stays, so the two copies cannot drift; the entries
+are not rules here and carry no labels.
+
+- The platform that produces a file cannot report that the file is broken on
+  another platform. In verification.md since 2026-10-01, once dsh and TempTime
+  had reproduced it. This repository is written on Windows and ships to every
+  platform, which makes it the rule most often needed while working on it.
+- A restatement is a copy, and nothing keeps an unguarded copy true. In
+  verification.md since 2026-10-01, once TempTime had reproduced it with a code
+  comment that went false. This repository's own examples of the outcomes that
+  work stay here: the agent tools line exists twice because the tool reads the
+  stub rather than the canonical file, and a check diffs the copies; and
+  memory-update.md refuses to restate METHOD.md's classification at all.
 
 ## Anti-Patterns
 

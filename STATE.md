@@ -179,15 +179,6 @@ Also, none of them rules:
 - `template/.gitattributes` cannot be verified in place, because the root
   file's attributes are inherited by everything under it. The checker copies
   it to a throwaway repository to get an answer that can differ.
-- Nothing checks the tier tags or the evidence labels in the root METHOD.md.
-  Those two checks scan template/kit/skills only, while the root file uses the
-  same grammar. A consuming project does not have this file, so no number of
-  real projects will ever run into it.
-- The README check has the same blind spot and is louder about it: it globs
-  the template directory, finds no README there at all, and reports that there
-  is only one and nothing to compare, while the translations that do exist sit
-  at the repository root outside its reach. Their agreement is asserted by
-  hand, against the contract that check would have applied.
 - The README also restates the project layout, the bootstrap procedure and
   the execution record of several components, and nothing diffs any of them
   against the files they describe. They are checked by hand when someone

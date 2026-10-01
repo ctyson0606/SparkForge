@@ -98,10 +98,10 @@ git init
 # 3. 先 stage，再把可执行位写进 index。Windows 上工作树里的
 #    mode 是假的，所以 chmod 做不到这件事
 git add -A
-git update-index --chmod=+x scripts/check.sh scripts/update-kit.sh kit/scripts/check.sh kit/scripts/update-kit.sh
+git add --chmod=+x -- 'scripts/*.sh' 'kit/scripts/*.sh'
 
-#    下面这行印出来的四行，开头都必须是 100755
-git ls-files -s scripts/check.sh scripts/update-kit.sh kit/scripts/check.sh kit/scripts/update-kit.sh
+#    下面这行印出来的每一行，开头都必须是 100755
+git ls-files -s -- 'scripts/*.sh' 'kit/scripts/*.sh'
 
 # 4. 验证结构，然后 commit
 bash scripts/check.sh

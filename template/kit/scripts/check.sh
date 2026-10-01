@@ -22,12 +22,15 @@ pass() { echo "ok    $1"; }
 # an absence look like a verified agreement.
 na()   { echo "n/a   $1"; }
 
+# Checks shared with SparkForge's own repository checker.
+. "$(dirname "$0")/rule-checks.sh"
+
 # --- required files -------------------------------------------------------
 REQUIRED=(
   AGENTS.md SPEC.md METHOD.md STATE.md GOTCHAS.md
   .gitattributes kit/VERSION kit/entry-points.txt
   scripts/check.sh scripts/update-kit.sh
-  kit/scripts/check.sh kit/scripts/update-kit.sh
+  kit/scripts/check.sh kit/scripts/update-kit.sh kit/scripts/rule-checks.sh
 )
 # CLAUDE.md is deliberately not in this list. It is one tool's entry file among
 # several, and a project using none of the tools that need one may delete it.
@@ -197,29 +200,8 @@ else
   else pass "tool entry points reach AGENTS.md ($present present)"; fi
 fi
 
-# --- tier tag grammar -----------------------------------------------------
-bad="$(grep -rhoE '`\[T[^]]*\]`' "$ROOT/kit/skills" 2>/dev/null \
-       | grep -vE '^`\[T[0-2]( \| T[0-2] if: [^]]+)*\]`$')"
-if [ -n "$bad" ]; then fail "tier tags outside the grammar: $bad"
-else pass "tier tags conform ($(grep -rhoE '`\[T[^]]*\]`' "$ROOT/kit/skills" 2>/dev/null | wc -l) tags)"; fi
-
-# --- exactly one evidence label per rule ----------------------------------
-# Anchored on the ### heading: a block with no heading is not a rule and is
-# not subject to this check. A rule ends at the next heading or at end of
-# file, never at a trailing comment — ending it at a comment would tie the
-# invariant to a convention someone has to remember, and a rule written
-# without that comment would leave the check silently.
-viol="$(for f in "$ROOT"/kit/skills/*.md; do
-  [ -e "$f" ] || continue
-  awk -v F="$(basename "$f")" '
-    function close_block() { if (inb && n != 1) printf "%s: %d labels: %s\n", F, n, h; inb=0 }
-    /^### / { close_block(); inb=1; h=$0; n=0; next }
-    inb && /^> (Evidence|Found|Rationale):/ { n++ }
-    END { close_block() }
-  ' "$f"
-done)"
-if [ -n "$viol" ]; then fail "evidence labels: $viol"
-else pass "exactly one evidence label per rule"; fi
+# --- tier tags and evidence labels -------------------------------------
+check_rule_grammar "kit/skills" "$ROOT"/kit/skills/*.md
 
 # --- .gitattributes verified outside this repo ----------------------------
 # It cannot be verified in place: a .gitattributes further up the tree
@@ -246,46 +228,7 @@ if [ -n "$attr_bad" ]; then fail "gitattributes in a clean repo: $attr_bad"
 else pass "gitattributes behaves correctly in a clean repo"; fi
 
 # --- README translations agree ---------------------------------------------
-readmes=()
-for r in "$ROOT"/README.md "$ROOT"/README.*.md; do
-  [ -e "$r" ] && readmes+=("$r")
-done
-if [ "${#readmes[@]}" -le 1 ]; then
-  na "README consistency: only one README, nothing to compare"
-else
-  base="$ROOT/README.md"
-  count_structure() {
-    printf '%s %s %s' \
-      "$(grep -c '^#\{1,6\} ' "$1")" \
-      "$(grep -c '^```' "$1")" \
-      "$(grep -c '^|' "$1")"
-  }
-  # Everything inside a fence, minus comment lines: this is what a reader
-  # copies out, and it is the part a translation must not have touched.
-  copyable() {
-    awk '/^```/{f=!f; next} f' "$1" | grep -vE '^[[:space:]]*#' | sed 's/[[:space:]]*$//'
-  }
-  # Two empty extractions compare equal, so a pair of READMEs with nothing
-  # copyable in either would satisfy the diff by agreeing about nothing. Say
-  # so instead of reporting it as a verified match.
-  vacuous=1
-  for r in "${readmes[@]}"; do
-    [ -n "$(copyable "$r")" ] && vacuous=0
-  done
-  bad=""
-  for r in "${readmes[@]}"; do
-    [ "$r" = "$base" ] && continue
-    n="$(basename "$r")"
-    [ "$(count_structure "$base")" = "$(count_structure "$r")" ] || \
-      bad="$bad; $n structure $(count_structure "$r") != $(count_structure "$base")"
-    diff <(copyable "$base") <(copyable "$r") >/dev/null 2>&1 || \
-      bad="$bad; $n copyable lines differ"
-  done
-  if [ -n "$bad" ]; then fail "README translations${bad}"
-  elif [ "$vacuous" -eq 1 ]; then
-    na "README: structure agrees across ${#readmes[@]} files, but no side has copyable content to compare"
-  else pass "README translations agree (${#readmes[@]} files)"; fi
-fi
+check_readme_translations "$ROOT"
 
 echo
 if [ "$FAILED" -eq 0 ]; then echo "check.sh: all checks passed"; else echo "check.sh: FAILED"; fi
