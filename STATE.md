@@ -1,6 +1,6 @@
 # STATE
 
-> Last updated: 2026-08-23
+> Last updated: 2026-10-01
 
 Current working state. Superseded content is deleted, not archived.
 For durable rules see METHOD.md.
@@ -20,29 +20,62 @@ Do not write into this file:
 SparkForge uses its own method: this file and METHOD.md at the repository root
 are its memory, kept separate from the empty shells under template/.
 
-The framework has been installed on its first real project, on Windows. That
-install is where everything below that is no longer a guess came from, and it
-produced the first change to the framework driven by use rather than by
-reading. Three of its four findings were assumptions about the reader's machine
-that nobody had thought to write down, which is now a rule.
+Three projects have adopted the framework, all on Windows, all in sibling
+directories of this repository: ../GameBrake, the first install, a C# tray tool
+built through every acceptance criterion of its v1 and in daily use;
+../LearningProject, a Markdown-only template for learning projects; and
+../dsh/dsh-docker+remote-access, which merges two Docker repositories into one
+public one. ../TempTime never adopted it, but source/METHOD.md is a copy of its
+METHOD.md, and it kept growing afterwards. A survey of all four on 2026-10-01
+is where most of the Next Steps below came from.
 
 kit/ has two halves with different standing, and the split is by how each was
 written rather than by what it covers. verification, diagnosis and
-memory-update were transformed from a previous project's methodology and carry
-its incidents. spec-gate, team-contract, bootstrap and evidence-reviewer were
-written from a specification; bootstrap and spec-gate have now been entered
-once each, the other two never. An earlier version of this section claimed
-every rule in kit/skills/ came from the methodology, which was never true.
+memory-update were transformed from TempTime's methodology and carry its
+incidents. spec-gate, team-contract, bootstrap and evidence-reviewer were
+written from a specification; bootstrap and spec-gate have now run in all three
+projects, the other two in none.
 
 ## Next Steps
 
-- Carry that first project past the spec gate to something actually built, and
-  find out which rules earn their place and which are never reached. The
-  install is answered; everything after it is not.
+- Memory does not load in DeepSeek Harness; see Open Questions. Unsolved. The
+  obvious patch is rejected in METHOD.md, Anti-Patterns.
+- The path-reference check in template/scripts/check.sh matches only md, sh,
+  json, yaml and txt. GameBrake's AGENTS.md names scripts/e2e.ps1 and
+  scripts/pack.ps1, and a Windows project's commands will mostly be .ps1.
+  GameBrake marked it "worth sending upstream", and it never arrived.
+- Bootstrap's Environment facts step. GameBrake needed a key the block does not
+  name (pack). "none" carries two meanings, not applicable (typecheck in C#) and
+  not set up (lint), which GameBrake had to separate with comments. dsh filled
+  test with scripts/check.sh and made "check.sh green" an acceptance criterion,
+  though that script checks the framework's layout and cannot fail for any
+  defect in the project.
+- Promotion candidates, under the rule in Recent Decisions:
+  - The platform rule has its second project. dsh's GOTCHAS.md holds OpenSSL in
+    Git Bash ending its output with CRLF, and Docker Desktop bind mounts
+    ignoring file modes, so a permission failure cannot be reproduced on
+    Windows. GameBrake's holds a Windows path losing a level of escaping
+    through an inline heredoc. Still one platform.
+  - The count rule and the restatement rule exist only in this repository's
+    METHOD.md, so no project has received them. GameBrake's STATE.md and
+    READMEs carry test counts nothing keeps in step, and it recorded that as a
+    gap itself. TempTime arrived independently at "a key is computed by the
+    code that colours, never restated".
+  - GameBrake's "Read memory and git state from disk before acting on it". The
+    opening context was a snapshot several commits behind, and an answer given
+    from it was confidently false. It describes this framework's loading
+    mechanism, not GameBrake.
+- `diff source/METHOD.md ../TempTime/METHOD.md` shows what TempTime learned
+  after the copy was taken. The verification-shaped part: aim the scenario as
+  well as the sabotage; give a selective change a neighbour it must not touch;
+  fixtures share their author's assumptions where one real file does not;
+  confirm a deploy with something only the new build does; a probe through
+  someone else's server spends their budget. Several have a counterpart in
+  GameBrake, which is the cross-project evidence kit/ asks for.
 - Design controls for the rules labelled `Rationale:` in
   kit/skills/verification.md — they are the ones no incident has tested.
-- Settle the two loading questions below by opening the tools, not by reading
-  more documentation about them.
+- Settle the Kimi Code question below by opening the tool, not by reading more
+  documentation about it.
 
 ## Open Questions
 
@@ -56,63 +89,70 @@ every rule in kit/skills/ came from the methodology, which was never true.
   with no other configuration, which is the observation to reproduce. Note
   that the brand group is documented as mutually exclusive, so a `.kimi/`
   directory would take over from `.claude/` rather than supplement it.
-- DeepSeek Harness is believed to need no entry file, because its
-  agent-instructions plugin is documented as loading AGENTS.md and CLAUDE.md
-  by itself. That is read from its config catalogue and has not been watched
-  happening. It is the same shape as the Kimi Code question and settles the
-  same way: open it in a project carrying AGENTS.md and see whether the
-  contents arrive.
+- DeepSeek Harness loads AGENTS.md and not the memory. Read on 2026-10-01 in
+  the README of @deepseek-ai/dsh-agent-instructions 0.2.0-rc.2, its instruction
+  loader: it loads AGENTS.md and CLAUDE.md, plus .local overlays, in every
+  directory from the project root down to the working directory; adds nested
+  ones once a file beneath them is touched; caps the whole at a byte budget,
+  65,536 by default, by dropping broader files first; and does not interpret
+  @path imports. So it needs no entry file, and METHOD.md, STATE.md and
+  GOTCHAS.md never load there. The one lever the loader offers is its
+  instructionFileCandidates list, which could name the memory files, but that
+  lives in the user's DSH profile rather than in the project, so the framework
+  cannot ship it. Untried. All of this is read, not watched.
+- Every tool entry except Claude Code's reaches AGENTS.md only by asking the
+  agent to open it. Cursor's alwaysApply loads the pointer, not the file it
+  points at. That is the same request the rejected memory patch made, and the
+  agent ignored it there, so whether those tools ever get AGENTS.md is now
+  doubtful rather than merely unobserved. None of the five has been opened.
+- Memory is written on request only. LearningProject reversed that for its own
+  template, because a quota running out mid-conversation leaves no moment to
+  ask, and the next agent starts from whatever was last written. A SparkForge
+  project whose user switches tools for the same reason has the same exposure.
+- Bootstrap puts the spec into STATE.md, which is replaced as work moves on,
+  yet a spec is a contract that stays. GameBrake's STATE.md still carries its
+  whole v1 spec after v1 shipped, and its memory files together are already
+  past half of DeepSeek Harness's default budget.
 
 ## Unverified
 
-This repository does not contain the situations these rules describe, so none
-of them has ever been walked. The first real project ticks this list off.
+Rules no project has walked yet. GameBrake walked shape over presence (an exact
+key set caught a serialised property that could not be read back), what a green
+run covers (the suite ran Debug output while a published single file shipped),
+and translated documentation (check.sh refused a translated fence), so those
+are off the list.
 
 - A UI that can be driven — selectors, text scoping, stale coordinates,
   waiting on a loaded-only signal, which render variant is mounted.
-- A test suite — what a green run covers, shape over presence, thresholds
-  the codebase can defend.
+- A test suite — thresholds the codebase can defend.
 - A deployment, a network, a second machine — production numbers,
   transport floors, a toolchain version invisible in the diff.
 - Intermittent failure — measuring a rate, a flake beside your own change,
   fixing timing rather than retrying, rates differing across machines.
 - A scheduled job, an external service, concurrent writes, runtime logs —
   observation windows, credential provenance, who is awake, logging the call.
-- Live data, a timing-sensitive probe, subagents, translated documentation,
-  TEAM > 1, MODE sprint — rules and modes needing a project shaped for them.
+- Live data, a timing-sensitive probe, subagents, TEAM > 1, MODE sprint —
+  rules and modes needing a project shaped for them.
 
 Also, none of them rules:
 
-- The tier system has never been executed. MODE has been project throughout,
-  the T1/T2 degradation path has never been taken, and the tier tags are
-  annotation so far.
-- These components have zero executions: team-contract, evidence-reviewer.
-- bootstrap ran once, on the first install, and its six steps were followed in
-  order. It stopped at the spec gate for want of a requirement, which is the
-  hard rule about vague requirements firing rather than a fault. It also held
-  the distinction the environment block asks for, leaving the commands blank
-  for "not decided yet" rather than writing none, without being told to.
-- spec-gate has been entered but has produced nothing. It blocked at its first
-  step and the four artifacts it exists to produce — goals, non-goals,
-  acceptance criteria, the data and API contract — have still never been
-  written by it.
-- update-kit.sh has now run, but only against a throwaway upstream and a
-  throwaway project built for the occasion. It has never pulled a real change
-  from a real remote into a project that was using it, and the destructive
-  half — removing kit/ before replacing it — has never run over content
-  anyone would miss.
-- Four of the six tool entries work by putting a file where the tool is
-  expected to look and trusting it to obey the prose inside. Only the Claude
-  Code import and the Cursor alwaysApply flag are mechanisms the loader
-  itself honours. Claude Code's chain has now been watched carrying in a real
-  project — a session opened there knew the project's rules with nothing
-  pointed at it — but the other five entries have never been opened, and a
-  tool that silently ignores its entry looks exactly like one that has none.
-- The `@GOTCHAS.md` import in AGENTS.md has not been tested on its own. The
-  import mechanism works here, but that line is written correctly and
-  unproven. To settle it: put one recognisable line in template/GOTCHAS.md,
-  open a session, and see whether it arrives in context. That is a next-time
-  errand, not something to schedule.
+- The tier system has never been executed. MODE has been project and TEAM 1 in
+  every install, the T1/T2 degradation path has never been taken, and the tier
+  tags are annotation so far.
+- These components have no recorded execution in any project: team-contract,
+  evidence-reviewer.
+- bootstrap has run in all three projects and does not fire by itself; it is
+  asked for by name. In the first it stopped at the spec gate for want of a
+  requirement, which is the hard rule about vague requirements firing rather
+  than a fault.
+- spec-gate has produced its four artifacts in all three projects, and
+  GameBrake's run also recorded its assumptions as the second step asks. Every
+  recorded run was bootstrap's step 4. The gate has never been seen firing on
+  its own.
+- update-kit.sh has run only against a throwaway upstream and a throwaway
+  project built for the occasion. It has never pulled a real change from a real
+  remote into a project that was using it, and the destructive half — removing
+  kit/ before replacing it — has never run over content anyone would miss.
 - A candidate rule, not yet written: a rule's boundary only becomes visible
   the first time it is actually applied, and that boundary has to be written
   back or the next reader applies it too literally. Three instances so far —
@@ -127,14 +167,12 @@ Also, none of them rules:
   later by someone applying it. Keeping design-time decisions out is what
   stops the rule widening into "write down your edge cases", which would make
   it true of everything and useful for nothing.
-- The first install answered one of the three watch-for questions and left the
-  others standing. Bootstrap does not fire by itself: it had to be asked for by
-  name, and no entry file can change that, since the entries carry a pointer
-  and not a trigger. Whether anyone changes the title in AGENTS.md unprompted
-  is still unknown, because this reader was told to. Whether an agent reaches
-  for spec-gate on its own when it touches auth or a migration is untouched —
-  that project has no code yet. All three remain the shape of the same
-  candidate rule, and what it needs is still a different rule system.
+- Two of the three watch-for questions are still open. Whether anyone changes
+  the title in AGENTS.md unprompted is unknown: the first reader was told to,
+  and the other two installs left no record either way. Whether an agent reaches for spec-gate on its own when it touches
+  auth or a migration is unanswered: GameBrake touched neither, and dsh's whole
+  subject is auth and secrets but its gate ran inside bootstrap. Both remain
+  the shape of the same candidate rule.
 
 ## Known Annoyances
 
@@ -155,7 +193,25 @@ Also, none of them rules:
 - The README also restates the project layout, the bootstrap procedure and
   the execution record of several components, and nothing diffs any of them
   against the files they describe. They are checked by hand when someone
-  remembers to, which is how all three went false at once.
+  remembers to, which is how all three went false at once. Two are false now:
+  its maturity section says nothing has crossed the spec gate, and it says
+  memory loads by itself, which is not so in DeepSeek Harness. The second is
+  deliberately left out of the README; see Recent Decisions.
+- Reading a file under template/ makes Claude Code load template/CLAUDE.md
+  and its import chain into the session working on this repository. That
+  brings in a second AGENTS.md titled "# SparkForge", whose rules include not
+  editing kit/, which is this repository's whole job. Watched on 2026-10-01,
+  which also settled that the @GOTCHAS.md import works. DeepSeek Harness
+  documents the same nested loading. LearningProject hit it with its own
+  template and put a guard at the top of the template's AGENTS.md.
+- Claude Code drops HTML comments from a file it loads through an import, so
+  the comment at the top of this file is not in the session's opening context
+  and is seen only when the file is opened to edit. That is when it is needed.
+- Nothing carries a finding upstream. GameBrake marked one for sending and it
+  never arrived, and for over a month this file and the README said nothing had
+  crossed the spec gate while GameBrake was finished. The return path is a
+  paragraph in AGENTS.md: a procedure that depends on someone remembering,
+  which is where every hole so far has been found.
 
 ## Recent Decisions
 
@@ -183,6 +239,9 @@ in METHOD.md, or visible in the code itself, has been dropped from here.
   a check looks like it ought to catch something and cannot.
 - A rule earns a place in kit/ when its evidence spans more than one project
   and it describes the framework rather than a stack; otherwise it stays in
-  this repository's own METHOD.md. The platform rule is the open case — three
-  incidents, all on one platform and one toolchain. Promoting it needs a
-  second project to reproduce it.
+  this repository's own METHOD.md. The platform rule now meets the first half,
+  with dsh as its second project, though every instance is still on Windows.
+- Memory loading in tools that do not resolve @ imports stays unsolved rather
+  than patched with prose. The patch was built, measured, rejected and
+  reverted on 2026-10-01; the reasons are in METHOD.md. By the user's decision
+  the README does not carry this finding.

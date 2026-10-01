@@ -165,4 +165,30 @@ Ask what a document assumes about its reader, not only what it says.
 
 ## Anti-Patterns
 
-(empty)
+### Patching a loader gap with an instruction to open the files it skipped.  `[T0]`  `[2026-10-01]`
+
+Rejected, and measured rather than argued. Where a tool does not load
+something — DeepSeek Harness does not resolve the @ lines that bring in
+METHOD.md, STATE.md and GOTCHAS.md — the obvious patch is a paragraph in
+AGENTS.md telling the agent to open each file itself. The agent does not do it.
+The instruction asks for an action at the one moment nothing in the task
+prompts one, and a request that does not obviously need the project's rules is
+answered without them. Stronger wording and a more prominent position were both
+tried and changed nothing, so neither is the next thing to try.
+
+Something has to load the file without the agent's cooperation: a mechanism the
+loader itself honours, or content placed where it is already loaded. Where
+neither exists, say plainly that the file does not load in that tool, rather
+than shipping an instruction that reads like a fix.
+
+> Evidence: Simulated by giving Claude Code AGENTS.md as plain text through
+> --append-system-prompt, with no CLAUDE.md, Read allowed, and a marker rule in
+> METHOD.md that any reply written with it loaded would show. With the
+> paragraph at the end of the Memory section, 0 of 3 runs opened a file. Moved
+> to a section at the top, phrased as something to do before the first reply
+> even when the request looks too small to need it, 0 of 4. The control without
+> the paragraph behaved identically, and a positive control that asked for
+> METHOD.md outright did read it, so the probe could see a read when one
+> happened. The simulation ran Claude rather than DeepSeek's model, and put the
+> text in a system prompt where DeepSeek Harness delivers it as a user message
+> framed as guidance to use "when applicable", which is no stronger.
