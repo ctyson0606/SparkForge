@@ -81,6 +81,27 @@ result that has not answered the question.
 
 <!-- source: METHOD.md 94-100 -->
 
+### Aim the scenario as well as the sabotage.  `[T0]` `[2026-10-01]`
+
+Before trusting an assertion, name the configuration in which the code under
+test is necessary — the narrowest screen, the input with gaps, the case where
+nothing else would do the job — and assert there. A check that runs only where
+the feature is redundant passes whether or not the feature exists, and a
+sabotage run there passes too, which reads as the sabotage having missed.
+
+> Evidence: Two projects. A grid meant to narrow its columns on a phone was
+> checked at 390px, and a sabotage that froze the columns passed the whole
+> script: seven fixed-width days fit 390px anyway. At 320px the frozen grid
+> overflowed, and the same sabotage failed at once. In the other, an
+> acceptance criterion said a protected program had to be closed within two
+> seconds of its window appearing, and named notepad.exe, which on Windows 11
+> starts a stub that exits by itself while a different process owns the
+> window. Approved and reviewed, it would have been satisfied by the stub
+> disappearing while the window stayed open. Only running it showed that, and
+> the subject became a plain program nothing else closes.
+
+<!-- source: TempTime METHOD.md, after the copy in source/; promoted 2026-10-01 -->
+
 ### Confirm the sabotage landed before reading the result.  `[T0]`  `[2026-08-12]`
 
 An injection that silently did nothing and a check that correctly passes
@@ -329,3 +350,22 @@ diffed are a different problem and this rule does not reach them.
 > second copy left to drift.
 
 <!-- source: SparkForge METHOD.md; promoted 2026-10-01 -->
+
+### Fixtures you wrote share your assumptions; one real artefact does not.  `[T1]` `[2026-10-01]`
+
+A synthetic suite proves the cases its author thought of, because the same
+head wrote the code and the cases. Before concluding that the code is fine and
+the problem is elsewhere, run it on one real input from the world it will
+meet: the user's actual file, the real program, the production record.
+
+> Evidence: Two projects. Asked why a calendar import did nothing, seven
+> synthetic .ics files covering every shape that seemed to matter all passed,
+> and the conclusion drawn was that the parser was fine. The user's actual
+> export threw on its first recurrence rule, on a property none of the seven
+> used. In the other, a tool that ends chosen programs passed every test
+> against a plain system program and did nothing to the game it was built for:
+> under that game's anti-cheat the process listing it relied on reports no
+> path, and the watcher discarded every start it could not name. Only running
+> the real game found it.
+
+<!-- source: TempTime METHOD.md, after the copy in source/; promoted 2026-10-01 -->

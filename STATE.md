@@ -52,12 +52,15 @@ projects, the other two in none.
   on 2026-10-01 every one of them still matched its tests. The day one of them
   is found wrong is the second project.
 - `diff source/METHOD.md ../TempTime/METHOD.md` shows what TempTime learned
-  after the copy was taken. The verification-shaped part: aim the scenario as
-  well as the sabotage; give a selective change a neighbour it must not touch;
-  fixtures share their author's assumptions where one real file does not;
-  confirm a deploy with something only the new build does; a probe through
-  someone else's server spends their budget. Several have a counterpart in
-  GameBrake, which is the cross-project evidence kit/ asks for.
+  after the copy was taken. Of its verification-shaped rules, aiming the
+  scenario and fixtures sharing their author's assumptions are now in kit, each
+  with a GameBrake incident beside TempTime's. Three wait for a second
+  incident. A selective change needing a neighbour it must not touch:
+  GameBrake built one in (AC6) but nothing ever went wrong there. Confirming a
+  deploy with something only the new build does: no other project has deployed
+  and checked. A probe spending someone else's budget: GameBrake's e2e script
+  overwrites the real config, and dsh's test stacks share one volume, but
+  neither has recorded any damage, which is the bar the count rule was held to.
 - Design controls for the rules labelled `Rationale:` in
   kit/skills/verification.md — they are the ones no incident has tested.
 - Settle the Kimi Code question below by opening the tool, not by reading more
