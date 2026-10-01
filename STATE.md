@@ -46,12 +46,11 @@ projects, the other two in none.
   not reach GameBrake, and dsh keeps check.sh as its test command. The
   Environment facts comment in AGENTS.md has the same standing, by design,
   since AGENTS.md belongs to the project.
-- Promotion candidates, under the rule in Recent Decisions:
-  - The count rule and the restatement rule exist only in this repository's
-    METHOD.md, so no project has received them. GameBrake's STATE.md and
-    READMEs carry test counts nothing keeps in step, and it recorded that as a
-    gap itself. TempTime arrived independently at "a key is computed by the
-    code that colours, never restated".
+- The count rule is not yet promotable, and should not be promoted early: its
+  only incidents are this repository's. GameBrake's STATE.md and READMEs carry
+  test counts nothing keeps in step, and GameBrake recorded that as a gap, but
+  on 2026-10-01 every one of them still matched its tests. The day one of them
+  is found wrong is the second project.
 - `diff source/METHOD.md ../TempTime/METHOD.md` shows what TempTime learned
   after the copy was taken. The verification-shaped part: aim the scenario as
   well as the sabotage; give a selective change a neighbour it must not touch;
@@ -228,7 +227,8 @@ in METHOD.md, or visible in the code itself, has been dropped from here.
   this repository's own METHOD.md. Promoting one moves it: the kit copy holds
   the rule and the evidence, and the entry here shrinks to a pointer, so there
   is never a second copy to drift. The platform rule went first, on evidence
-  from TempTime, dsh and this repository, every instance of it on Windows.
+  from TempTime, dsh and this repository, every instance of it on Windows;
+  then the restatement rule, on this repository and TempTime.
 - Memory loading in tools that do not resolve @ imports stays unsolved rather
   than patched with prose. The patch was built, measured, rejected and
   reverted on 2026-10-01; the reasons are in METHOD.md. By the user's decision

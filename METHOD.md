@@ -121,23 +121,12 @@ its root excludes.
 
 ### A restatement is a copy, and nothing keeps an unguarded copy true.  `[T1]`  `[2026-08-20]`
 
-Where something has to be said in a second place, there are three outcomes and
-only two of them are chosen. Point at the original and state nothing. Restate
-it and add something that diffs the two. Or restate it and find out later.
-
-The test is whether the restatement can be compared mechanically against what
-it describes. A layout, a numbered procedure, a recorded status: each of those
-is diffable against the thing itself, so a copy of one that nothing diffs is
-already waiting to go false. Copies that cannot be diffed are a different
-problem and this rule does not reach them.
-
-> Evidence: A README restated the project layout, the bootstrap procedure and
-> one component's execution record. All of them were false within four commits,
-> and every change that falsified one reported nothing. The same repository
-> holds the other two answers: the agent tools line exists twice because the
-> tool reads the stub rather than the canonical file, and a check diffs the
-> copies; and memory-update.md refuses the copy outright, on the stated grounds
-> that a second copy would drift from the first.
+Promoted on 2026-10-01 to template/kit/skills/verification.md, once TempTime
+had reproduced it with a code comment that went false; the rule and its
+evidence live there now. What stays here is this repository's own two examples
+of the outcomes that work: the agent tools line exists twice because the tool
+reads the stub rather than the canonical file, and a check diffs the copies;
+and memory-update.md refuses to restate METHOD.md's classification at all.
 
 ### What the instructions were written in becomes a requirement nobody stated.  `[T1]`  `[2026-08-23]`
 

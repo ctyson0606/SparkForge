@@ -305,3 +305,27 @@ where that has not happened.
 > file with every permission set.
 
 <!-- source: SparkForge METHOD.md; promoted 2026-10-01 -->
+
+### A restatement is a copy, and nothing keeps an unguarded copy true.  `[T1]` `[2026-08-20]`
+
+Where something has to be said in a second place, there are three outcomes and
+only two of them are chosen. Point at the original and state nothing. Restate
+it and add something that diffs the two. Or restate it and find out later.
+
+The test is whether the restatement can be compared mechanically against what
+it describes. A layout, a numbered procedure, a recorded status, what a piece
+of code does: each of those is diffable against the thing itself, so a copy of
+one that nothing diffs is already waiting to go false. Copies that cannot be
+diffed are a different problem and this rule does not reach them.
+
+> Evidence: Two projects. A README restated its project's layout, its setup
+> procedure and one component's execution record; all three were false within
+> four commits, and no change that falsified one reported anything. In the
+> other, a code comment said the top step of a colour scale meant everyone had
+> answered, and the arithmetic stopped delivering that above five people, so
+> six of seven and seven of seven drew the same colour — the one answer the
+> page existed to show. The fix there was the first outcome: the legend's
+> labels are now computed by the function that colours a cell, so there is no
+> second copy left to drift.
+
+<!-- source: SparkForge METHOD.md; promoted 2026-10-01 -->
