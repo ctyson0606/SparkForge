@@ -233,7 +233,7 @@ this repository records the detail, and what has still never been exercised.
 | 🔍 `diagnosis.md` | ✅ Same — extracted from a working methodology, not written from spec. |
 | 💾 `memory-update.md` | ✅ Same. Writing memory as you go was measured before it shipped: with nothing said about memory, the agent recorded what came next, and under the old rule it did not. |
 | ✅ `check.sh` | ✅ Runs, and has caught real holes, in this repository and in a project using it. |
-| 🔄 `update-kit.sh` | 🟡 Has pulled a real change from the real remote into all three projects. That was the old version; the current one, which carries the scripts with `kit/` and replaces itself mid-run, has run end to end only against a throwaway upstream. |
+| 🔄 `update-kit.sh` | ✅ Has pulled real changes from the real remote into all three projects, the current version included: it carries the scripts with `kit/` and replaced itself mid-run in each. It has never yet run over a `kit/` someone had edited locally. |
 | 🚪 The tool entry files | 🟡 Claude Code's is an import its loader honours, and it has been watched carrying a real project's rules into a session. The others work by asking the agent to open `AGENTS.md`, the kind of request an experiment here found agents ignoring. None of them has been opened. |
 | 📐 `SPEC.md` | 🟡 New. All three projects keep their spec there, moved in by hand; the spec gate has not yet written one itself. |
 | 🚪 `spec-gate.md` | 🟡 Written from spec. It has produced its four artifacts in all three projects, each time as bootstrap's fourth step. It has never been seen firing on its own. |
