@@ -38,6 +38,14 @@ projects, the other two in none.
 
 ## Next Steps
 
+- The user is about to run a project with TEAM > 1 for the first time, which
+  team-contract has never seen. Read on 2026-10-01, it only asks for a contract
+  reference and a file-ownership list, and says neither where that list is
+  written nor anything about memory: every rule in memory-update.md assumes one
+  writer, and STATE.md is replaced on each write, so two people's agents
+  writing as they go on separate branches meet as a merge conflict in it.
+  Waiting on the user for the project's shape: how many people, one repository
+  or several, branches, which agent tools.
 - Memory does not load in DeepSeek Harness; see Open Questions. Unsolved. The
   obvious patch is rejected in METHOD.md, Anti-Patterns.
 - The three installed projects are at 0.2.1. They were brought to 0.2.0 on
