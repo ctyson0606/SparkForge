@@ -15,6 +15,7 @@ my-project/
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── GEMINI.md
+├── SPEC.md
 ├── METHOD.md
 ├── STATE.md
 ├── GOTCHAS.md
@@ -43,6 +44,7 @@ my-project/
 | ⚙️ `AGENTS.md` | 入口，也是唯一做路由的文件。放 `MODE`、`TEAM`、你这个项目的环境命令、硬规则，以及把 agent 导向某个 skill 的那张表。 |
 | 🚪 各工具的入口文件 | `CLAUDE.md`、`GEMINI.md`、`.clinerules`、`.windsurfrules`、`.cursor/rules/`、`.github/`。每一个都只说一件事：先读 `AGENTS.md`。详见下一节。 |
 | 🗂️ `kit/entry-points.txt` | 那些入口文件的清单。两支检查器都读它，所以一个工具不会在这里有、在那里漏。 |
+| 📐 `SPEC.md` | 批准过的契约：目标、非目标、验收条件、数据和 API 的格式。只能通过规格门修改，所以不会随着状态更新被清掉。 |
 | 🧠 `METHOD.md` | 这个项目自己挣来的长效规则。**开始是空的，而且会一直空着**，直到真的踩到坑才填。 |
 | 📌 `STATE.md` | 当前工作状态。整份替换，绝不往后追加。 |
 | 🐛 `GOTCHAS.md` | 绑定版本的陷阱，每条都有日期。依赖消失后可以随手删掉。 |
@@ -129,14 +131,14 @@ bash：
 3. 一项一项把环境命令填进去。如果这个项目真的没有某个命令，它会写 `none` ——
    缺席本身就是一项发现，不是一格空白。
 4. 按 `MODE` 选定的深度跑一次规格门。
-5. 把结果写进 `STATE.md` 的 `Current Focus`。
+5. 把结果写进 `SPEC.md`，并在 `STATE.md` 的 `Current Focus` 注明先做哪一部分。
 6. **让 `METHOD.md` 保持空白。** 这是硬规则。规则要从项目真正踩到的坑挣来，
    绝不能事先用猜的。
 
 ## 🧭 日常使用
 
-记忆会自己载入：入口文件导入 `AGENTS.md`，后者再导入 `METHOD.md`、`STATE.md`
-和 `GOTCHAS.md`。每个 session 一开场，这个项目学到的所有东西都已经在 context
+记忆会自己载入：入口文件导入 `AGENTS.md`，后者再导入 `SPEC.md`、`METHOD.md`、
+`STATE.md` 和 `GOTCHAS.md`。每个 session 一开场，这个项目学到的所有东西都已经在 context
 里了。
 
 | 当你正在… | 读这份 | 一句话版本 |
@@ -177,7 +179,7 @@ bash：
 ## 🔄 更新
 
 ```bash
-# 从上游覆盖 kit/。METHOD.md、STATE.md、GOTCHAS.md
+# 从上游覆盖 kit/。SPEC.md、METHOD.md、STATE.md、GOTCHAS.md
 # 以及 AGENTS.md 的每一个段落都是你的，永远不会被碰
 scripts/update-kit.sh
 

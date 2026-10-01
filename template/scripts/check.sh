@@ -23,7 +23,7 @@ na()   { echo "n/a   $1"; }
 
 # --- required files -------------------------------------------------------
 REQUIRED=(
-  AGENTS.md METHOD.md STATE.md GOTCHAS.md
+  AGENTS.md SPEC.md METHOD.md STATE.md GOTCHAS.md
   .gitattributes kit/VERSION kit/entry-points.txt
   scripts/check.sh scripts/update-kit.sh
 )

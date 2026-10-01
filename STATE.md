@@ -94,10 +94,6 @@ projects, the other two in none.
   points at. That is the same request the rejected memory patch made, and the
   agent ignored it there, so whether those tools ever get AGENTS.md is now
   doubtful rather than merely unobserved. None of the five has been opened.
-- Bootstrap puts the spec into STATE.md, which is replaced as work moves on,
-  yet a spec is a contract that stays. GameBrake's STATE.md still carries its
-  whole v1 spec after v1 shipped, and its memory files together are already
-  past half of DeepSeek Harness's default budget.
 
 ## Unverified
 
@@ -164,6 +160,11 @@ Also, none of them rules:
 
 - The working tree's file mode is not real here, so an executable bit has to
   be set with `git update-index --chmod=+x` rather than `chmod`.
+- `grep -c $'\r'` cannot be trusted as a carriage-return count on this
+  machine. On 2026-10-01 it reported every line of LF-only files as matching,
+  where od, file and git's eol listing all showed none, and earlier the same
+  day it had printed 0 for files of the same kind. Ask `git ls-files --eol`,
+  which reads the index too, or `file`, which was shown to flag a real CRLF.
 - `template/.gitattributes` cannot be verified in place, because the root
   file's attributes are inherited by everything under it. The checker copies
   it to a throwaway repository to get an answer that can differ.
@@ -262,3 +263,14 @@ in METHOD.md, or visible in the code itself, has been dropped from here.
   probe has to avoid the words the classification keys on. Unlike opening a
   file at session start, the write comes at a moment the work itself produces.
   Only Claude Code has been watched doing it.
+- The spec lives in its own SPEC.md, decided on 2026-10-01. Bootstrap used to
+  put it into STATE.md, which is replaced as work moves while a spec is a
+  contract that stays, so neither rule could be followed: GameBrake's STATE.md
+  still carried its whole v1 spec after v1 shipped, and its memory files
+  together were past half of DeepSeek Harness's default budget. SPEC.md is
+  imported every session like the memory files, because asking the agent to
+  open it when needed is the anti-pattern in METHOD.md; the cost is that the
+  spec still takes context, and what this buys is a STATE.md that can be
+  cleared. It changes only through the spec gate, never as you go. Projects
+  already installed keep their spec in STATE.md until moved by hand: SPEC.md,
+  its import and the bootstrap step are all outside kit/ or ran once already.

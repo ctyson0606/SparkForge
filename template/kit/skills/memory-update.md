@@ -29,7 +29,9 @@ to date at once.
 
 This section decides when to write, not what. The classification in METHOD.md
 decides what, and much of what changes in a session is already recorded by the
-repository and belongs in no memory file.
+repository and belongs in no memory file. SPEC.md is not memory and is never
+written as you go: it changes only through the spec gate, with a person's
+approval.
 
 On each write:
 

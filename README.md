@@ -16,6 +16,7 @@ my-project/
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── GEMINI.md
+├── SPEC.md
 ├── METHOD.md
 ├── STATE.md
 ├── GOTCHAS.md
@@ -44,6 +45,7 @@ my-project/
 | ⚙️ `AGENTS.md` | The entry point, and the only file that routes. Holds `MODE`, `TEAM`, your project's environment commands, the hard rules, and the table that sends the agent to a skill. |
 | 🚪 The per-tool entry files | `CLAUDE.md`, `GEMINI.md`, `.clinerules`, `.windsurfrules`, `.cursor/rules/`, `.github/`. Each says one thing: read `AGENTS.md` first. See below. |
 | 🗂️ `kit/entry-points.txt` | The list of those entry files. Both checkers read it, so a tool cannot be covered in one place and missed in another. |
+| 📐 `SPEC.md` | The approved contract: goals, non-goals, acceptance criteria, the data and API shapes. Changed only through the spec gate, so it outlives every state change. |
 | 🧠 `METHOD.md` | Durable rules this project earned. **Starts empty and stays empty** until a real trap fills it. |
 | 📌 `STATE.md` | Current working state. Replaced wholesale, never appended to. |
 | 🐛 `GOTCHAS.md` | Version-bound traps, each dated. Delete freely once the dependency is gone. |
@@ -135,14 +137,15 @@ still empty, and it will:
 3. Fill in the environment commands one by one. Where the project genuinely has
    no such command it writes `none` — an absence is a finding, not a blank.
 4. Run the spec gate at the depth `MODE` selects.
-5. Write the result into `Current Focus` in `STATE.md`.
+5. Write the result into `SPEC.md`, and point `Current Focus` in `STATE.md` at
+   the part being built first.
 6. **Leave `METHOD.md` empty.** This is a hard rule. Rules are earned from traps
    the project actually hits, never guessed in advance.
 
 ## 🧭 Daily use
 
 Memory loads itself: the entry file imports `AGENTS.md`, which imports
-`METHOD.md`, `STATE.md` and `GOTCHAS.md`. Every session opens with everything
+`SPEC.md`, `METHOD.md`, `STATE.md` and `GOTCHAS.md`. Every session opens with everything
 the project has learned already in context.
 
 | When you are… | Read | The one-line version |
@@ -187,7 +190,7 @@ missing.
 ## 🔄 Updating
 
 ```bash
-# Overwrites kit/ from upstream. METHOD.md, STATE.md, GOTCHAS.md
+# Overwrites kit/ from upstream. SPEC.md, METHOD.md, STATE.md, GOTCHAS.md
 # and every section of AGENTS.md are yours, and are never touched
 scripts/update-kit.sh
 

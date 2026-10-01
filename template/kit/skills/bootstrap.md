@@ -22,7 +22,8 @@ Runs only when METHOD.md and STATE.md are both still empty shells. Runs once.
 3. Ask for or infer the Environment facts and fill them in one by one,
    following the comment beneath that block in AGENTS.md.
 4. Run the spec gate at the depth MODE selects.
-5. Write what the spec gate produced into Current Focus in STATE.md.
+5. Write what the spec gate produced into SPEC.md, and point Current Focus in
+   STATE.md at the part being built first.
 6. Leave METHOD.md empty.
 
 Step 6 is a hard rule. METHOD.md grows from the traps this project actually

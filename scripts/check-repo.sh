@@ -38,6 +38,17 @@ done
 if [ -n "$bad" ]; then fail "template memory files carry content${bad}"
 else pass "template memory files are still empty shells"; fi
 
+# --- the shipped SPEC.md has nothing under its headings -------------------
+# A spec is not written in the grammar the check above looks for: it is plain
+# lines under ## headings, so that check would pass a filled-in SPEC.md. Here
+# the shell is held to its own shape instead: everything after the first ##
+# heading is a heading or blank.
+hit="$(awk '/^## /{p=1; next} p && NF {print FNR": "$0; exit}' \
+      "$ROOT/template/SPEC.md" 2>/dev/null)"
+if [ ! -f "$ROOT/template/SPEC.md" ]; then fail "template SPEC.md is missing"
+elif [ -n "$hit" ]; then fail "template SPEC.md carries content: $hit"
+else pass "template SPEC.md is still an empty shell"; fi
+
 # --- this repository's own tool entry points ------------------------------
 # The shipped checker reads template/kit/entry-points.txt and applies it to the
 # template. SparkForge uses the same arrangement at its own root, and that copy

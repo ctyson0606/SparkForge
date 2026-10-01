@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Pull the latest framework content from upstream and overwrite kit/ with it.
 #
-# Nothing outside kit/ is written. METHOD.md, STATE.md, GOTCHAS.md and every
-# section of AGENTS.md — Declarations and Environment facts included — are this
-# project's own and are never touched by this script.
+# Nothing outside kit/ is written. SPEC.md, METHOD.md, STATE.md, GOTCHAS.md
+# and every section of AGENTS.md — Declarations and Environment facts
+# included — are this project's own and are never touched by this script.
 #
 # For a project that consumes this framework the upstream is SparkForge
 # itself, so that is the default. Fork it and set SPARKFORGE_UPSTREAM to point
