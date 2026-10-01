@@ -40,17 +40,21 @@ projects, the other two in none.
 
 - Memory does not load in DeepSeek Harness; see Open Questions. Unsolved. The
   obvious patch is rejected in METHOD.md, Anti-Patterns.
-- The three installed projects are behind on everything done on 2026-10-01,
-  and only part of it can reach them through update-kit.sh. The scripts now
-  live in kit/scripts/ behind one-line stubs in scripts/, so update-kit.sh
-  carries them; that was run end to end against a scratch upstream and
-  project, on Windows, with the updater replacing its own file mid-run from a
-  copy it made first. But each project still has the old full scripts, which
-  know nothing of kit/scripts/, so the stubs have to be copied in once by
-  hand. So do the AGENTS.md changes (the write-as-you-go hard rule, the
-  Environment facts comment, the SPEC.md import), SPEC.md itself, and moving
-  GameBrake's spec out of its STATE.md: AGENTS.md and the memory files belong
-  to the project, by design.
+- The three installed projects were brought to 0.2.0 on 2026-10-01 and each
+  committed on its own main, not yet pushed. kit/ came through each project's
+  own update-kit.sh from GitHub over SSH; the rest was copied in once by hand,
+  and each spec moved out of STATE.md into SPEC.md, checked line for line.
+  collect-upstream.sh reports all three current. One thing is left to dsh's
+  own spec gate: its acceptance criterion 5 still names scripts/check.sh,
+  which the framework now rules out, and changing it needs approval.
+- update-kit.sh hangs instead of failing when the upstream needs a login. Its
+  default upstream is the HTTPS URL, chosen because a reader may have no SSH
+  key; on 2026-10-01, run from GameBrake against this repository on GitHub, the
+  clone sat behind Git Credential Manager waiting for a login nobody could
+  give, until it was killed after three minutes. Nothing had been touched yet,
+  since the clone comes first. An agent cannot answer that prompt, so the
+  clone should refuse to ask (GIT_TERMINAL_PROMPT=0, GCM_INTERACTIVE=never)
+  and say what to pass instead. The migration that day passed the SSH URL.
 - The count rule is not yet promotable, and should not be promoted early: its
   only incidents are this repository's. GameBrake's STATE.md and READMEs carry
   test counts nothing keeps in step, and GameBrake recorded that as a gap, but
@@ -135,10 +139,12 @@ Also, none of them rules:
   GameBrake's run also recorded its assumptions as the second step asks. Every
   recorded run was bootstrap's step 4. The gate has never been seen firing on
   its own.
-- update-kit.sh has run only against a throwaway upstream and a throwaway
-  project built for the occasion. It has never pulled a real change from a real
-  remote into a project that was using it, and the destructive half — removing
-  kit/ before replacing it — has never run over content anyone would miss.
+- update-kit.sh pulled a real change from the real remote into all three
+  projects on 2026-10-01, but it was each project's old copy that ran. The
+  current one, which copies itself out before replacing kit/, has run only
+  against a throwaway upstream. The destructive half has now run in real
+  projects, over kits nobody had edited, so it has still never run over
+  content anyone would miss.
 - A candidate rule, not yet written: a rule's boundary only becomes visible
   the first time it is actually applied, and that boundary has to be written
   back or the next reader applies it too literally. Three instances so far —
