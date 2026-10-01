@@ -84,8 +84,8 @@ projects, the other two in none.
   directory from the project root down to the working directory; adds nested
   ones once a file beneath them is touched; caps the whole at a byte budget,
   65,536 by default, by dropping broader files first; and does not interpret
-  @path imports. So it needs no entry file, and METHOD.md, STATE.md and
-  GOTCHAS.md never load there. The one lever the loader offers is its
+  @path imports. So it needs no entry file, and SPEC.md, METHOD.md, STATE.md
+  and GOTCHAS.md never load there. The one lever the loader offers is its
   instructionFileCandidates list, which could name the memory files, but that
   lives in the user's DSH profile rather than in the project, so the framework
   cannot ship it. Untried. All of this is read, not watched.
@@ -209,8 +209,7 @@ Also, none of them rules:
   read GameBrake's STATE.md. For over a month before that, this file and the
   README said nothing had crossed the spec gate while GameBrake was finished.
   The return path is a paragraph in AGENTS.md: a procedure that depends on
-  someone remembering,
-  which is where every hole so far has been found.
+  someone remembering, which is where every hole so far has been found.
 
 ## Recent Decisions
 
