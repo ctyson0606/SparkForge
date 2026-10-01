@@ -30,5 +30,9 @@ against `template/` first, then the checks that belong only to this repository.
 
 ## Memory
 
+This repository's memory is written as you go, the moment state changes and
+not when asked, by template/kit/skills/memory-update.md. A session can stop
+without warning, and what was not written is lost with it.
+
 @METHOD.md
 @STATE.md

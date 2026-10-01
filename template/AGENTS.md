@@ -37,6 +37,9 @@ e2e:
   METHOD.md, STATE.md and GOTCHAS.md. Talking to the user, and the README,
   follow whatever language they ask for. A memory file that accumulated in
   two languages is what this prevents, and it only accumulates.
+- Write memory as you go, not when asked: the moment state changes, by
+  kit/skills/memory-update.md. The memory files are always in scope. A session
+  can stop without warning, and what was not written is lost with it.
 
 ## Tiers
 T0  free — do it under any time pressure

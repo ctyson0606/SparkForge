@@ -101,10 +101,6 @@ projects, the other two in none.
   points at. That is the same request the rejected memory patch made, and the
   agent ignored it there, so whether those tools ever get AGENTS.md is now
   doubtful rather than merely unobserved. None of the five has been opened.
-- Memory is written on request only. LearningProject reversed that for its own
-  template, because a quota running out mid-conversation leaves no moment to
-  ask, and the next agent starts from whatever was last written. A SparkForge
-  project whose user switches tools for the same reason has the same exposure.
 - Bootstrap puts the spec into STATE.md, which is replaced as work moves on,
   yet a spec is a contract that stays. GameBrake's STATE.md still carries its
   whole v1 spec after v1 shipped, and its memory files together are already
@@ -242,3 +238,19 @@ in METHOD.md, or visible in the code itself, has been dropped from here.
   than patched with prose. The patch was built, measured, rejected and
   reverted on 2026-10-01; the reasons are in METHOD.md. By the user's decision
   the README does not carry this finding.
+- Memory is written as you go, all three files, the moment state changes —
+  reversed from request-only on 2026-10-01 by the user's decision, on
+  LearningProject's reason: a quota running out mid-conversation leaves no
+  moment to ask, and the next agent starts from whatever was last written. It
+  applies to this repository's memory as well. The trigger has to sit in
+  AGENTS.md's hard rules, since the skill is read only once memory is already
+  on the agent's mind. It is still prose asking for an unprompted action, the
+  shape METHOD.md's anti-pattern warns about, so it was measured. In a scratch
+  copy, Claude Code was asked to create a file and told what would come next
+  time, with nothing said about memory: under the new rule it wrote that next
+  step into STATE.md in 2 of 2 runs, under the old one in 0 of 2, one of which
+  said "noted for next time" and wrote nothing. A first prompt that called its
+  instruction "a decision for this project" made both versions write, so a
+  probe has to avoid the words the classification keys on. Unlike opening a
+  file at session start, the write comes at a moment the work itself produces.
+  Only Claude Code has been watched doing it.

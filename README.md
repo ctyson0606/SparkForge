@@ -151,7 +151,7 @@ the project has learned already in context.
 | 🧪 looking at a green test run | `kit/skills/verification.md` | A suite that passes on its first run is unverified, not correct. Break the code on purpose and confirm the right tests fail. |
 | 🔍 chasing a failure | `kit/skills/diagnosis.md` | An intermittent failure has a *rate*, and one run does not measure it. Check the harness before reading anything into a result. |
 | 👥 working with other people | `kit/skills/team-contract.md` | Agree once on the data/API contract and on who owns which directories. Nothing beyond that. |
-| 💾 asked to save memory | `kit/skills/memory-update.md` | Re-read the *whole* file, not the sections you touched. The stale line is never where you were working. |
+| 💾 writing memory | `kit/skills/memory-update.md` | Write the moment state changes, never at the end. Re-read the *whole* file first: the stale line is never where you were working. |
 
 ### 🚨 The spec gate is not optional here
 
@@ -161,16 +161,19 @@ service. Everywhere else it is a judgement call.
 
 ### 🧠 How memory behaves
 
-- ✍️ **Memory is written on request only.** The main conversation never writes on
-  its own — you have to ask. The one exception is a delegated subagent, which
-  writes when it finishes, because it holds context the main thread never sees.
+- ✍️ **Memory is written as you go.** The moment state changes — a step done, a
+  decision made, a finding, a trap hit — the agent writes it down, without being
+  asked and never saving it for the end, because a session can stop without
+  warning when a quota runs out or you switch tools. Asking still works: say so
+  and every file is brought up to date at once. A delegated subagent writes
+  before it returns, since its context is discarded with it.
 - 🔁 **`METHOD.md` accumulates.** Correct a rule in place rather than appending one
   that contradicts it. Deleting requires a stated reason.
 - 🧹 **`STATE.md` is replaced.** Anything no longer true is deleted, not archived.
   Git holds the history.
-- ⚡ **A claim your own change falsified gets fixed immediately**, without waiting
-  to be asked. Adding to the record is a request; keeping the record true is
-  part of the work.
+- ⚡ **A claim your own change falsified is fixed in the same step as the
+  change**, before moving on. Until then it will be believed. Keeping the record
+  true is part of the work.
 
 ### 🕵️ The evidence reviewer
 
