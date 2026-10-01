@@ -209,12 +209,19 @@ Also, none of them rules:
 - Claude Code drops HTML comments from a file it loads through an import, so
   the comment at the top of this file is not in the session's opening context
   and is seen only when the file is opened to edit. That is when it is needed.
-- Nothing carries a finding upstream. GameBrake marked one for sending and
-  never sent it; it reached this repository only because a survey went and
-  read GameBrake's STATE.md. For over a month before that, this file and the
-  README said nothing had crossed the spec gate while GameBrake was finished.
-  The return path is a paragraph in AGENTS.md: a procedure that depends on
-  someone remembering, which is where every hole so far has been found.
+- A finding still only reaches this repository when someone here goes to get
+  it. GameBrake marked one for sending and never sent it; it arrived only
+  because a survey read GameBrake's STATE.md, and for over a month before that
+  this file and the README said nothing had crossed the spec gate while
+  GameBrake was finished. Since 2026-10-01 a project writes such things under
+  Upstream in its STATE.md, and scripts/collect-upstream.sh lists that section
+  and whether kit/ is current for every project beside this repository. That
+  makes the survey one command rather than an hour of reading, and it was run
+  against the real projects and a scratch set covering current, behind, empty,
+  filled and missing. It does not make the survey happen: the root AGENTS.md
+  asks for it before choosing work, which is the depends-on-remembering shape
+  every hole so far has had. The three installed projects have no Upstream
+  section yet, so the collector reports them as predating it.
 
 ## Recent Decisions
 

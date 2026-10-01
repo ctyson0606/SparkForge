@@ -28,6 +28,13 @@ the stubs.
 Run `scripts/check-repo.sh` after any change. It runs the shipped checker
 against `template/` first, then the checks that belong only to this repository.
 
+## What the projects found
+
+`scripts/collect-upstream.sh` lists every project next to this repository that
+uses SparkForge: whether its kit/ matches template/kit/, and what it has
+written under Upstream in its STATE.md. Run it before choosing what to work on.
+Nothing else brings a project's findings here.
+
 ## Memory
 
 This repository's memory is written as you go, the moment state changes and

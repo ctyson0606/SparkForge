@@ -210,10 +210,14 @@ the full scripts in `scripts/`. Copy the two stubs from SparkForge's
 `template/scripts/` over them once. Until then the old copies keep running and
 the fixes that arrive in `kit/scripts/` are never used.
 
-Found an improvement while using it? Send it upstream instead of editing `kit/`
-locally. And when you do, read the `Unverified` block in the upstream
-`STATE.md` — 🏅 a rule your project has now actually walked is worth more than
-the improvement itself.
+📮 Found something that belongs to SparkForge rather than to your project — a
+rule that proved wrong, a check that missed, a script that broke? Don't edit
+`kit/` locally. The agent writes it under `Upstream` in your `STATE.md`, as it
+writes the rest of memory, and it stays there until upstream has it. A
+SparkForge checkout next to your projects reads that section from all of them
+with one command, `scripts/collect-upstream.sh`. 🏅 A framework rule your
+project was the first to actually walk belongs there too: it is worth more
+than most improvements.
 
 ## 🌡️ Maturity
 

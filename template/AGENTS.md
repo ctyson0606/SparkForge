@@ -87,10 +87,13 @@ SPEC.md, METHOD.md, STATE.md and GOTCHAS.md, which are never
 overwritten.
 scripts/check.sh verifies the invariants of this layout. Run it after
 any change to kit/, the stubs, or AGENTS.md itself.
-When sending an improvement upstream, review the Unverified block in
-the upstream STATE.md and tick off anything this project exercised.
-A rule that has now been walked is a finding worth more than the
-improvement itself.
+Anything that belongs to SparkForge rather than to this project — a
+rule that proved wrong or useless here, a check that missed something,
+a stub or script that did not work, a framework rule this project was
+the first to actually walk — goes under Upstream in STATE.md, written
+as you go like the rest of memory. Leave it there until upstream has
+it. That section is the only thing upstream reads from a project, and
+a note kept anywhere else is never found.
 
 ## Memory
 @SPEC.md

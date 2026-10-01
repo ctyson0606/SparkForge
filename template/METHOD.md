@@ -9,15 +9,17 @@ STATE.md.
 1. Part of the approved contract (goals,
    criteria, a data or API shape)?             -> SPEC.md, and only through
                                                   the spec gate
-2. Useful again in a future task?              -> METHOD.md
-3. Meaningless once this task closes?          -> STATE.md
-4. A decision?                                 -> principle to METHOD,
+2. About SparkForge itself rather than this
+   project (kit/, the stubs, the scripts)?     -> STATE.md -> Upstream
+3. Useful again in a future task?              -> METHOD.md
+4. Meaningless once this task closes?          -> STATE.md
+5. A decision?                                 -> principle to METHOD,
                                                   specific choice and its
                                                   situational reason to STATE
-5. Already recorded by the repo (code layout,
+6. Already recorded by the repo (code layout,
    git history, config files)?                 -> record nothing
-6. A rejected approach with a reason?          -> METHOD -> Anti-Patterns
-7. Tied to a specific library or tool version? -> GOTCHAS.md
+7. A rejected approach with a reason?          -> METHOD -> Anti-Patterns
+8. Tied to a specific library or tool version? -> GOTCHAS.md
 
 ## Update semantics
 
