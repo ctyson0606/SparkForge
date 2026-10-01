@@ -44,8 +44,12 @@ projects, the other two in none.
   written nor anything about memory: every rule in memory-update.md assumes one
   writer, and STATE.md is replaced on each write, so two people's agents
   writing as they go on separate branches meet as a merge conflict in it.
-  Waiting on the user for the project's shape: how many people, one repository
-  or several, branches, which agent tools. The user's people work at different
+  Paused by the user on 2026-10-01 with nothing built; the project's shape is
+  still unknown: how many people, one repository or several, branches, which
+  agent tools. The direction discussed, not decided: no separate framework,
+  one STATE file per person under TEAM > 1, METHOD.md and SPEC.md shared, the
+  ownership list in SPEC.md. Agents pushing memory themselves is open too,
+  since memory not pushed is invisible to the others. The user's people work at different
   times, not together, so the conflicts come from starting on a stale copy.
   Pulling before a session starts is an action at session start, the shape of
   METHOD.md's anti-pattern, so it needs a mechanism (a SessionStart hook in
