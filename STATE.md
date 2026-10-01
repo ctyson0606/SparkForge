@@ -189,7 +189,17 @@ Also, none of them rules:
   editing kit/, which is this repository's whole job. Watched on 2026-10-01,
   which also settled that the @GOTCHAS.md import works. DeepSeek Harness
   documents the same nested loading. LearningProject hit it with its own
-  template and put a guard at the top of the template's AGENTS.md.
+  template and put a guard at the top of the template's AGENTS.md. The same
+  guard was tried here and measured: asked after reading a template file
+  whether template/AGENTS.md's rules bound the session, Claude Code said no in
+  4 of 4 runs with the guard and 4 of 4 without, including with this note
+  removed. The "Two roots" section of the root AGENTS.md was what it reasoned
+  from. A local qwen3.6:27b, given the same files through Ollama and asked
+  whether a new skill belonged directly under template/kit/, answered
+  directly in 3 of 3 runs either way. deepseek-r1:32b was started and stopped
+  before it answered. No misbehaviour from the nested load has been seen, so
+  the guard was not added: it would ship into every project's AGENTS.md to
+  answer nothing measured.
 - Claude Code drops HTML comments from a file it loads through an import, so
   the comment at the top of this file is not in the session's opening context
   and is seen only when the file is opened to edit. That is when it is needed.
