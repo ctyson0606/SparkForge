@@ -27,10 +27,12 @@ while IFS= read -r version; do
   found=$((found + 1))
   echo "=== $project"
 
+  theirs="$(cat "$project/kit/VERSION" 2>/dev/null)"
+  ours="$(cat "$ROOT/template/kit/VERSION" 2>/dev/null)"
   if diff -rq "$project/kit" "$ROOT/template/kit" >/dev/null 2>&1; then
-    echo "kit/      current"
+    echo "kit/      current ($ours)"
   else
-    echo "kit/      behind or changed: differs from template/kit/ here"
+    echo "kit/      behind or changed: $theirs there, $ours here, and the contents differ"
   fi
 
   if [ ! -f "$project/STATE.md" ]; then

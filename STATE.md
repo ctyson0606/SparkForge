@@ -51,12 +51,6 @@ projects, the other two in none.
   Environment facts comment, the SPEC.md import), SPEC.md itself, and moving
   GameBrake's spec out of its STATE.md: AGENTS.md and the memory files belong
   to the project, by design.
-- kit/VERSION has said 0.1.0 since the first commit, through every change made
-  to kit/ on 2026-10-01, so update-kit.sh would report "0.1.0 -> 0.1.0" for an
-  update that changes most of the kit. Nothing obliges anyone to bump it, which
-  is why collect-upstream.sh compares contents instead. Either bump it as part
-  of any change to kit/, with something that notices when it was not, or stop
-  printing it as though it meant something.
 - The count rule is not yet promotable, and should not be promoted early: its
   only incidents are this repository's. GameBrake's STATE.md and READMEs carry
   test counts nothing keeps in step, and GameBrake recorded that as a gap, but

@@ -100,6 +100,24 @@ else
   else pass "every repository .sh is 100755 in the index"; fi
 fi
 
+# --- kit/VERSION moves whenever kit/ does ---------------------------------
+# update-kit.sh tells a project which version it replaced and which it brought,
+# and that line is the only sign the project gets of how much changed. It said
+# 0.1.0 through every change kit/ had ever had, because nothing made anyone
+# bump it. So a change under template/kit/ since the commit that last moved
+# VERSION has to come with a change to VERSION, in the same change.
+v="template/kit/VERSION"
+last="$(git -C "$ROOT" log -1 --format=%H -- "$v" 2>/dev/null)"
+if [ -z "$last" ]; then
+  fail "kit/VERSION: no commit has ever touched $v"
+elif ! git -C "$ROOT" diff --quiet HEAD -- "$v"; then
+  pass "kit/VERSION is being moved in this change ($(cat "$ROOT/$v"))"
+elif git -C "$ROOT" diff --quiet "$last" -- template/kit ":(exclude)$v"; then
+  pass "kit/VERSION covers every change to kit/ ($(cat "$ROOT/$v"))"
+else
+  fail "kit/ changed since kit/VERSION last moved (${last:0:7}); bump it in the same change"
+fi
+
 # --- this repository's own METHOD.md and READMEs --------------------------
 # The shipped checker reads only the template, so the root METHOD.md, written
 # in the same grammar, and the three READMEs at the root were checked by
