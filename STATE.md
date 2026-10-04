@@ -99,6 +99,14 @@ projects, the other two in none.
   user has used this: a LEARNING switch and bilingual notes written at
   decision time, each saying what was chosen, what was rejected, what it
   solves and what it costs.
+  First real install, agreed 2026-10-04: GameBrake, chosen because the user
+  knows it and its data is real, not because it tests the main unknown — it
+  has no development under way, so whether an agent writes status, ids and
+  translations unprompted waits for a project with work in progress. Plan:
+  update-kit from the local SparkForge path (the new commits are unpushed),
+  the hand-copied pieces, status lines backed by commands actually rerun,
+  and a spec-gate draft of milestones, components, Means and Try for the
+  user to approve before SPEC.md changes.
 - The user is about to run a project with TEAM > 1 for the first time, which
   team-contract has never seen. Read on 2026-10-01, it only asks for a contract
   reference and a file-ownership list, and says neither where that list is
