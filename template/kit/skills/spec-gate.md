@@ -18,10 +18,18 @@ Every new feature goes through three steps.
 3. Produce: goals, non-goals, acceptance criteria, and the data and API
    contract. Then stop and wait for human approval.
 
-Write each goal as `- G1: ...` and each acceptance criterion as `- AC1 (G1):
-...`, naming the goal or goals it serves in parentheses. The ids are what the
-progress page draws its lines from, and it draws no line it cannot read: a
-criterion that names no goal, and a goal no criterion names, are listed as gaps.
+Write each goal as `- G1: ...` and each acceptance criterion with two indented
+sub-items, approved with the spec:
+
+    - AC1 (G1): <the criterion>
+      - Means: <plain language: what this gives the user>
+      - Try: <how a person sees it work for themselves>
+
+Try may be repeated, one line per step; together the Try lines are the
+project's usage guide. The ids are what the progress page groups criteria by and
+attaches commits and next steps to. A criterion names the goal or goals it
+serves in parentheses; one that names none, or has no Means or Try, is listed
+there as a gap.
 
 ## MODE: sprint
 

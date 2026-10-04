@@ -92,12 +92,12 @@ overwritten.
 scripts/check.sh verifies the invariants of this layout. Run it after
 any change to kit/, the stubs, or AGENTS.md itself.
 scripts/progress.sh (Windows: `powershell -ExecutionPolicy Bypass -File
-scripts/progress.ps1`) opens a page built from SPEC.md, STATE.md and git: cards
-for the goals, the acceptance criteria with the evidence recorded for each, what
-changed since the last look and the next steps, joined by lines. When a commit
-or a Next Steps entry serves an acceptance criterion, name its id (AC3): the
-page draws its lines from ids and draws none it cannot read. It stores nothing,
-so it cannot go stale.
+scripts/progress.ps1`) opens a page built from SPEC.md, STATE.md and git: the
+goals as sections, each acceptance criterion as a card that opens to what it
+means, how to try it and the evidence recorded for it, plus what changed since
+the last look and the next steps. When a commit or a Next Steps entry serves an
+acceptance criterion, name its id (AC3): that puts it on that criterion's card
+and gives it a chip that jumps there. It stores nothing, so it cannot go stale.
 With TRANSLATION set, `scripts/progress.sh --untranslated` lists what lacks a
 translation in translations/<lang>.md.
 Anything that belongs to SparkForge rather than to this project — a
