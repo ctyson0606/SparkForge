@@ -1,6 +1,6 @@
 # STATE
 
-> Last updated: 2026-10-01
+> Last updated: 2026-10-04
 
 Current working state. Superseded content is deleted, not archived.
 For durable rules see METHOD.md.
@@ -38,6 +38,24 @@ projects, the other two in none.
 
 ## Next Steps
 
+- Build a progress page, decided with the user on 2026-10-04. Origin: at a
+  hackathon, without SparkForge, the user accepted AI suggestions until they
+  no longer knew what the demo did or how to run it. Phase 1, being built: a
+  command (scripts/progress.sh, scripts/progress.ps1 on Windows) that
+  generates a self-contained HTML page from SPEC.md, STATE.md, AGENTS.md and
+  git log and opens it in the browser. It stores nothing: blocks are what it
+  does and how to start it, acceptance status (evidenced, claimed, not
+  started, read from a new Acceptance status section in STATE.md), what
+  changed since this machine last looked, and next steps. English and
+  Traditional Chinese with a toggle; the Chinese is a translation file whose
+  entries carry a hash of their English source, shown only while it matches,
+  refreshed by the agent during memory updates. Solo use first; team use
+  waits for the paused TEAM > 1 design. Mac support is written for bash 3.2
+  and unverified until run on a Mac. Phase 2, after the user has used phase
+  1: a LEARNING switch and bilingual notes written at decision time, each
+  saying what was chosen, what was rejected, what it solves and what it
+  costs. Unverified either way: whether an agent fills the acceptance status
+  and translations without being prompted.
 - The user is about to run a project with TEAM > 1 for the first time, which
   team-contract has never seen. Read on 2026-10-01, it only asks for a contract
   reference and a file-ownership list, and says neither where that list is
