@@ -18,6 +18,11 @@ Every new feature goes through three steps.
 3. Produce: goals, non-goals, acceptance criteria, and the data and API
    contract. Then stop and wait for human approval.
 
+Write each goal as `- G1: ...` and each acceptance criterion as `- AC1 (G1):
+...`, naming the goal or goals it serves in parentheses. The ids are what the
+progress page draws its lines from, and it draws no line it cannot read: a
+criterion that names no goal, and a goal no criterion names, are listed as gaps.
+
 ## MODE: sprint
 
 Once, at the start, producing one page:

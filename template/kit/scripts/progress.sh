@@ -3,6 +3,16 @@
 # opens it. The page stores nothing: every run rebuilds it from SPEC.md,
 # STATE.md, AGENTS.md and git, so it cannot drift from them.
 #
+# The page is a canvas of cards joined by lines. A line exists only where an id
+# written in a file says so: a criterion naming its goal "(G1)", a commit
+# subject or a Next Steps entry naming an AC id. Nothing is guessed from
+# wording or position, and a card with no id reference stays unlinked.
+#
+# The work is split in two. This script reads the files and git and writes the
+# result as JSON inside the page; JavaScript inside the page does the layout
+# and drawing. Both stay in this one file so the output is one self-contained
+# page that needs no network.
+#
 # This file lives at kit/scripts/progress.sh and is run through the stub at
 # scripts/progress.sh (Windows: scripts/progress.ps1, which finds Git Bash and
 # opens the page). ROOT is two levels above it, as in check.sh.
@@ -160,9 +170,10 @@ resolve_section() {
 }
 
 resolve_section "$SPEC"  "Problem"             > "$T/res.problem"
-resolve_section "$SPEC"  "Goals"               > "$T/res.goals"
+resolve_section "$SPEC"  "Goals"               li > "$T/res.goals"
 resolve_section "$SPEC"  "Acceptance criteria" li > "$T/res.ac"
-resolve_section "$STATE" "Next Steps"          > "$T/res.next"
+resolve_section "$STATE" "Current Focus"       > "$T/res.focus"
+resolve_section "$STATE" "Next Steps"          li > "$T/res.next"
 resolve_section "$STATE" "Open Questions"      > "$T/res.open"
 
 # --- --untranslated: report and stop ------------------------------------------------
@@ -171,7 +182,7 @@ if [ "$UNTRANS" -eq 1 ]; then
   echo "# Units below have no current translation. Each block is a translation-file"
   echo "# entry: keep the '## <hash>' line, replace the English with the translation."
   echo
-  cat "$T/res.problem" "$T/res.goals" "$T/res.ac" "$T/res.next" "$T/res.open" \
+  cat "$T/res.problem" "$T/res.focus" "$T/res.goals" "$T/res.ac" "$T/res.next" "$T/res.open" \
     | awk 'BEGIN { FS = "\037" } $2 == "stale" && !($3 in seen) { seen[$3] = 1; print "## " $3; print $4; print "" }'
   echo "# Orphaned entries: their hash matches no displayed unit, so prune them."
   orph=0
@@ -186,75 +197,123 @@ if [ "$UNTRANS" -eq 1 ]; then
   exit 0
 fi
 
-# --- awk: rendering --------------------------------------------------------------------
-# Content from files is escaped here, and only here. Inline code is the one
-# piece of markdown rendered.
-RENDER_LIB='
-function esc(s,   o, i, c) {
+# STATE.md's Acceptance status lines, as units: read by acs_json.
+: > "$T/status.units"
+[ -f "$STATE" ] && awk -v sec="Acceptance status" "$UNITS_AWK" "$STATE" > "$T/status.units"
+
+# --- awk: JSON ---------------------------------------------------------------------------------
+# The page is drawn by JavaScript from one JSON block. Everything read from a
+# file is escaped here, and only here: backslash, quote, every control
+# character, and "<" as a unicode escape, so "</script>" in a file can never end the
+# block it is embedded in. The page itself sets text only through textContent,
+# so nothing read from a file is ever parsed as markup.
+JLIB='
+function jesc(s,   o, i, c, n, k) {
   o = ""
-  for (i = 1; i <= length(s); i++) {
+  n = length(s)
+  for (i = 1; i <= n; i++) {
     c = substr(s, i, 1)
-    if (c == "&") o = o "&amp;"
-    else if (c == "<") o = o "&lt;"
-    else if (c == ">") o = o "&gt;"
-    else if (c == "\"") o = o "&quot;"
+    if (c == "\\") o = o "\\\\"
+    else if (c == "\"") o = o "\\\""
+    else if (c == "<") o = o "\\u003c"
+    else if ((k = index(CTL, c)) > 0) o = o sprintf("\\u%04x", k)
     else o = o c
   }
-  return o
+  return "\"" o "\""
 }
-function rend(s,   n, p, i, o) {
-  n = split(s, p, "`")
-  if (n == 1 || n % 2 == 0) return esc(s)
-  o = ""
-  for (i = 1; i <= n; i++) o = o ((i % 2 == 0) ? "<code>" esc(p[i]) "</code>" : esc(p[i]))
-  return o
-}
-function unit(en, tr, st,   z) {
-  z = (tr != "") ? rend(tr) : rend(en)
-  if (tr == "" && trans && st == "stale") z = z " <em class=\"stale\">" mark "</em>"
-  return "<span class=\"en\">" rend(en) "</span><span class=\"zh\">" z "</span>"
-}
-function bi(en, zh) { return "<span class=\"en\">" en "</span><span class=\"zh\">" zh "</span>" }
-'
-
-MARK_TEXT="[translation missing or out of date / 翻譯缺漏或過期]"
-SECTION_AWK='
-BEGIN { FS = "\037" }
-{
-  if ($1 == "li") {
-    if (!inl) { print "<ul>"; inl = 1 }
-    print "<li>" unit($4, $5, $2) "</li>"
-    next
-  }
-  if (inl) { print "</ul>"; inl = 0 }
-  if ($1 == "h") print "<h4>" unit($4, $5, $2) "</h4>"
-  else print "<p>" unit($4, $5, $2) "</p>"
-}
-END { if (inl) print "</ul>" }
-'
-
-# render_section <res-file> <empty-en> <empty-zh>
-render_section() {
-  if [ -s "$1" ]; then
-    awk -v trans="$TRANS_ON" -v mark="$MARK_TEXT" "$RENDER_LIB $SECTION_AWK" "$1"
-  else
-    printf '<p class="empty">%s</p>\n' "<span class=\"en\">$2</span><span class=\"zh\">$3</span>"
-  fi
-}
-
-# Acceptance criteria joined with STATE.md's Acceptance status lines. The id is
-# the first word of a criterion when it looks like AC1 or G2; spec-gate fixes no
-# scheme, so a criterion without one is numbered by position as AC<n>. The
-# status of a criterion comes only from a status line naming that id. Anything
-# not evidenced with evidence text is shown as less than evidenced, and nothing
-# is checked here: the page shows the evidence so a person can rerun it.
-AC_AWK='
 function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
-function badge(st) {
-  if (st == "evidenced") return "<span class=\"badge b-evidenced\">" bi("evidenced", "有證據") "</span>"
-  if (st == "claimed") return "<span class=\"badge b-claimed\">" bi("claimed", "僅宣稱") "</span>"
-  return "<span class=\"badge b-none\">" bi("not started", "未開始") "</span>"
+BEGIN { for (ci = 1; ci < 32; ci++) CTL = CTL sprintf("%c", ci) }
+'
+
+json_str() { printf '%s' "$1" | awk "$JLIB"'{ printf "%s", jesc($0) } END { if (NR == 0) printf "\"\"" }'; }
+
+# units_json <res-file>: [{"k":kind,"st":ok|stale,"en":..,"tr":..}, ...]
+units_json() {
+  awk "$JLIB"'
+    BEGIN { FS = "\037"; printf "[" }
+    NF >= 4 { printf "%s{\"k\":%s,\"st\":%s,\"en\":%s,\"tr\":%s}", (n++ ? "," : ""), jesc($1), jesc($2), jesc($4), jesc($5) }
+    END { printf "]" }' "$1"
 }
+
+# A list item that starts with an id: "G1: text", "AC3 (G1, G2): text". Sets
+# pid (empty when the item has no id), prefs (comma list of goal ids, empty
+# when none are written) and prest (the text without them). The pattern says
+# what an id looks like, so goals and criteria can differ.
+HEAD_AWK='
+function parse_head(s, pat,   w, rest, p, inner, n, parts, i, ok) {
+  pid = ""; prefs = ""; prest = s
+  w = s; sub(/ .*$/, "", w)
+  if (w == s || w !~ pat) return
+  pid = w; sub(/[.:)]$/, "", pid)
+  rest = substr(s, length(w) + 2)
+  if (substr(rest, 1, 1) == "(") {
+    p = index(rest, ")")
+    if (p > 0) {
+      inner = substr(rest, 2, p - 2)
+      gsub(/[,;\/]/, " ", inner)
+      n = split(inner, parts, " ")
+      ok = (n > 0)
+      for (i = 1; i <= n; i++) if (parts[i] !~ /^G[0-9][0-9]*$/) ok = 0
+      if (ok) {
+        prefs = parts[1]
+        for (i = 2; i <= n; i++) prefs = prefs "," parts[i]
+        rest = trim(substr(rest, p + 1))
+        if (substr(rest, 1, 1) == ":") rest = trim(substr(rest, 2))
+        else if (substr(rest, 1, length("：")) == "：") rest = trim(substr(rest, length("：") + 1))
+      }
+    }
+  }
+  prest = rest
+}
+# The same head on a translation: dropped only when it names the same id.
+function strip_tr(t, id, pat,   r) {
+  if (t == "") return t
+  parse_head(t, pat)
+  if (pid == id) return prest
+  if (substr(t, 1, length(id)) == id) {
+    r = substr(t, length(id) + 1)
+    if (substr(r, 1, 1) == ":") return trim(substr(r, 2))
+    if (substr(r, 1, length("：")) == "：") return trim(substr(r, length("：") + 1))
+  }
+  return t
+}
+function jarr_ids(csv,   n, parts, i, o) {
+  if (csv == "") return "[]"
+  n = split(csv, parts, ",")
+  o = "["
+  for (i = 1; i <= n; i++) o = o (i > 1 ? "," : "") jesc(parts[i])
+  return o "]"
+}
+'
+ID_PAT='^[A-Za-z][A-Za-z]*[0-9][0-9]*[.:)]?$'
+GOAL_PAT='^G[0-9][0-9]*[.:)]?$'
+
+# goals_json: an item "G1: text" is goal G1; an item without an id is G<n> by
+# position, flagged so the page can say that the id was never written.
+goals_json() {
+  awk -v idpat="$GOAL_PAT" "$JLIB $HEAD_AWK"'
+    BEGIN { FS = "\037"; printf "[" }
+    NF >= 4 {
+      pos++
+      en = $4; tr = $5
+      parse_head(en, idpat)
+      if (pid == "") { id = "G" pos; impl = 1 }
+      else { id = pid; impl = 0; en = prest; tr = strip_tr(tr, id, idpat) }
+      dup = (id in U) ? 1 : 0
+      U[id] = 1
+      printf "%s{\"id\":%s,\"impl\":%s,\"dup\":%s,\"st\":%s,\"en\":%s,\"tr\":%s}", (n++ ? "," : ""), jesc(id), (impl ? "true" : "false"), (dup ? "true" : "false"), jesc($2), jesc(en), jesc(tr)
+    }
+    END { printf "]" }' "$1"
+}
+
+# acs_json: criteria joined with STATE.md's Acceptance status lines. The id is
+# the first word of a criterion when it looks like AC1; a criterion without one
+# is numbered by position as AC<n>. Goals it serves are the ids in parentheses
+# after the id. The status of a criterion comes only from a status line naming
+# that id, and nothing is checked here: the page shows the evidence so a person
+# can rerun it. Output: {"acs":[...],"unknown":[ids],"bad":[lines]}
+acs_json() {
+  awk -v EM="—" -v sf="$T/status.units" -v idpat="$ID_PAT" "$JLIB $HEAD_AWK"'
 FILENAME == sf {
   t = $0
   if (t !~ /^li /) next
@@ -263,7 +322,7 @@ FILENAME == sf {
   if (i == 0) { bad[++nb] = t; next }
   id = trim(substr(t, 1, i - 1)); rest = trim(substr(t, i + 1))
   if (id == "" || id ~ / /) { bad[++nb] = t; next }
-  if (substr(rest, 1, 9) == "evidenced" ) { st = "evidenced"; rest = substr(rest, 10) }
+  if (substr(rest, 1, 9) == "evidenced") { st = "evidenced"; rest = substr(rest, 10) }
   else if (substr(rest, 1, 7) == "claimed") { st = "claimed"; rest = substr(rest, 8) }
   else if (substr(rest, 1, 11) == "not started") { st = "none"; rest = substr(rest, 12) }
   else { bad[++nb] = t; next }
@@ -278,108 +337,79 @@ FILENAME == sf {
   S[id] = st; E[id] = rest; D[id] = date
   next
 }
-BEGIN { FS = "\037" }
+BEGIN { FS = "\037"; printf "{\"acs\":[" }
 FILENAME != sf && NF >= 4 {
   pos++
   en = $4; tr = $5
-  w = en; sub(/ .*$/, "", w)
-  if (w ~ /^[A-Za-z][A-Za-z]*[0-9][0-9]*[.:)]?$/ && w != en) {
-    id = w; sub(/[.:)]$/, "", id)
-    en = substr(en, length(w) + 2)
-    if (tr != "") { w2 = tr; sub(/ .*$/, "", w2); if (w2 == w) tr = substr(tr, length(w) + 2) }
-  } else id = "AC" pos
+  parse_head(en, idpat)
+  if (pid == "") { id = "AC" pos; impl = 1; refs = "" }
+  else { id = pid; impl = 0; refs = prefs; en = prest; tr = strip_tr(tr, id, idpat) }
+  dup = (id in U) ? 1 : 0
   U[id] = 1
-  st = (id in S) ? S[id] : "none"
-  warn = ""
-  if (st == "evidenced" && E[id] == "") { st = "claimed"; warn = bi("Marked evidenced, but no evidence is recorded, so it is shown as claimed.", "標為已有證據，但沒有記錄證據，因此顯示為僅宣稱。") }
-  cnt[st]++
-  total++
-  row = "<li class=\"ac s-" st "\"><div class=\"ach\"><span class=\"id\">" esc(id) "</span>" badge(st) "</div>"
-  row = row "<div class=\"actext\">" unit(en, tr, $2) "</div>"
-  if (warn != "") row = row "<div class=\"warn\">" warn "</div>"
-  if (st == "claimed" && warn == "" && E[id] == "") row = row "<div class=\"warn\">" bi("No evidence recorded.", "沒有記錄證據。") "</div>"
-  if (E[id] != "") {
-    row = row "<div class=\"ev\"><span class=\"lbl\">" bi("Evidence", "證據") "</span> " rend(E[id])
-    if (D[id] != "") row = row " <span class=\"date\">(" esc(D[id]) ")</span>"
-    row = row "</div>"
-  }
-  rows = rows row "</li>\n"
+  decl = (id in S) ? S[id] : "missing"
+  printf "%s{\"id\":%s,\"impl\":%s,\"dup\":%s,\"goals\":%s,\"decl\":%s,\"ev\":%s,\"date\":%s,\"st\":%s,\"en\":%s,\"tr\":%s}", (n++ ? "," : ""), jesc(id), (impl ? "true" : "false"), (dup ? "true" : "false"), jarr_ids(refs), jesc(decl), jesc(E[id]), jesc(D[id]), jesc($2), jesc(en), jesc(tr)
 }
 END {
-  if (total == 0) {
-    print "<p class=\"empty\">" bi("SPEC.md lists no acceptance criteria yet.", "SPEC.md 還沒有列出驗收條件。") "</p>"
-  } else {
-    print "<p class=\"summary\">" bi(cnt["evidenced"] + 0 " of " total " evidenced, " cnt["claimed"] + 0 " claimed, " cnt["none"] + 0 " not started", total " 項中 " cnt["evidenced"] + 0 " 項有證據、" cnt["claimed"] + 0 " 項僅宣稱、" cnt["none"] + 0 " 項未開始") "</p>"
-    print "<ul class=\"acs\">"; printf "%s", rows; print "</ul>"
-  }
-  for (id in S) if (!(id in U)) { if (!ow++) print "<p class=\"warn\">" bi("Status lines naming no criterion in SPEC.md:", "狀態行對應不到 SPEC.md 的任何驗收條件：") "</p><ul>"; print "<li><code>" esc(id) "</code></li>" }
-  if (ow) print "</ul>"
-  if (nb) {
-    print "<p class=\"warn\">" bi("Status lines that could not be read (expected id: evidenced|claimed|not started - evidence (date)):", "無法解讀的狀態行（格式：id: evidenced|claimed|not started - 證據 (日期)）：") "</p><ul>"
-    for (i = 1; i <= nb; i++) print "<li>" esc(bad[i]) "</li>"
-    print "</ul>"
-  }
-}
-'
-
-render_ac() {
-  : > "$T/status.units"
-  [ -f "$STATE" ] && awk -v sec="Acceptance status" "$UNITS_AWK" "$STATE" > "$T/status.units"
-  awk -v trans="$TRANS_ON" -v mark="$MARK_TEXT" -v EM="—" -v sf="$T/status.units" "$RENDER_LIB $AC_AWK" "$T/status.units" "$T/res.ac"
+  printf "],\"unknown\":["
+  for (id in S) if (!(id in U)) printf "%s%s", (nu++ ? "," : ""), jesc(id)
+  printf "],\"bad\":["
+  for (i = 1; i <= nb; i++) printf "%s%s", (i > 1 ? "," : ""), jesc(bad[i])
+  printf "]}"
+}' "$T/status.units" "$T/res.ac"
 }
 
-# Environment facts: dev always, install and build when AGENTS.md has the key.
-# A blank value is shown as blank. It is a finding, not something to hide.
-ENV_AWK='
-function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
-{ sub(/\r$/, "") }
-/^## / { on = ($0 == "## Environment facts"); next }
-!on { next }
-/^(install|dev|build):/ {
-  k = $0; sub(/:.*$/, "", k)
-  v = $0; sub(/^[a-z]+:/, "", v); sub(/[ \t]+#.*$/, "", v); v = trim(v)
-  V[k] = v; P[k] = 1
+# env_json: dev always, install and build when AGENTS.md has the key. A blank
+# value is a finding, so it is passed on as blank (p true, v empty).
+env_json() {
+  [ -f "$AGENTS" ] || { printf '{"install":{"p":false,"v":""},"dev":{"p":false,"v":""},"build":{"p":false,"v":""}}'; return; }
+  awk "$JLIB"'
+    { sub(/\r$/, "") }
+    /^## / { on = ($0 == "## Environment facts"); next }
+    !on { next }
+    /^(install|dev|build):/ {
+      k = $0; sub(/:.*$/, "", k)
+      v = $0; sub(/^[a-z]+:/, "", v); sub(/[ \t]+#.*$/, "", v); v = trim(v)
+      V[k] = v; P[k] = 1
+    }
+    function one(k) { return "{\"p\":" ((k in P) ? "true" : "false") ",\"v\":" jesc(V[k]) "}" }
+    END { printf "{\"install\":%s,\"dev\":%s,\"build\":%s}", one("install"), one("dev"), one("build") }' "$AGENTS"
 }
-function show(k,   v) {
-  if (!(k in P)) { if (k == "dev") print "<tr><th><code>dev</code></th><td class=\"empty\">" bi("not listed in AGENTS.md", "AGENTS.md 裡沒有這一項") "</td></tr>"; return }
-  v = V[k]
-  if (v == "") print "<tr><th><code>" k "</code></th><td class=\"empty\">" bi("empty: not established yet", "空白：尚未確立") "</td></tr>"
-  else print "<tr><th><code>" k "</code></th><td><code>" esc(v) "</code></td></tr>"
-}
-END { print "<table class=\"env\">"; show("install"); show("dev"); show("build"); print "</table>" }
-'
 
 # --- what changed since this machine last looked ------------------------------------------
-render_changes() {
-  local head last range total n fmt
-  head="$(git -C "$ROOT" rev-parse --verify -q HEAD 2>/dev/null)" || head=""
-  if [ -z "$head" ]; then
-    printf '<p class="empty">%s</p>\n' "$(printf '<span class="en">No commits yet.</span><span class="zh">還沒有任何 commit。</span>')"
-    return
-  fi
+# changes.log holds the commits to show; hist.log holds every commit (newest
+# first, up to HIST_N) whose subject has anything id-shaped in it, so that "last
+# touched by" can look back past the last view for any criterion.
+HIST_N=5000
+FMT='%h%x1f%ad%x1f%s'
+CH_KIND="nocommits"; CH_N=""; CH_TOTAL=0
+: > "$T/changes.log"; : > "$T/hist.log"
+HEADC="$(git -C "$ROOT" rev-parse --verify -q HEAD 2>/dev/null)" || HEADC=""
+if [ -n "$HEADC" ]; then
   last=""
   [ -f "$MARKER" ] && last="$(head -n 1 "$MARKER" | tr -d '[:space:]')"
-  fmt='%h%x1f%ad%x1f%s'
   if [ -z "$last" ]; then
-    printf '<p>%s</p>\n' '<span class="en">First view on this machine, so this shows the last '"$FIRST_N"' commits.</span><span class="zh">這台機器第一次檢視，因此顯示最近 '"$FIRST_N"' 個 commit。</span>'
-    git -C "$ROOT" log -n "$FIRST_N" --date=short --format="$fmt" HEAD
+    CH_KIND="first"
+    git -C "$ROOT" log -n "$FIRST_N" --date=short --format="$FMT" HEAD > "$T/changes.log"
   elif ! git -C "$ROOT" cat-file -e "$last^{commit}" 2>/dev/null; then
-    printf '<p class="warn">%s</p>\n' '<span class="en">The marker commit is no longer in this repository (history was rewritten?), so this shows the last '"$FIRST_N"' commits.</span><span class="zh">標記的 commit 已不在這個 repository（歷史被改寫過？），因此顯示最近 '"$FIRST_N"' 個 commit。</span>'
-    git -C "$ROOT" log -n "$FIRST_N" --date=short --format="$fmt" HEAD
+    CH_KIND="lost"
+    git -C "$ROOT" log -n "$FIRST_N" --date=short --format="$FMT" HEAD > "$T/changes.log"
   else
-    total="$(git -C "$ROOT" rev-list --count "$last..HEAD")"
-    n="$(git -C "$ROOT" rev-parse --short "$last")"
-    if [ "$total" -eq 0 ]; then
-      printf '<p>%s</p>\n' '<span class="en">Nothing new since the last view (at <code>'"$n"'</code>).</span><span class="zh">自上次檢視（<code>'"$n"'</code>）以來沒有新的 commit。</span>'
-      return
+    CH_TOTAL="$(git -C "$ROOT" rev-list --count "$last..HEAD")"
+    CH_N="$(git -C "$ROOT" rev-parse --short "$last")"
+    if [ "$CH_TOTAL" -eq 0 ]; then CH_KIND="none"; else CH_KIND="some"
+      git -C "$ROOT" log -n "$MAX_N" --date=short --format="$FMT" "$last..HEAD" > "$T/changes.log"
     fi
-    printf '<p>%s</p>\n' '<span class="en">'"$total"' commit(s) since the last view (at <code>'"$n"'</code>).</span><span class="zh">自上次檢視（<code>'"$n"'</code>）以來共 '"$total"' 個 commit。</span>'
-    git -C "$ROOT" log -n "$MAX_N" --date=short --format="$fmt" "$last..HEAD"
-  fi | awk "$RENDER_LIB"'
-    BEGIN { FS = "\037" }
-    NF < 3 { print; next }
-    { if (!o) { print "<ul class=\"log\">"; o = 1 } print "<li><code>" esc($1) "</code> <span class=\"date\">" esc($2) "</span> " esc($3) "</li>" }
-    END { if (o) print "</ul>" }'
+  fi
+  git -C "$ROOT" log -n "$HIST_N" --date=short --format="$FMT" HEAD 2>/dev/null \
+    | awk -F '\037' '$3 ~ /[A-Za-z][0-9]/' > "$T/hist.log"
+fi
+
+# log_json <file>: [{"h":hash,"d":date,"s":subject}, ...]
+log_json() {
+  awk "$JLIB"'
+    BEGIN { FS = "\037"; printf "[" }
+    NF >= 3 { printf "%s{\"h\":%s,\"d\":%s,\"s\":%s}", (n++ ? "," : ""), jesc($1), jesc($2), jesc($3) }
+    END { printf "]" }' "$1"
 }
 
 # --- the page ------------------------------------------------------------------------------
@@ -390,135 +420,836 @@ NAME=""
 NAME_H="$(printf '%s' "$NAME" | esc_sh)"
 if [ "$TRANS_ON" -eq 1 ]; then DEF_LANG="zh"; TLANG="$LANG2"; else DEF_LANG="en"; TLANG="zh-TW"; fi
 UPDATED=""
-[ -f "$STATE" ] && UPDATED="$(sed -n 's/^> Last updated:[[:space:]]*//p' "$STATE" | head -n 1 | tr -d '\r' | esc_sh)"
+[ -f "$STATE" ] && UPDATED="$(sed -n 's/^> Last updated:[[:space:]]*//p' "$STATE" | head -n 1 | tr -d '\r')"
 NOW="$(date '+%Y-%m-%d %H:%M')"
 HEAD_SHORT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo none)"
+TRFILE_OK=true
+[ "$TRANS_ON" -eq 1 ] && [ ! -f "$TRFILE" ] && TRFILE_OK=false
+TRANS_JS=false; [ "$TRANS_ON" -eq 1 ] && TRANS_JS=true
 
 {
-cat <<EOF
-<!doctype html>
-<html lang="$DEF_LANG" data-lang="$DEF_LANG" data-tlang="$TLANG">
+printf '<!doctype html>\n<html lang="%s" data-lang="%s" data-tlang="%s">\n' "$DEF_LANG" "$DEF_LANG" "$TLANG"
+cat <<'EOF'
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>$NAME_H progress</title>
+EOF
+printf '<title>%s progress</title>\n' "$NAME_H"
+cat <<'EOF'
 <style>
-:root { --bg:#fafaf8; --fg:#1d1d1b; --muted:#66655f; --line:#dcdad2; --card:#fff;
-  --ok:#14663a; --okbg:#e0f3e7; --mid:#8a5a00; --midbg:#fbefd0; --none:#555; --nonebg:#ececea;
-  --warn:#9c2a1a; --link:#1b5fa8; --code:#efeee8; }
+:root { --bg:#f5f4ef; --fg:#1d1d1b; --muted:#66655f; --line:#d6d4ca; --card:#fff; --panel:#fbfaf7;
+  --ok:#14663a; --okbg:#e0f3e7; --mid:#8a5a00; --midbg:#fbefd0; --none:#55554f; --nonebg:#ececea;
+  --warn:#9c2a1a; --warnbg:#fbe7e2; --code:#efeee8; --dot:#dedcd2; --acc:#1b5fa8;
+  --e-pg:#8d8b80; --e-ga:#23806f; --e-ca:#1b5fa8; --e-na:#8a3fb0; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg:#17171a; --fg:#e8e6df; --muted:#9d9b93; --line:#33332f; --card:#202024;
-  --ok:#6fd49a; --okbg:#173325; --mid:#f0c460; --midbg:#3a2e12; --none:#aaa; --nonebg:#2b2b2e;
-  --warn:#ff9d8a; --link:#7db6f0; --code:#2a2a2e; } }
+  --bg:#141417; --fg:#e8e6df; --muted:#9d9b93; --line:#37373a; --card:#1f1f24; --panel:#1a1a1e;
+  --ok:#6fd49a; --okbg:#173325; --mid:#f0c460; --midbg:#3a2e12; --none:#b0b0aa; --nonebg:#2b2b2e;
+  --warn:#ff9d8a; --warnbg:#3b1d19; --code:#2a2a2e; --dot:#26262a; --acc:#7db6f0;
+  --e-pg:#8d8b82; --e-ga:#4fc2ab; --e-ca:#6fb0f0; --e-na:#c78ae6; } }
 * { box-sizing:border-box; }
-body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui, -apple-system, "Segoe UI", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; }
-main { max-width:52rem; margin:0 auto; padding:1rem 16px 3rem; }
-header { display:flex; flex-wrap:wrap; gap:.5rem 1rem; align-items:baseline; justify-content:space-between; }
-h1 { font-size:1.5rem; margin:.6rem 0; }
-h2 { font-size:1.15rem; margin:0 0 .6rem; }
-h3 { font-size:1rem; margin:1rem 0 .3rem; color:var(--muted); text-transform:none; }
-h4 { font-size:1rem; margin:.8rem 0 .2rem; }
-section { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:1rem; margin:1rem 0; }
-p, ul { margin:.4rem 0; } ul { padding-left:1.3rem; }
-code { background:var(--code); border-radius:4px; padding:.05em .3em; font:.9em ui-monospace, Consolas, Menlo, monospace; overflow-wrap:anywhere; }
-button { font:inherit; padding:.3rem .8rem; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--fg); cursor:pointer; }
-.meta, .date, .lbl { color:var(--muted); font-size:.88rem; }
-.empty { color:var(--muted); font-style:italic; }
-.warn { color:var(--warn); font-size:.92rem; }
-.stale { color:var(--warn); font-style:normal; font-size:.85rem; }
+[hidden] { display:none !important; }
+html, body { height:100%; }
+body { margin:0; background:var(--bg); color:var(--fg); display:flex; flex-direction:column; height:100vh; overflow:hidden;
+  font:15px/1.45 system-ui, -apple-system, "Segoe UI", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; }
+code { background:var(--code); border-radius:4px; padding:.05em .3em; font:.88em ui-monospace, Consolas, Menlo, monospace; overflow-wrap:anywhere; }
+button { font:inherit; font-size:.88rem; padding:.25rem .7rem; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--fg); cursor:pointer; }
+button:hover { border-color:var(--acc); }
 html[data-lang="en"] .zh { display:none; }
 html[data-lang="zh"] .en { display:none; }
-.acs { list-style:none; padding:0; }
-.ac { border:1px solid var(--line); border-radius:6px; padding:.6rem .7rem; margin:.5rem 0; }
-.ach { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; margin-bottom:.2rem; }
-.id { font:600 .9rem ui-monospace, Consolas, Menlo, monospace; }
-.badge { font-size:.8rem; font-weight:600; padding:.05rem .5rem; border-radius:99px; }
+em.stale { color:var(--warn); font-style:normal; font-size:.85em; }
+
+/* header: fixed above the canvas */
+#top { flex:none; background:var(--panel); border-bottom:1px solid var(--line); padding:.5rem 16px .6rem; }
+.bar { display:flex; flex-wrap:wrap; gap:.3rem 1rem; align-items:center; justify-content:space-between; }
+.bar h1 { font-size:1.25rem; margin:0; }
+.tools { display:flex; gap:.5rem; }
+.hgrid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:.6rem; margin-top:.5rem; }
+.hb { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:.45rem .7rem; min-width:0; }
+.hb h2 { margin:0 0 .15rem; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+.hb .u { margin:0; }
+.hb .u + .u { margin-top:.3rem; }
+.cmd { display:flex; gap:.4rem; align-items:center; margin:.12rem 0; min-width:0; }
+.cmd b { font:600 .8rem ui-monospace, Consolas, monospace; width:3.4rem; flex:none; }
+.cmd code { flex:1; min-width:0; }
+.cmd button { flex:none; padding:.05rem .45rem; font-size:.78rem; }
+.gapname { color:var(--warn); font-style:italic; flex:1; }
+.sum { font-weight:600; margin:.1rem 0 .35rem; }
+.bar3 { display:flex; height:12px; border-radius:6px; overflow:hidden; background:var(--nonebg); border:1px solid var(--line); }
+.bar3 i { display:block; height:100%; }
+.bar3 .k1 { background:var(--ok); } .bar3 .k2 { background:#d9a21b; } .bar3 .k3 { background:transparent; }
+.leg { display:flex; flex-wrap:wrap; gap:.2rem .8rem; margin-top:.3rem; font-size:.85rem; }
+.leg .t1 { color:var(--ok); } .leg .t2 { color:var(--mid); } .leg .t3 { color:var(--none); }
+
+/* main: canvas and gaps panel */
+#main { flex:1; min-height:0; display:flex; }
+#canvas { flex:1; position:relative; overflow:hidden; touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none;
+  background-image:radial-gradient(var(--dot) 1px, transparent 1px); background-size:22px 22px; }
+#canvas.drag { cursor:grabbing; }
+#view { position:absolute; left:0; top:0; transform-origin:0 0; }
+#edges { position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
+#cards { position:absolute; left:0; top:0; }
+.ctl { position:absolute; right:10px; top:10px; display:flex; gap:.35rem; }
+.ctl button { box-shadow:0 1px 3px rgba(0,0,0,.18); min-width:2rem; }
+.legend { position:absolute; left:10px; top:10px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.35rem .6rem; font-size:.78rem; display:flex; flex-wrap:wrap; gap:.15rem .9rem; max-width:calc(100% - 200px); pointer-events:none; }
+.legend span { display:inline-flex; align-items:center; gap:.35rem; }
+.legend svg { width:26px; height:8px; overflow:visible; }
+#gaps { flex:none; width:340px; overflow:auto; background:var(--panel); border-left:1px solid var(--line); padding:.7rem .8rem 1rem; }
+#gaps h2 { font-size:1rem; margin:0 0 .4rem; }
+#gaps ul { list-style:none; margin:0; padding:0; }
+#gaps li.g { display:flex; gap:.5rem; padding:.4rem .5rem; margin:.3rem 0; background:var(--card); border:1px solid var(--line); border-radius:6px; font-size:.9rem; }
+#gaps li.g.w { border-color:var(--warn); background:var(--warnbg); }
+#gaps li.g.ref { cursor:pointer; }
+#gaps li.g.ref:hover { border-color:var(--acc); }
+#gaps li.g .ic { flex:none; font-weight:700; color:var(--warn); width:1rem; text-align:center; }
+#gaps .none { color:var(--ok); font-weight:600; }
+#gaps details { margin-top:1rem; }
+#gaps summary { cursor:pointer; font-weight:600; }
+#gaps details li { margin:.3rem 0; font-size:.88rem; }
+#gaps .gen { color:var(--muted); font-size:.78rem; margin-top:1.2rem; }
+
+/* cards */
+.card { position:absolute; background:var(--card); border:1px solid var(--line); border-left-width:5px; border-radius:8px; padding:.4rem .6rem .45rem; font-size:14px; line-height:1.4; box-shadow:0 1px 2px rgba(0,0,0,.08); transition:opacity .12s; overflow-wrap:anywhere; cursor:pointer; }
+.card.nolink { border-style:dashed; border-left-style:solid; }
+.card .ch { display:flex; flex-wrap:wrap; align-items:center; gap:.3rem .5rem; margin-bottom:.2rem; }
+.card .kind { font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+.card .id { font:700 .85rem ui-monospace, Consolas, Menlo, monospace; }
+.card .date, .card .meta { color:var(--muted); font-size:.82em; }
+.card .foot { margin-top:.3rem; font-size:.82em; color:var(--muted); }
+.card .foot.w { color:var(--warn); font-weight:600; }
+.warnmini { margin-left:auto; color:var(--warn); font-weight:600; font-size:.74rem; }
+.card .u { margin:0; }
+.card .u + .u { margin-top:.25rem; }
+.badge { font-size:.76rem; font-weight:700; padding:.02rem .5rem; border-radius:99px; white-space:nowrap; }
 .b-evidenced { color:var(--ok); background:var(--okbg); }
 .b-claimed { color:var(--mid); background:var(--midbg); }
 .b-none { color:var(--none); background:var(--nonebg); }
-.ev { margin-top:.3rem; font-size:.92rem; overflow-wrap:anywhere; }
-.summary { font-weight:600; }
-.env { border-collapse:collapse; width:100%; } .env th { text-align:left; width:5.5rem; vertical-align:top; padding:.2rem .5rem .2rem 0; }
-.env td { padding:.2rem 0; overflow-wrap:anywhere; }
-.log { list-style:none; padding:0; } .log li { padding:.15rem 0; overflow-wrap:anywhere; }
-footer { color:var(--muted); font-size:.85rem; }
+.s-evidenced { border-left-color:var(--ok); } .s-claimed { border-left-color:#d9a21b; } .s-none { border-left-color:#9a9a92; }
+.t-problem { border-left-color:var(--acc); } .t-goal { border-left-color:var(--e-ga); }
+.t-commit { border-left-color:var(--e-ca); } .t-next { border-left-color:var(--e-na); }
+.card.ac { border-width:1.5px; border-left-width:6px; font-size:14.5px; }
+.ev { margin-top:.35rem; padding:.3rem .45rem; background:var(--code); border-radius:6px; font-size:.92em; }
+.ev .lbl { font-weight:700; margin-right:.3rem; }
+.warnline { margin-top:.35rem; color:var(--warn); font-weight:600; font-size:.92em; }
+.cl { overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:5; }
+.cl.l3 { -webkit-line-clamp:3; } .cl.l4 { -webkit-line-clamp:4; } .cl.l7 { -webkit-line-clamp:7; }
+.cw.open .cl { display:block; }
+.more { margin-top:.15rem; padding:0 .4rem; font-size:.75rem; }
+.cw.open .lm, .cw:not(.open) .ll { display:none; }
+.colhead { position:absolute; font-weight:700; font-size:.95rem; letter-spacing:.01em; }
+.colhead small { display:block; font-weight:400; color:var(--muted); font-size:.78rem; }
+.sep { position:absolute; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); border-top:1.5px dashed var(--line); padding-top:.2rem; }
+.edge { fill:none; stroke-width:1.8; stroke-linecap:round; transition:opacity .12s; }
+.edge.pg { stroke:var(--e-pg); } .edge.ga { stroke:var(--e-ga); } .edge.ca { stroke:var(--e-ca); } .edge.na { stroke:var(--e-na); stroke-dasharray:6 3; }
+.mk-pg { fill:var(--e-pg); } .mk-ga { fill:var(--e-ga); } .mk-ca { fill:var(--e-ca); } .mk-na { fill:var(--e-na); }
+.lg-pg { stroke:var(--e-pg); } .lg-ga { stroke:var(--e-ga); } .lg-ca { stroke:var(--e-ca); } .lg-na { stroke:var(--e-na); stroke-dasharray:6 3; }
+.legend path { fill:none; stroke-width:2; }
+#view.has-sel .card:not(.hl) { opacity:.22; }
+#view.has-sel .edge:not(.hl) { opacity:.08; }
+#view.has-sel .sep, #view.has-sel .colhead { opacity:.5; }
+.card.sel { box-shadow:0 0 0 3px var(--acc), 0 2px 8px rgba(0,0,0,.25); }
+.edge.hl { stroke-width:3.2; }
+noscript { display:block; padding:1rem; }
+
+@media (max-width: 800px) {
+  body { display:block; height:auto; overflow:auto; }
+  #main { display:flex; flex-direction:column; }
+  #gaps { order:-1; width:auto; border-left:none; border-bottom:1px solid var(--line); max-height:60vh; }
+  #canvas { flex:none; height:calc(100vh - 12px); min-height:480px; }
+  .legend { font-size:.7rem; }
+  .legend .sentence { display:none; }
+}
 </style>
 </head>
 <body>
-<main>
-<header>
-<h1>$NAME_H</h1>
-<button id="lang" type="button" hidden></button>
+<header id="top">
+<div class="bar">
+<h1 id="title"></h1>
+<div class="tools"><button id="gapsbtn" type="button" hidden></button><button id="lang" type="button" hidden></button></div>
+</div>
+<div class="hgrid">
+<section class="hb" id="hproblem"></section>
+<section class="hb" id="hfocus"></section>
+<section class="hb" id="hstart"></section>
+<section class="hb" id="hsum"></section>
+</div>
 </header>
-
-<section id="what">
-<h2><span class="en">What this is and how to start it</span><span class="zh">這是什麼、怎麼啟動</span></h2>
-<h3><span class="en">Problem</span><span class="zh">問題</span></h3>
+<div id="main">
+<div id="canvas">
+<div id="view"><svg id="edges" xmlns="http://www.w3.org/2000/svg"></svg><div id="cards"></div></div>
+<div class="ctl" id="ctl"></div>
+<div class="legend" id="legend"></div>
+</div>
+<aside id="gaps"></aside>
+</div>
+<noscript><p>This page draws itself with JavaScript, which is off here. The data it shows is in the page source, in the block with id "data".</p></noscript>
 EOF
-render_section "$T/res.problem" "SPEC.md has nothing under Problem: the spec gate has not run." "SPEC.md 的 Problem 是空的：規格門還沒跑過。"
-echo '<h3><span class="en">Goals</span><span class="zh">目標</span></h3>'
-render_section "$T/res.goals" "SPEC.md has nothing under Goals." "SPEC.md 的 Goals 是空的。"
-echo '<h3><span class="en">Commands (from AGENTS.md)</span><span class="zh">指令（來自 AGENTS.md）</span></h3>'
-if [ -f "$AGENTS" ]; then
-  awk "$RENDER_LIB $ENV_AWK" "$AGENTS"
-else
-  echo '<p class="empty"><span class="en">AGENTS.md is missing.</span><span class="zh">找不到 AGENTS.md。</span></p>'
-fi
+printf '<script type="application/json" id="data">\n'
+printf '{"name":%s,"updated":%s,"now":%s,"head":%s,"trans":%s,"tlang":%s,"trfileOk":%s,' \
+  "$(json_str "$NAME")" "$(json_str "$UPDATED")" "$(json_str "$NOW")" "$(json_str "$HEAD_SHORT")" \
+  "$TRANS_JS" "$(json_str "$LANG2")" "$TRFILE_OK"
+printf '"trfile":%s,' "$(json_str "translations/$LANG2.md")"
+printf '"problem":%s,' "$(units_json "$T/res.problem")"
+printf '"focus":%s,' "$(units_json "$T/res.focus")"
+printf '"goals":%s,' "$(goals_json "$T/res.goals")"
+printf '"ac":%s,' "$(acs_json)"
+printf '"next":%s,' "$(units_json "$T/res.next")"
+printf '"open":%s,' "$(units_json "$T/res.open")"
+printf '"env":%s,' "$(env_json)"
+printf '"changes":{"kind":%s,"n":%s,"total":%s,"items":%s},' "$(json_str "$CH_KIND")" "$(json_str "$CH_N")" "$CH_TOTAL" "$(log_json "$T/changes.log")"
+printf '"hist":%s}\n' "$(log_json "$T/hist.log")"
+printf '</script>\n<script>\n'
 cat <<'EOF'
-</section>
-
-<section id="acceptance">
-<h2><span class="en">Acceptance status</span><span class="zh">驗收狀態</span></h2>
-<p class="meta"><span class="en">Nothing is shown as done without recorded evidence. This page verifies nothing: rerun the evidence to check it.</span><span class="zh">沒有記錄證據的項目一律不會顯示為完成。本頁不驗證任何事：要確認請自行重跑證據裡的指令。</span></p>
-EOF
-render_ac
-cat <<'EOF'
-</section>
-
-<section id="changes">
-<h2><span class="en">What changed since this machine last looked</span><span class="zh">這台機器上次檢視之後的變更</span></h2>
-EOF
-render_changes
-cat <<'EOF'
-</section>
-
-<section id="next">
-<h2><span class="en">Next steps and open questions</span><span class="zh">下一步與未解問題</span></h2>
-<h3><span class="en">Next steps</span><span class="zh">下一步</span></h3>
-EOF
-render_section "$T/res.next" "STATE.md has no Next Steps." "STATE.md 沒有 Next Steps。"
-echo '<h3><span class="en">Open questions</span><span class="zh">未解問題</span></h3>'
-render_section "$T/res.open" "STATE.md has no Open Questions." "STATE.md 沒有 Open Questions。"
-cat <<EOF
-</section>
-
-<footer>
-<p><span class="en">Generated $NOW at commit <code>$HEAD_SHORT</code> from SPEC.md, STATE.md (last updated: ${UPDATED:-unknown}), AGENTS.md and git. The page stores nothing; run the generator again to refresh it.</span><span class="zh">產生於 $NOW，commit <code>$HEAD_SHORT</code>，來源為 SPEC.md、STATE.md（最後更新：${UPDATED:-不明}）、AGENTS.md 與 git。本頁不儲存任何東西，要更新請重新執行產生器。</span></p>
-</footer>
-</main>
-<script>
 (function () {
-  var h = document.documentElement, key = "sparkforge-progress-lang", b = document.getElementById("lang");
-  var tl = h.getAttribute("data-tlang") || "zh-TW";
-  try { var s = localStorage.getItem(key); if (s === "en" || s === "zh") h.setAttribute("data-lang", s); } catch (e) {}
-  function apply() {
-    var l = h.getAttribute("data-lang");
-    h.setAttribute("lang", l === "zh" ? tl : "en");
-    b.textContent = l === "zh" ? "English" : "繁體中文";
+  "use strict";
+  var D = JSON.parse(document.getElementById("data").textContent);
+  var root = document.documentElement;
+  var KEY = "sparkforge-progress-lang";
+  var SVGNS = "http://www.w3.org/2000/svg";
+
+  /* ---------- small helpers: every file-derived string goes in through textContent ---------- */
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
   }
-  b.hidden = false;
-  b.addEventListener("click", function () {
-    var n = h.getAttribute("data-lang") === "zh" ? "en" : "zh";
-    h.setAttribute("data-lang", n);
-    try { localStorage.setItem(key, n); } catch (e) {}
-    apply();
+  function sv(tag, attrs) {
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  // Inline code is the one piece of markdown shown: `like this`.
+  function rich(parent, s) {
+    var parts = s.split("`");
+    if (parts.length === 1 || parts.length % 2 === 0) { parent.appendChild(document.createTextNode(s)); return parent; }
+    for (var i = 0; i < parts.length; i++) {
+      if (i % 2 === 1) parent.appendChild(el("code", null, parts[i]));
+      else if (parts[i]) parent.appendChild(document.createTextNode(parts[i]));
+    }
+    return parent;
+  }
+  function bi(en, zh) {
+    var f = document.createDocumentFragment();
+    f.appendChild(rich(el("span", "en"), en));
+    f.appendChild(rich(el("span", "zh"), zh));
+    return f;
+  }
+  var MARK_EN = "[translation missing or out of date]", MARK_ZH = "[翻譯缺漏或過期]";
+  // A unit read from a file: English, and the translation when there is a current one.
+  function unitFrag(u) {
+    var f = document.createDocumentFragment();
+    f.appendChild(rich(el("span", "en"), u.en));
+    var z = rich(el("span", "zh"), u.tr || u.en);
+    if (D.trans && !u.tr && u.st === "stale") { z.appendChild(document.createTextNode(" ")); z.appendChild(el("em", "stale", MARK_ZH)); }
+    f.appendChild(z);
+    return f;
+  }
+  function unitDiv(u) {
+    var d = el("div", "u");
+    if (u.k === "h") d.style.fontWeight = "700";
+    d.appendChild(unitFrag(u));
+    return d;
+  }
+  function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+
+  /* ---------- ids: a relation exists only where an id is written ---------- */
+  function isW(c) { return c !== "" && /[A-Za-z0-9_]/.test(c); }
+  // Whole-token match: AC1 is not found inside AC10, AC1x or xAC1.
+  function hasTok(s, id) {
+    var i = 0;
+    while ((i = s.indexOf(id, i)) >= 0) {
+      var b = i === 0 ? "" : s.charAt(i - 1), a = s.charAt(i + id.length);
+      if (!isW(b) && !isW(a)) return true;
+      i += 1;
+    }
+    return false;
+  }
+
+  /* ---------- model ---------- */
+  var gaps = [];
+  function gap(en, zh, ref) { gaps.push({ en: en, zh: zh, ref: ref || null }); }
+
+  var goals = [], acs = [], goalBy = {}, acBy = {};
+  D.goals.forEach(function (g) {
+    if (g.dup) { gap("`" + g.id + "` appears more than once under Goals in SPEC.md; only the first is drawn.", "`" + g.id + "` 在 SPEC.md 的 Goals 裡重複出現，只畫第一個。"); return; }
+    goalBy[g.id] = g; goals.push(g); g.acs = [];
+    if (g.impl) gap("A goal in SPEC.md has no id written; it is numbered `" + g.id + "` by position.", "SPEC.md 裡有一個目標沒有寫 id，依位置編為 `" + g.id + "`。", "g:" + g.id);
   });
-  apply();
+  D.ac.acs.forEach(function (a) {
+    if (a.dup) { gap("`" + a.id + "` appears more than once under Acceptance criteria in SPEC.md; only the first is drawn.", "`" + a.id + "` 在 SPEC.md 的驗收條件裡重複出現，只畫第一個。"); return; }
+    acBy[a.id] = a; acs.push(a);
+    a.eff = a.decl === "evidenced" ? (a.ev ? "evidenced" : "claimed") : (a.decl === "claimed" ? "claimed" : "none");
+    a.nodes = { c: [], n: [] };
+    a.touch = null;
+    for (var i = 0; i < D.hist.length; i++) { if (hasTok(D.hist[i].s, a.id)) { a.touch = D.hist[i]; break; } }
+  });
+
+  var counts = { evidenced: 0, claimed: 0, none: 0 };
+  acs.forEach(function (a) { counts[a.eff]++; });
+
+  var edges = [];
+  function edge(kind, from, to) { edges.push({ kind: kind, from: from, to: to }); }
+
+  // goal -> criterion: the criterion names its goal.
+  acs.forEach(function (a) {
+    a.gids = [];
+    a.goals.forEach(function (gid) {
+      if (goalBy[gid]) { if (a.gids.indexOf(gid) < 0) { a.gids.push(gid); goalBy[gid].acs.push(a); edge("ga", "g:" + gid, "a:" + a.id); } }
+      else gap("`" + a.id + "` names goal `" + gid + "`, which SPEC.md does not list.", "`" + a.id + "` 指名的目標 `" + gid + "` 不在 SPEC.md 裡。", "a:" + a.id);
+    });
+  });
+
+  // commit -> criterion: an id in the subject. Next step -> criterion: an id in the entry.
+  var commits = D.changes.items.map(function (c) {
+    var k = { key: "c:" + c.h, c: c, ids: [] };
+    acs.forEach(function (a) { if (hasTok(c.s, a.id)) { k.ids.push(a.id); a.nodes.c.push(k); edge("ca", k.key, "a:" + a.id); } });
+    return k;
+  });
+  var nexts = D.next.filter(function (u) { return u.k === "li"; }).map(function (u, i) {
+    var k = { key: "n:" + i, u: u, ids: [] };
+    acs.forEach(function (a) { if (hasTok(u.en, a.id)) { k.ids.push(a.id); a.nodes.n.push(k); edge("na", k.key, "a:" + a.id); } });
+    return k;
+  });
+  var hasProblem = D.problem.length > 0;
+  if (hasProblem) goals.forEach(function (g) { edge("pg", "P", "g:" + g.id); });
+
+  /* ---------- gaps: what is missing, named ---------- */
+  if (!hasProblem) gap("SPEC.md has nothing under Problem: the spec gate has not run.", "SPEC.md 的 Problem 是空的：規格門還沒跑過。");
+  if (!goals.length) gap("SPEC.md lists no goals (list items under Goals).", "SPEC.md 沒有列出任何目標（Goals 底下的清單項目）。");
+  if (!acs.length) gap("SPEC.md lists no acceptance criteria (list items under Acceptance criteria).", "SPEC.md 沒有列出任何驗收條件（Acceptance criteria 底下的清單項目）。");
+  // Up to two of the same kind are named one by one; more become one line that
+  // lists them, so the panel reads as a short list of problems, not a wall.
+  function fmt(s, a, n) { return s.replace("%", function () { return a; }).replace("#", function () { return n; }); }
+  function group(ids, ref, one, many) {
+    if (!ids.length) return;
+    if (ids.length <= 2) { ids.forEach(function (id) { gap(fmt(one[0], "`" + id + "`", 1), fmt(one[1], "`" + id + "`", 1), ref + id); }); return; }
+    gap(fmt(many[0], ids.join(", "), ids.length), fmt(many[1], ids.join(", "), ids.length), ref + ids[0]);
+  }
+  group(goals.filter(function (g) { return !g.acs.length; }).map(function (g) { return g.id; }), "g:",
+    ["% has no acceptance criteria: no criterion names it.", "% 沒有驗收條件：沒有任何條件指名它。"],
+    ["# goals have no acceptance criteria, because no criterion names them: %.", "# 個目標沒有驗收條件，因為沒有任何條件指名它們：%。"]);
+  acs.forEach(function (a) {
+    var r = "a:" + a.id;
+    if (a.impl) gap("A criterion in SPEC.md has no id written; it is numbered `" + a.id + "` by position.", "SPEC.md 裡有一項驗收條件沒有寫 id，依位置編為 `" + a.id + "`。", r);
+    if (a.decl === "evidenced" && !a.ev) gap("`" + a.id + "` is marked evidenced but records no evidence, so it counts as claimed.", "`" + a.id + "` 標為有證據，但沒有記錄證據，因此算作僅宣稱。", r);
+    else if (a.decl === "claimed" && !a.ev) gap("`" + a.id + "` is claimed but records no evidence.", "`" + a.id + "` 是僅宣稱，而且沒有記錄證據。", r);
+  });
+  if (goals.length) group(acs.filter(function (a) { return !a.goals.length; }).map(function (a) { return a.id; }), "a:",
+    ["% names no goal.", "% 沒有指名任何目標。"],
+    ["# criteria name no goal: %.", "# 項驗收條件沒有指名任何目標：%。"]);
+  group(acs.filter(function (a) { return a.decl === "missing"; }).map(function (a) { return a.id; }), "a:",
+    ["% has no status line in STATE.md.", "% 在 STATE.md 沒有狀態行。"],
+    ["# criteria have no status line in STATE.md, so they show as not started: %.", "# 項驗收條件在 STATE.md 沒有狀態行，因此顯示為未開始：%。"]);
+  D.ac.unknown.slice().sort().forEach(function (id) { gap("STATE.md has a status line for `" + id + "`, which SPEC.md does not list.", "STATE.md 有 `" + id + "` 的狀態行，但 SPEC.md 沒有這一項。"); });
+  D.ac.bad.forEach(function (t) { gap("Unreadable status line: `" + t.replace(/`/g, "'") + "` (expected `id: evidenced|claimed|not started - evidence (date)`).", "無法解讀的狀態行：`" + t.replace(/`/g, "'") + "`（格式：`id: evidenced|claimed|not started - 證據 (日期)`）。"); });
+  [["dev", true], ["install", false], ["build", false]].forEach(function (p) {
+    var e = D.env[p[0]];
+    if (!e.p) { if (p[1]) gap("`dev` is not listed in AGENTS.md, so nothing says how to start the project.", "AGENTS.md 裡沒有 `dev`，沒有任何地方說明怎麼啟動專案。"); }
+    else if (e.v === "") gap("`" + p[0] + "` command is empty in AGENTS.md: not established yet.", "AGENTS.md 的 `" + p[0] + "` 指令是空的：尚未確立。");
+  });
+  if (!D.focus.length) gap("STATE.md has nothing under Current Focus.", "STATE.md 的 Current Focus 是空的。");
+  if (!nexts.length) gap("STATE.md has no Next Steps (list items).", "STATE.md 沒有 Next Steps（清單項目）。");
+  if (D.changes.kind === "lost") gap("The marker commit is no longer in this repository (history was rewritten?), so the changes column shows the last commits instead.", "標記的 commit 已不在這個 repository（歷史被改寫過？），因此變更欄改為顯示最近的 commit。");
+  if (D.trans && !D.trfileOk) gap("`" + D.trfile + "` does not exist, so every unit shows in English as untranslated.", "`" + D.trfile + "` 不存在，所有單位都以英文顯示為未翻譯。");
+  if (D.trans) {
+    var seen = {}, miss = 0;
+    [D.problem, D.focus, D.goals, D.ac.acs, D.next, D.open].forEach(function (list) { list.forEach(function (u) { if (!u.tr && u.st === "stale") { var k = u.en; if (!seen[k]) { seen[k] = 1; miss++; } } }); });
+    if (miss) gap(miss + " displayed unit(s) have no current translation; `scripts/progress.sh --untranslated` lists them.", miss + " 個顯示的單位沒有最新的翻譯；`scripts/progress.sh --untranslated` 會列出它們。");
+  }
+
+  /* ---------- the header ---------- */
+  document.getElementById("title").textContent = D.name;
+
+  function clampBox(content, lines) {
+    var wrap = el("div", "cw"), box = el("div", "cl" + (lines ? " l" + lines : ""));
+    box.appendChild(content);
+    var btn = el("button", "more"); btn.type = "button"; btn.hidden = true;
+    var m = el("span", "lm"); m.appendChild(bi("more", "展開"));
+    var l = el("span", "ll"); l.appendChild(bi("less", "收合"));
+    btn.appendChild(m); btn.appendChild(l);
+    btn.addEventListener("click", function () { wrap.classList.toggle("open"); layout(); });
+    wrap.appendChild(box); wrap.appendChild(btn);
+    clamps.push({ wrap: wrap, box: box, btn: btn });
+    return wrap;
+  }
+  var clamps = [];
+
+  function section(id, en, zh) {
+    var s = document.getElementById(id);
+    var h = el("h2"); h.appendChild(bi(en, zh)); s.appendChild(h);
+    return s;
+  }
+  (function header() {
+    var s = section("hproblem", "Problem", "問題");
+    if (!D.problem.length) { var e = el("p", "u"); e.style.color = "var(--warn)"; e.appendChild(bi("Not written: the spec gate has not run.", "還沒寫：規格門還沒跑過。")); s.appendChild(e); }
+    else { var c = el("div"); D.problem.forEach(function (u) { c.appendChild(unitDiv(u)); }); s.appendChild(clampBox(c, 3)); }
+
+    s = section("hfocus", "Current focus", "目前焦點");
+    if (!D.focus.length) { var e2 = el("p", "u"); e2.style.color = "var(--warn)"; e2.appendChild(bi("Nothing written under Current Focus in STATE.md.", "STATE.md 的 Current Focus 沒有內容。")); s.appendChild(e2); }
+    else { var c2 = el("div"); D.focus.forEach(function (u) { c2.appendChild(unitDiv(u)); }); s.appendChild(clampBox(c2, 3)); }
+
+    s = section("hstart", "How to start", "怎麼啟動");
+    [["dev", true], ["install", false], ["build", false]].forEach(function (p) {
+      var e = D.env[p[0]];
+      if (!e.p && !p[1]) return;
+      var row = el("div", "cmd");
+      row.appendChild(el("b", null, p[0]));
+      if (!e.p) { var g = el("span", "gapname"); g.appendChild(bi("not listed in AGENTS.md", "AGENTS.md 裡沒有這一項")); row.appendChild(g); }
+      else if (e.v === "") { var g2 = el("span", "gapname"); g2.appendChild(bi("empty: not established yet", "空白：尚未確立")); row.appendChild(g2); }
+      else {
+        row.appendChild(el("code", null, e.v));
+        var b = el("button", null); b.type = "button"; b.appendChild(bi("copy", "複製"));
+        b.addEventListener("click", function () {
+          function done() { b.textContent = "✓"; setTimeout(function () { b.textContent = ""; b.appendChild(bi("copy", "複製")); }, 1200); }
+          try { navigator.clipboard.writeText(e.v).then(done, fallback); } catch (x) { fallback(); }
+          function fallback() {
+            try { var t = el("textarea"); t.value = e.v; t.style.position = "fixed"; t.style.opacity = "0"; document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t); done(); } catch (y) {}
+          }
+        });
+        row.appendChild(b);
+      }
+      s.appendChild(row);
+    });
+
+    s = section("hsum", "Acceptance criteria", "驗收條件");
+    var total = acs.length;
+    if (!total) { var e3 = el("p", "u"); e3.style.color = "var(--warn)"; e3.appendChild(bi("None listed in SPEC.md yet.", "SPEC.md 還沒有列出。")); s.appendChild(e3); }
+    else {
+      var line = el("div", "sum");
+      line.appendChild(bi(counts.evidenced + " of " + total + " evidenced", total + " 項中 " + counts.evidenced + " 項有證據"));
+      s.appendChild(line);
+      var bar = el("div", "bar3");
+      [["k1", counts.evidenced], ["k2", counts.claimed], ["k3", counts.none]].forEach(function (p) { var i = el("i", p[0]); i.style.width = (100 * p[1] / total) + "%"; bar.appendChild(i); });
+      s.appendChild(bar);
+      var lg = el("div", "leg");
+      var t1 = el("span", "t1"); t1.appendChild(bi("✓ " + counts.evidenced + " evidenced", "✓ " + counts.evidenced + " 項有證據"));
+      var t2 = el("span", "t2"); t2.appendChild(bi("◐ " + counts.claimed + " claimed", "◐ " + counts.claimed + " 項僅宣稱"));
+      var t3 = el("span", "t3"); t3.appendChild(bi("○ " + counts.none + " not started", "○ " + counts.none + " 項未開始"));
+      lg.appendChild(t1); lg.appendChild(t2); lg.appendChild(t3);
+      s.appendChild(lg);
+    }
+  })();
+
+  /* ---------- the gaps panel ---------- */
+  var aside = document.getElementById("gaps"), gapsbtn = document.getElementById("gapsbtn");
+  (function panel() {
+    var h = el("h2"); h.appendChild(bi("Gaps (" + gaps.length + ")", "缺口（" + gaps.length + "）")); aside.appendChild(h);
+    if (!gaps.length) { var p = el("p", "none"); p.appendChild(bi("No gaps found.", "沒有發現缺口。")); aside.appendChild(p); }
+    else {
+      var ul = el("ul");
+      gaps.forEach(function (g) {
+        var li = el("li", "g w" + (g.ref ? " ref" : ""));
+        li.appendChild(el("span", "ic", "!"));
+        var t = el("span"); t.appendChild(bi(g.en, g.zh)); li.appendChild(t);
+        if (g.ref) li.addEventListener("click", function () { focusNode(g.ref); });
+        ul.appendChild(li);
+      });
+      aside.appendChild(ul);
+    }
+    var det = el("details"), sm = el("summary"); sm.appendChild(bi("Open questions (" + D.open.length + ")", "未解問題（" + D.open.length + "）")); det.appendChild(sm);
+    if (!D.open.length) { var e = el("p", "u"); e.style.color = "var(--muted)"; e.appendChild(bi("STATE.md has no Open Questions.", "STATE.md 沒有 Open Questions。")); det.appendChild(e); }
+    else { var ul2 = el("ul"); D.open.forEach(function (u) { var li = el("li"); li.appendChild(unitFrag(u)); ul2.appendChild(li); }); det.appendChild(ul2); }
+    aside.appendChild(det);
+    var gen = el("p", "gen");
+    gen.appendChild(bi("Generated " + D.now + " at commit `" + D.head + "` from SPEC.md, STATE.md (last updated: " + (D.updated || "unknown") + "), AGENTS.md and git. The page stores nothing and verifies nothing; run the generator again to refresh it, and rerun the evidence to check it.",
+      "產生於 " + D.now + "，commit `" + D.head + "`，來源為 SPEC.md、STATE.md（最後更新：" + (D.updated || "不明") + "）、AGENTS.md 與 git。本頁不儲存也不驗證任何事；要更新請重新執行產生器，要確認請自行重跑證據裡的指令。"));
+    aside.appendChild(gen);
+    function sync() {
+      var open = !aside.hidden;
+      gapsbtn.textContent = "";
+      gapsbtn.appendChild(bi((open ? "Hide gaps" : "Show gaps") + " (" + gaps.length + ")", (open ? "收起缺口" : "顯示缺口") + "（" + gaps.length + "）"));
+    }
+    aside.hidden = window.matchMedia("(max-width: 800px)").matches;
+    gapsbtn.hidden = false;
+    gapsbtn.addEventListener("click", function () { aside.hidden = !aside.hidden; sync(); layoutSoon(); });
+    sync();
+  })();
+
+  /* ---------- cards ---------- */
+  var nodes = {}, order = [];
+  var cardsEl = document.getElementById("cards");
+  function addNode(key, type, div, extra) {
+    var n = { key: key, type: type, el: div, x: 0, y: 0, w: 0, h: 0, deg: 0 };
+    for (var k in extra) n[k] = extra[k];
+    div.setAttribute("data-key", key);
+    div.classList.add("card", "t-" + type);
+    cardsEl.appendChild(div);
+    nodes[key] = n; order.push(n);
+    return n;
+  }
+  function kindLabel(div, en, zh) { var k = el("span", "kind"); k.appendChild(bi(en, zh)); return k; }
+  // A card no id reaches is drawn dashed and says so in its header row.
+  function noLink(div, h, en, zh) { var w = el("span", "warnmini"); w.appendChild(bi(en, zh)); h.appendChild(w); div.classList.add("nolink"); }
+  function arrows(h, ids) { var m = el("span", "meta"); m.appendChild(document.createTextNode("→ " + ids.join(", "))); h.appendChild(m); }
+
+  var ICON = { evidenced: "✓", claimed: "◐", none: "○" };
+  var LABEL = { evidenced: ["evidenced", "有證據"], claimed: ["claimed", "僅宣稱"], none: ["not started", "未開始"] };
+
+  var problemNode = null;
+  if (hasProblem) {
+    var pd = el("div");
+    var ph = el("div", "ch"); ph.appendChild(kindLabel(pd, "Problem", "問題")); pd.appendChild(ph);
+    var pc = el("div"); D.problem.forEach(function (u) { pc.appendChild(unitDiv(u)); });
+    pd.appendChild(clampBox(pc, 7));
+    problemNode = addNode("P", "problem", pd, {});
+  }
+
+  goals.forEach(function (g) {
+    var d = el("div");
+    var h = el("div", "ch"); h.appendChild(el("span", "id", g.id)); h.appendChild(kindLabel(d, "Goal", "目標"));
+    if (!g.acs.length) { var w = el("span", "warnmini"); w.appendChild(bi("no criteria", "沒有條件")); h.appendChild(w); d.classList.add("nolink"); }
+    d.appendChild(h);
+    d.appendChild(clampBox(unitDiv(g), 5));
+    var f = el("div", "foot");
+    if (!g.acs.length) { f.className = "foot w"; f.appendChild(bi("No acceptance criterion names " + g.id, "沒有任何驗收條件指名 " + g.id)); }
+    else {
+      var ev = g.acs.filter(function (a) { return a.eff === "evidenced"; }).length;
+      var ids = g.acs.map(function (a) { return a.id; }).join(" ");
+      f.appendChild(bi(ids + " — " + ev + " of " + g.acs.length + " evidenced", ids + " —— " + g.acs.length + " 項中 " + ev + " 項有證據"));
+    }
+    d.appendChild(f);
+    addNode("g:" + g.id, "goal", d, { goal: g });
+  });
+
+  acs.forEach(function (a) {
+    var d = el("div", "ac s-" + a.eff);
+    var h = el("div", "ch");
+    h.appendChild(el("span", "id", a.id));
+    var b = el("span", "badge b-" + a.eff); b.appendChild(document.createTextNode(ICON[a.eff] + " ")); b.appendChild(bi(LABEL[a.eff][0], LABEL[a.eff][1])); h.appendChild(b);
+    if (a.gids.length) { var sv2 = el("span", "meta"); sv2.appendChild(bi("serves " + a.gids.join(", "), "對應 " + a.gids.join(", "))); h.appendChild(sv2); }
+    else noLink(d, h, "no goal", "沒有目標");
+    d.appendChild(h);
+    d.appendChild(clampBox(unitDiv(a), 4));
+    if (a.ev) {
+      var e = el("div", "ev"); var l = el("span", "lbl"); l.appendChild(bi("Evidence", "證據")); e.appendChild(l);
+      var body = el("span"); rich(body, a.ev); e.appendChild(body);
+      if (a.date) e.appendChild(el("span", "date", " (" + a.date + ")"));
+      var w = el("div"); w.appendChild(e); d.appendChild(clampBox(w, 3));
+    }
+    if (a.decl === "evidenced" && !a.ev) { var w1 = el("div", "warnline"); w1.appendChild(bi("Marked evidenced, but no evidence is recorded: counted as claimed.", "標為有證據，但沒有記錄證據：算作僅宣稱。")); d.appendChild(w1); }
+    else if (a.decl === "claimed" && !a.ev) { var w2 = el("div", "warnline"); w2.appendChild(bi("No evidence recorded.", "沒有記錄證據。")); d.appendChild(w2); }
+    else if (a.decl === "missing") { var w3 = el("div", "warnline"); w3.appendChild(bi("No status line in STATE.md.", "STATE.md 沒有狀態行。")); d.appendChild(w3); }
+    var t = el("div", "foot");
+    if (a.touch) { t.appendChild(bi("Last touched by `" + a.touch.h + "` " + a.touch.d, "最近一次相關 commit：`" + a.touch.h + "` " + a.touch.d)); }
+    else t.appendChild(bi("No commit names " + a.id, "沒有任何 commit 提到 " + a.id));
+    d.appendChild(t);
+    addNode("a:" + a.id, "ac", d, { ac: a });
+  });
+
+  commits.forEach(function (k) {
+    var d = el("div");
+    var h = el("div", "ch"); h.appendChild(el("code", null, k.c.h)); h.appendChild(el("span", "date", k.c.d));
+    if (k.ids.length) arrows(h, k.ids); else noLink(d, h, "no id link", "沒有 id 連結");
+    d.appendChild(h);
+    d.appendChild(el("div", null, k.c.s));
+    addNode(k.key, "commit", d, { ids: k.ids });
+  });
+
+  nexts.forEach(function (k) {
+    var d = el("div");
+    var h = el("div", "ch"); h.appendChild(kindLabel(d, "Next step", "下一步"));
+    if (k.ids.length) arrows(h, k.ids); else noLink(d, h, "no id link", "沒有 id 連結");
+    d.appendChild(h);
+    d.appendChild(clampBox(unitDiv(k.u), 5));
+    addNode(k.key, "next", d, { ids: k.ids });
+  });
+
+  /* ---------- layout ---------- */
+  var COLW = { g: 220, a: 340, c: 240, n: 270 }, GAPX = 88, PADL = 40, ROW = 12, HEADH = 44;
+  var view = document.getElementById("view"), svg = document.getElementById("edges"), cv = document.getElementById("canvas");
+  var W = 0, H = 0, decor = [], LX = { a: 0 };
+
+  function nodeOf(k) { return nodes[k]; }
+  function cyOf(n) { return n.y + n.h / 2; }
+
+  // Ports: where each line meets a card, spread along its edge and ordered by
+  // where the other end is, so lines leave and arrive without piling up.
+  function ports(list, side, otherKey) {
+    var byNode = {};
+    list.forEach(function (e) { var n = side(e); (byNode[n] = byNode[n] || []).push(e); });
+    for (var k in byNode) {
+      var n = nodes[k], es = byNode[k];
+      es.sort(function (p, q) { return cyOf(nodes[otherKey(p)]) - cyOf(nodes[otherKey(q)]); });
+      es.forEach(function (e, i) {
+        var y = es.length === 1 ? n.y + Math.min(n.h / 2, 40) : n.y + 20 + (n.h - 40) * i / (es.length - 1);
+        if (n.h < 60 && es.length > 1) y = n.y + 8 + (n.h - 16) * i / (es.length - 1);
+        e["y_" + k] = y;
+      });
+    }
+  }
+
+  function rpath(pts, r) {
+    var d = "M" + pts[0][0] + " " + pts[0][1];
+    for (var i = 1; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1];
+      var l1 = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), l2 = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+      if (!l1 || !l2) continue;
+      var rr = Math.min(r, l1 / 2, l2 / 2);
+      d += " L" + (p1[0] + (p0[0] - p1[0]) * rr / l1) + " " + (p1[1] + (p0[1] - p1[1]) * rr / l1) +
+           " Q" + p1[0] + " " + p1[1] + " " + (p1[0] + (p2[0] - p1[0]) * rr / l2) + " " + (p1[1] + (p2[1] - p1[1]) * rr / l2);
+    }
+    var z = pts[pts.length - 1];
+    return d + " L" + z[0] + " " + z[1];
+  }
+  function bez(x1, y1, x2, y2) {
+    var dx = (x2 - x1) * 0.5;
+    return "M" + x1 + " " + y1 + " C" + (x1 + dx) + " " + y1 + " " + (x2 - dx) + " " + y2 + " " + x2 + " " + y2;
+  }
+
+  function layout() {
+    // 1. measure
+    clamps.forEach(function (c) { if (c.wrap.classList.contains("open")) c.btn.hidden = false; });
+    order.forEach(function (n) {
+      var cw = n.type === "problem" || n.type === "goal" ? COLW.g : n.type === "ac" ? COLW.a : n.type === "commit" ? COLW.c : COLW.n;
+      n.el.style.width = cw + "px"; n.w = cw;
+    });
+    clamps.forEach(function (c) { if (!c.wrap.classList.contains("open")) c.btn.hidden = !(c.box.scrollHeight > c.box.clientHeight + 1); });
+    order.forEach(function (n) { n.h = n.el.offsetHeight; });
+
+    // 2. columns
+    var skip = edges.filter(function (e) { return e.kind === "na"; });
+    var H0 = skip.length ? 18 + skip.length * 9 : 12;
+    var top = H0 + HEADH;
+    var xg = PADL, xa = xg + COLW.g + GAPX, xc = xa + COLW.a + GAPX, xn = xc + COLW.c + GAPX;
+    LX.a = xa;
+    decor.forEach(function (d) { if (d.parentNode) d.parentNode.removeChild(d); });
+    decor = [];
+    function deco(cls, x, y, w) { var d = el("div", cls); d.style.left = x + "px"; d.style.top = y + "px"; if (w) d.style.width = w + "px"; cardsEl.appendChild(d); decor.push(d); return d; }
+    function n_w2(x) { return x === xg ? COLW.g : x === xa ? COLW.a : x === xc ? COLW.c : COLW.n; }
+    function head(x, en, zh, sub) {
+      var d = deco("colhead", x, H0 - 2, n_w2(x));
+      d.appendChild(bi(en, zh));
+      if (sub) { var s = el("small"); s.appendChild(bi(sub[0], sub[1])); d.appendChild(s); }
+    }
+
+    // criteria: those that name a goal, in goal order; then those that name none
+    var gIndex = {}; goals.forEach(function (g, i) { gIndex[g.id] = i; });
+    var withGoal = acs.filter(function (a) { return a.gids.length; });
+    var noGoal = acs.filter(function (a) { return !a.gids.length; });
+    withGoal.sort(function (p, q) {
+      var bp = p.gids.reduce(function (s, id) { return s + gIndex[id]; }, 0) / p.gids.length;
+      var bq = q.gids.reduce(function (s, id) { return s + gIndex[id]; }, 0) / q.gids.length;
+      return bp - bq || acs.indexOf(p) - acs.indexOf(q);
+    });
+    var y = top;
+    withGoal.forEach(function (a) { var n = nodes["a:" + a.id]; n.x = xa; n.y = y; y += n.h + ROW; });
+    if (noGoal.length) {
+      if (withGoal.length) y += 10;
+      var sp = deco("sep", xa, y, COLW.a); sp.appendChild(bi("No goal linked", "沒有連到目標")); y += 26;
+      noGoal.forEach(function (a) { var n = nodes["a:" + a.id]; n.x = xa; n.y = y; y += n.h + ROW; });
+    }
+    var bottom = y;
+    head(xa, "Acceptance criteria", "驗收條件", [counts.evidenced + " evidenced · " + counts.claimed + " claimed · " + counts.none + " not started", counts.evidenced + " 有證據 · " + counts.claimed + " 僅宣稱 · " + counts.none + " 未開始"]);
+
+    // a column that follows the criteria: each card sits level with the
+    // criteria it names, pushed down only as far as the cards above it need
+    function follow(list, x, linkedOf, sepEn, sepZh) {
+      var linked = [], free = [];
+      list.forEach(function (n) { (linkedOf(n).length ? linked : free).push(n); });
+      linked.forEach(function (n) { n.want = linkedOf(n).reduce(function (s, id) { return s + cyOf(nodes["a:" + id]); }, 0) / linkedOf(n).length; });
+      linked.sort(function (p, q) { return p.want - q.want; });
+      var prev = top - ROW;
+      linked.forEach(function (n) { n.x = x; n.y = Math.max(n.want - n.h / 2, prev + ROW); prev = n.y + n.h; });
+      if (free.length) {
+        var yy = (linked.length ? prev + ROW + 10 : top);
+        var s = deco("sep", x, yy, null); s.style.width = n_w(x) + "px"; s.appendChild(bi(sepEn, sepZh)); yy += 26;
+        free.forEach(function (n) { n.x = x; n.y = yy; yy += n.h + ROW; prev = n.y + n.h; });
+      }
+      return prev;
+    }
+    function n_w(x) { return x === xc ? COLW.c : COLW.n; }
+
+    // goals, with the problem above them
+    var gy = top;
+    if (problemNode) { problemNode.x = xg; problemNode.y = top; gy = top + problemNode.h + 28; }
+    var gl = goals.map(function (g) { return nodes["g:" + g.id]; });
+    var gLinked = gl.filter(function (n) { return n.goal.acs.length; }), gFree = gl.filter(function (n) { return !n.goal.acs.length; });
+    gLinked.forEach(function (n) { n.want = n.goal.acs.reduce(function (s, a) { return s + cyOf(nodes["a:" + a.id]); }, 0) / n.goal.acs.length; });
+    var prev = gy - ROW;
+    gLinked.forEach(function (n) { n.x = xg; n.y = Math.max(n.want - n.h / 2, prev + ROW); prev = n.y + n.h; });
+    if (gFree.length) {
+      var yy = prev + ROW + (gLinked.length ? 10 : 0);
+      var s = deco("sep", xg, yy, COLW.g); s.appendChild(bi("No criterion names these", "沒有條件指名這些目標")); yy += 26;
+      gFree.forEach(function (n) { n.x = xg; n.y = yy; yy += n.h + ROW; prev = n.y + n.h; });
+    }
+    bottom = Math.max(bottom, prev);
+    head(xg, "Goals", "目標", goals.length ? [goals.length + " in SPEC.md", "SPEC.md 裡共 " + goals.length + " 個"] : null);
+
+    bottom = Math.max(bottom, follow(commits.map(function (k) { return nodes[k.key]; }), xc, function (n) { return n.ids; }, "No id link", "沒有 id 連結"));
+    var chk = D.changes, sub;
+    if (chk.kind === "first") sub = ["First view here: the last " + chk.items.length + " commits", "這台機器第一次檢視：最近 " + chk.items.length + " 個 commit"];
+    else if (chk.kind === "lost") sub = ["Marker gone: the last " + chk.items.length + " commits", "標記已不存在：最近 " + chk.items.length + " 個 commit"];
+    else if (chk.kind === "none") sub = ["Nothing new since the last view (at " + chk.n + ")", "自上次檢視（" + chk.n + "）以來沒有新的 commit"];
+    else if (chk.kind === "some") sub = [chk.total + " commit(s) since the last view (at " + chk.n + ")", "自上次檢視（" + chk.n + "）以來共 " + chk.total + " 個 commit"];
+    else sub = ["No commits yet", "還沒有任何 commit"];
+    head(xc, "Changes since last view", "上次檢視後的變更", sub);
+
+    bottom = Math.max(bottom, follow(nexts.map(function (k) { return nodes[k.key]; }), xn, function (n) { return n.ids; }, "No id link", "沒有 id 連結"));
+    head(xn, "Next steps", "下一步", [nexts.length + " in STATE.md", "STATE.md 裡共 " + nexts.length + " 項"]);
+
+    order.forEach(function (n) { n.el.style.left = n.x + "px"; n.el.style.top = n.y + "px"; });
+    W = xn + COLW.n + 50; H = bottom + 40;
+
+    // 3. lines
+    var ge = edges.filter(function (e) { return e.kind === "ga"; });
+    var ce = edges.filter(function (e) { return e.kind === "ca"; });
+    var pe = edges.filter(function (e) { return e.kind === "pg"; });
+    ports(ge, function (e) { return e.from; }, function (e) { return e.to; });
+    ports(ge, function (e) { return e.to; }, function (e) { return e.from; });
+    ports(ce.concat(skip), function (e) { return e.to; }, function (e) { return e.from; });
+    ports(ce.concat(skip), function (e) { return e.from; }, function (e) { return e.to; });
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    svg.setAttribute("width", W); svg.setAttribute("height", H);
+    var defs = sv("defs", {});
+    ["pg", "ga", "ca", "na"].forEach(function (k) {
+      var m = sv("marker", { id: "mk-" + k, viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "8", markerHeight: "8", orient: "auto", markerUnits: "userSpaceOnUse" });
+      m.appendChild(sv("path", { d: "M0 0 L10 5 L0 10 z", "class": "mk-" + k })); defs.appendChild(m);
+    });
+    svg.appendChild(defs);
+    function draw(e, d) {
+      var p = sv("path", { d: d, "class": "edge " + e.kind, "marker-end": "url(#mk-" + e.kind + ")" });
+      svg.appendChild(p); e.path = p;
+    }
+    ge.forEach(function (e) { var a = nodes[e.from], b = nodes[e.to]; draw(e, bez(a.x + a.w, e["y_" + e.from], b.x, e["y_" + e.to])); });
+    ce.forEach(function (e) { var a = nodes[e.from], b = nodes[e.to]; draw(e, bez(a.x, e["y_" + e.from], b.x + b.w, e["y_" + e.to])); });
+    // next step -> criterion crosses the commits column, so it goes round the
+    // top of it instead of behind the cards
+    var lane = 0;
+    skip.slice().sort(function (p, q) { return cyOf(nodes[p.to]) - cyOf(nodes[q.to]); }).forEach(function (e, i) {
+      var a = nodes[e.from], b = nodes[e.to];
+      var j = (i % 5 - 2) * 6;
+      var xB = xn - GAPX * 0.5 + j, xA = xc - GAPX * 0.5 + j, ly = 10 + (lane++) * 9;
+      draw(e, rpath([[a.x, e["y_" + e.from]], [xB, e["y_" + e.from]], [xB, ly], [xA, ly], [xA, e["y_" + e.to]], [b.x + b.w, e["y_" + e.to]]], 8));
+    });
+    // problem -> goals leaves the problem by its left side and runs down the margin
+    pe.forEach(function (e, i) {
+      var a = nodes[e.from], b = nodes[e.to], gx = xg - 20, sy = a.y + 22;
+      draw(e, rpath([[a.x, sy], [gx, sy], [gx, b.y + Math.min(22, b.h / 2)], [b.x, b.y + Math.min(22, b.h / 2)]], 8));
+    });
+    view.style.width = W + "px"; view.style.height = H + "px";
+    applySel();
+  }
+  var pending = false;
+  function layoutSoon() { if (pending) return; pending = true; setTimeout(function () { pending = false; layout(); if (!moved) fit(); }, 0); }
+
+  /* ---------- selection ---------- */
+  var sel = null;
+  function applySel() {
+    var near = {};
+    if (sel) { near[sel] = 1; edges.forEach(function (e) { if (e.from === sel || e.to === sel) { near[e.from] = 1; near[e.to] = 1; } }); }
+    view.classList.toggle("has-sel", !!sel);
+    order.forEach(function (n) { n.el.classList.toggle("hl", !!near[n.key]); n.el.classList.toggle("sel", n.key === sel); });
+    edges.forEach(function (e) { if (e.path) e.path.setAttribute("class", "edge " + e.kind + (sel && (e.from === sel || e.to === sel) ? " hl" : "")); });
+  }
+  function select(k) { sel = (sel === k) ? null : k; applySel(); }
+  function focusNode(k) {
+    var n = nodes[k]; if (!n) return;
+    sel = k; applySel();
+    var r = cv.getBoundingClientRect();
+    S.tx = r.width / 2 - (n.x + n.w / 2) * S.k; S.ty = r.height / 2 - (n.y + n.h / 2) * S.k; moved = true; applyT();
+    if (window.matchMedia("(max-width: 800px)").matches) { aside.hidden = true; gapsbtn.textContent = ""; gapsbtn.appendChild(bi("Show gaps (" + gaps.length + ")", "顯示缺口（" + gaps.length + "）")); cv.scrollIntoView({ block: "center" }); }
+  }
+
+  /* ---------- pan and zoom ---------- */
+  var S = { tx: 0, ty: 0, k: 1 }, moved = false;
+  function applyT() { view.style.transform = "translate(" + S.tx + "px," + S.ty + "px) scale(" + S.k + ")"; }
+  // Readable first: the whole picture when it fits at a size text can be read
+  // at, otherwise that size, with the criteria column in view, and the rest is
+  // a pan away. The Fit button always shows everything.
+  function fit(all) {
+    var r = cv.getBoundingClientRect(), lg = document.getElementById("legend");
+    var top = lg.offsetHeight + 20, availH = r.height - top - 14;
+    var kw = (r.width - 30) / W, kh = availH / H;
+    var k = Math.min(kw, kh, 1.15);
+    if (!all && k < 0.8) k = 0.8;
+    k = clamp(k, 0.1, 1.15);
+    S.k = k;
+    S.tx = W * k <= r.width ? (r.width - W * k) / 2 : (all ? 15 : Math.min(15, 14 - LX.a * k));
+    S.ty = H * k <= availH ? top + (availH - H * k) / 2 : top;
+    moved = false; applyT();
+  }
+  function zoomAt(cx, cy, f) {
+    var k2 = clamp(S.k * f, 0.1, 2.5); f = k2 / S.k;
+    S.tx = cx - (cx - S.tx) * f; S.ty = cy - (cy - S.ty) * f; S.k = k2; moved = true; applyT();
+  }
+  (function controls() {
+    var c = document.getElementById("ctl");
+    function btn(txt, fn, en, zh) { var b = el("button"); b.type = "button"; if (txt) b.textContent = txt; else b.appendChild(bi(en, zh)); b.addEventListener("click", fn); c.appendChild(b); return b; }
+    btn("+", function () { var r = cv.getBoundingClientRect(); zoomAt(r.width / 2, r.height / 2, 1.25); });
+    btn("−", function () { var r = cv.getBoundingClientRect(); zoomAt(r.width / 2, r.height / 2, 0.8); });
+    btn(null, function () { fit(true); }, "Fit", "全覽");
+    var lg = document.getElementById("legend");
+    [["pg", "problem → goal", "問題 → 目標"], ["ga", "goal → criterion", "目標 → 條件"], ["ca", "commit → criterion", "commit → 條件"], ["na", "next step → criterion", "下一步 → 條件"]].forEach(function (p) {
+      var s = el("span"), g = sv("svg", { viewBox: "0 0 26 8" });
+      g.appendChild(sv("path", { d: "M0 4 L26 4", "class": "lg-" + p[0] })); s.appendChild(g); s.appendChild(bi(p[1], p[2])); lg.appendChild(s);
+    });
+    var s2 = el("span", "sentence"); s2.appendChild(bi("A line exists only where an id is written in a file.", "只有檔案裡寫了 id 的地方才有線。")); lg.appendChild(s2);
+  })();
+
+  var ptrs = {}, down = null, pinch = 0;
+  function count() { return Object.keys(ptrs).length; }
+  cv.addEventListener("pointerdown", function (e) {
+    if (e.target.closest("button, .ctl")) return;
+    ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (count() === 1) { var c = e.target.closest(".card"); down = { x: e.clientX, y: e.clientY, moved: false, key: c ? c.getAttribute("data-key") : null }; }
+    else { if (down) down.moved = true; var ks = Object.keys(ptrs); pinch = Math.hypot(ptrs[ks[0]].x - ptrs[ks[1]].x, ptrs[ks[0]].y - ptrs[ks[1]].y); }
+  });
+  cv.addEventListener("pointermove", function (e) {
+    var p = ptrs[e.pointerId]; if (!p) return;
+    var dx = e.clientX - p.x, dy = e.clientY - p.y;
+    if (count() === 1 && down) {
+      if (!down.moved && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 4) { down.moved = true; cv.classList.add("drag"); try { cv.setPointerCapture(e.pointerId); } catch (x) {} }
+      if (down.moved) { S.tx += dx; S.ty += dy; moved = true; applyT(); }
+      p.x = e.clientX; p.y = e.clientY;
+    } else if (count() === 2) {
+      p.x = e.clientX; p.y = e.clientY;
+      var ks = Object.keys(ptrs), a = ptrs[ks[0]], b = ptrs[ks[1]];
+      var d = Math.hypot(a.x - b.x, a.y - b.y), r = cv.getBoundingClientRect();
+      if (pinch) zoomAt((a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top, d / pinch);
+      pinch = d;
+    }
+  });
+  function up(e) {
+    if (!ptrs[e.pointerId]) return;
+    var wasOne = count() === 1;
+    delete ptrs[e.pointerId];
+    if (wasOne && down) {
+      if (!down.moved && e.type === "pointerup") { if (down.key) select(down.key); else { sel = null; applySel(); } }
+      down = null; cv.classList.remove("drag");
+    }
+    if (count() < 2) pinch = 0;
+  }
+  cv.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+  cv.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    var r = cv.getBoundingClientRect();
+    zoomAt(e.clientX - r.left, e.clientY - r.top, Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015)));
+  }, { passive: false });
+  window.addEventListener("resize", function () { if (!moved) fit(); });
+
+  /* ---------- language ---------- */
+  var lb = document.getElementById("lang"), tl = root.getAttribute("data-tlang") || "zh-TW";
+  try { var s0 = localStorage.getItem(KEY); if (s0 === "en" || s0 === "zh") root.setAttribute("data-lang", s0); } catch (e) {}
+  function applyLang() {
+    var l = root.getAttribute("data-lang");
+    root.setAttribute("lang", l === "zh" ? tl : "en");
+    lb.textContent = l === "zh" ? "English" : "繁體中文";
+  }
+  lb.hidden = false;
+  lb.addEventListener("click", function () {
+    var n = root.getAttribute("data-lang") === "zh" ? "en" : "zh";
+    root.setAttribute("data-lang", n);
+    try { localStorage.setItem(KEY, n); } catch (e) {}
+    applyLang(); layout();
+  });
+  applyLang();
+
+  layout();
+  fit();
 })();
-</script>
-</body>
-</html>
 EOF
+printf '</script>\n</body>\n</html>\n'
 } > "$OUT" || { echo "progress.sh: could not write $OUT" >&2; exit 1; }
 
 # Move the marker only after the page was written, so a failed run does not
