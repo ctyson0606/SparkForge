@@ -106,7 +106,17 @@ projects, the other two in none.
   update-kit from the local SparkForge path (the new commits are unpushed),
   the hand-copied pieces, status lines backed by commands actually rerun,
   and a spec-gate draft of milestones, components, Means and Try for the
-  user to approve before SPEC.md changes.
+  user to approve before SPEC.md changes. Done the same day except the
+  approval: GameBrake is on 0.6.0 with the page, 6 criteria evidenced by
+  tests run that day and 4 claimed, because their real-process half lives in
+  e2e, which kills the running tray and overwrites the real config, and in
+  WindowsProcessWatcherTests, which refuse while the tray runs. The draft
+  waits for the user. What the install found about SparkForge, unfixed:
+  update-kit.sh lands a new .sh in kit/ as 100644 on Windows, so check.sh
+  fails right after an update; nothing lists the hand edits an install of
+  0.3.0 or later needs, and check.sh misses most of them; spec-gate does not
+  say that "uses" takes bare comma-separated ids and nothing else, and a
+  prose "uses" line parsed as junk ids.
 - The user is about to run a project with TEAM > 1 for the first time, which
   team-contract has never seen. Read on 2026-10-01, it only asks for a contract
   reference and a file-ownership list, and says neither where that list is
