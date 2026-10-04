@@ -89,13 +89,10 @@ projects, the other two in none.
   unprompted. Known limits: the page cannot tell a stale translation from a
   missing one; a criterion edited after its evidence was recorded still shows
   evidenced, the date being the only hint; a run takes several seconds on
-  Windows because each translated section unit spawns a git hash. The three
-  installed projects need, by hand, since update-kit.sh writes only kit/:
-  scripts/progress.sh and progress.ps1 stubs (their check.sh fails on the
-  missing stubs until then, by design), the TRANSLATION declaration and
-  progress paragraph in AGENTS.md, an Acceptance status heading in STATE.md,
-  and Means and Try lines, milestones and components in SPEC.md. Solo use
-  first; team use waits for the paused TEAM > 1 design. Phase 2, after the
+  Windows because each translated section unit spawns a git hash. What a
+  project needs outside kit/ is listed in kit/project-requirements.txt (see
+  below); Means and Try lines, milestones and components in SPEC.md are
+  content and are not in it. Solo use first; team use waits for the paused TEAM > 1 design. Phase 2, after the
   user has used this: a LEARNING switch and bilingual notes written at
   decision time, each saying what was chosen, what was rejected, what it
   solves and what it costs.
@@ -111,17 +108,22 @@ projects, the other two in none.
   tests run that day and 4 claimed, because their real-process half lives in
   e2e, which kills the running tray and overwrites the real config, and in
   WindowsProcessWatcherTests, which refuse while the tray runs. The draft
-  waits for the user. What the install found about SparkForge, unfixed:
-  update-kit.sh lands a new .sh in kit/ as 100644 on Windows, so check.sh
-  fails right after an update; nothing lists the hand edits an install of
-  0.3.0 or later needs, and check.sh misses most of them; spec-gate does not
-  say that "uses" takes bare comma-separated ids and nothing else, and a
-  prose "uses" line parsed as junk ids. The user asked on 2026-10-04 for all
-  three to be fixed now, being built as 0.6.1: update-kit.sh stages kit/'s
-  .sh files executable; kit/ ships a list of what a project needs outside
-  kit/, which check.sh enforces and update-kit.sh diffs old against new to
-  print what this update newly needs by hand; spec-gate states the "uses"
-  form and the page reports a non-id in it as a gap.
+  waits for the user. What the install found about SparkForge was three defects, fixed in kit
+  0.6.1 on 2026-10-04. update-kit.sh stages kit/'s .sh files 100755 and says
+  so. kit/project-requirements.txt (path|text|hint per line) is the one list
+  of what a project needs outside kit/: check.sh reads it in place of its old
+  REQUIRED array and fails each unmet line with its hint, and update-kit.sh
+  prints the lines that are new against the list it replaced and unmet, so a
+  project already meeting everything, or an old requirement still unmet, gets
+  no repeat. spec-gate states that uses takes bare comma-separated ids; the
+  page draws nothing from a uses list holding any other token and reports it
+  as a high gap. Verified on scratch clones of GameBrake at 0.2.1 and 0.6.0,
+  a uses fixture in headless Edge, and a sabotage of the gap check restored
+  from the index. Not verified: macOS. A first update to 0.6.1 runs the OLD
+  kit/scripts/update-kit.sh, which neither stages nor lists anything, so
+  GameBrake meets the new code only on its second update, or by running the new
+  script against it directly (SPARKFORGE_ROOT and SPARKFORGE_UPDATE_COPY set
+  to the project and a copy of the new script).
 - The user is about to run a project with TEAM > 1 for the first time, which
   team-contract has never seen. Read on 2026-10-01, it only asks for a contract
   reference and a file-ownership list, and says neither where that list is
