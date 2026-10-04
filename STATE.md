@@ -101,7 +101,16 @@ projects, the other two in none.
   lines dazzle; an AC's one sentence does not tell them what it means; and
   they want everything translated, commits and evidence included. Three
   rounds of drawing lines better did not fix it, so the lines themselves are
-  the suspect: the next proposal replaces them with containment and links.
+  the suspect. Agreed with the user the same day, being built: no lines at
+  all and no graph tab. Goals are sections holding their criteria's cards;
+  a card shows status, a plain title and its id; clicking it opens a detail
+  panel (meaning, how to try it, evidence, related commits and next steps).
+  Changes and next steps become lists whose AC chips jump to cards; gaps sit
+  behind a button, with high ones as one line at the top. spec-gate adds two
+  sub-lines per criterion, Means (plain language) and Try (how a person sees
+  it work themselves), approved with the spec; together the Try lines are
+  the demo's usage guide. Everything is translated except commands, commit
+  subjects and evidence included, the original one click away.
 - The user is about to run a project with TEAM > 1 for the first time, which
   team-contract has never seen. Read on 2026-10-01, it only asks for a contract
   reference and a file-ownership list, and says neither where that list is
