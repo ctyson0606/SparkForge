@@ -79,6 +79,16 @@ projects, the other two in none.
   design. Phase 2, after the user has used the canvas: a LEARNING switch and
   bilingual notes written at decision time, each saying what was chosen, what
   was rejected, what it solves and what it costs.
+  The user's verdict on the canvas, 2026-10-04: the Chinese view is a mess.
+  Causes found: the fixture translated 7 of 20 units on purpose; commit
+  subjects and evidence are never translated and nothing says so; and a bug,
+  the untranslated marker is appended to the text inside a line-clamped box,
+  so truncation hides it and untranslated English looks like a normal card.
+  Agreed fix, being built: marker in the card header, fallback English styled
+  as such, original-language records labelled, a zh summary line of how many
+  units lack translation, a fully translated fixture shown beside the partial
+  one; plus the duplicated problem card, the bundled next-step lines, and
+  gaps ranked by severity.
 - The user is about to run a project with TEAM > 1 for the first time, which
   team-contract has never seen. Read on 2026-10-01, it only asks for a contract
   reference and a file-ownership list, and says neither where that list is
