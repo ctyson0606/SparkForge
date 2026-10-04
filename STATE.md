@@ -40,36 +40,43 @@ projects, the other two in none.
 
 - Progress page, decided with the user on 2026-10-04. Origin: at a hackathon,
   without SparkForge, the user accepted AI suggestions until they no longer
-  knew what the demo did or how to run it. Phase 1 is built and in kit 0.3.0:
+  knew what the demo did or how to run it. Built, in kit 0.4.0:
   scripts/progress.sh (progress.ps1 on Windows) generates a self-contained
   bilingual HTML page from SPEC.md, STATE.md, AGENTS.md and git, and stores
-  nothing. Acceptance status comes from a new section in STATE.md; ids are
-  the ones SPEC.md writes (AC1, G1), AC<n> by position when a criterion has
-  none, since spec-gate fixes no scheme. The Chinese is translations/<lang>.md,
-  entries keyed by the hash of the English unit, with TRANSLATION in
-  AGENTS.md. Run on Git Bash and through powershell.exe against a scratch
-  project (space in the path, CRLF sources, missing, stale and orphaned
-  translations, escaping, marker behaviour) and against a clone of GameBrake
-  (all ten criteria not started, as expected). On 2026-10-04 the user ran
-  progress.ps1 on Windows and the page opened in their browser. Not observed:
-  opening through open, xdg-open or Git Bash's start; anything on a Mac
-  (written for bash 3.2 and BSD awk, never run); the language button and its
-  remembered choice. The user's verdict on the first look: too plain and not
-  clear enough, the information scattered and vague; they want cards on a
-  canvas joined by arrows and lines. Agreed on 2026-10-04 and being built:
-  every line comes from an id written in a file (goal ids in SPEC.md, an AC
-  naming its goal, an AC id in a commit subject or a Next Steps entry), never
-  from a guess, and a card with no id stays unlinked; layout is automatic and
-  cards cannot be dragged, so every viewer sees the same picture. Unverified: whether an agent writes acceptance status lines and
-  fills translations unprompted. Known limits: the page cannot tell a stale
-  translation from a missing one, so the marker says both; a criterion edited
-  after its evidence was recorded still shows evidenced, the date being the
-  only hint. The three installed projects need, by hand, since update-kit.sh
+  nothing. Acceptance status comes from a section in STATE.md. The first
+  version was plain; the user found it scattered and vague and asked for cards
+  on a canvas joined by lines. Now: bash and awk emit JSON, inline JS lays out
+  and draws. Every line comes from an id written in a file (goal ids in
+  SPEC.md, "AC3 (G1)" naming its goal, an AC id in a commit subject or a Next
+  Steps entry, matched as whole tokens), never from a guess; a card with no id
+  reference is dashed, at the bottom of its column, and named in a gaps panel.
+  Layout is automatic, cards are not draggable. Old forms (no ids, no goal
+  refs) still parse, unlinked, and show as gaps; goal ids without a colon
+  ("G1  text", as GameBrake writes them) parse too. spec-gate.md and the
+  progress paragraph in AGENTS.md carry the id convention. Observed with
+  headless Edge on Windows (screenshots, light and dark, 1600 wide, 390 wide
+  with device emulation, zh default and en), and by driving it over the
+  DevTools protocol: click highlighting, drag pan, wheel zoom, Fit, language
+  toggle with its stored choice, "more" expansion, hostile text (script,
+  quotes, backslashes, control characters) inert, an empty template and a
+  project with no files, no page exceptions; against a GameBrake clone (ten
+  criteria, six goals, none linked, readable; its real commits naming AC7 and
+  AC8 produced lines). Not observed: pinch on touch, touch dragging, opening
+  through open, xdg-open or Git Bash's start; anything on a Mac (written for
+  bash 3.2 and BSD awk, never run); other browsers; light mode was seen only
+  through emulation. The first view is readable-first: at least 0.8 scale, so
+  a project with many criteria starts cut off at the bottom and Fit shows all.
+  Unverified: whether an agent writes ids in commits and Next Steps entries
+  unprompted, and acceptance status lines and translations. Known limits: the
+  page cannot tell a stale translation from a missing one, so the marker says
+  both; a criterion edited after its evidence was recorded still shows
+  evidenced, the date being the only hint; last-touched looks back 5000
+  commits. The three installed projects need, by hand, since update-kit.sh
   writes only kit/: scripts/progress.sh and progress.ps1 stubs (their check.sh
   fails on the missing stubs until then, by design), the TRANSLATION
   declaration and progress paragraph in AGENTS.md, and an Acceptance status
   heading in STATE.md. Solo use first; team use waits for the paused TEAM > 1
-  design. Phase 2, after the user has used phase 1: a LEARNING switch and
+  design. Phase 2, after the user has used the canvas: a LEARNING switch and
   bilingual notes written at decision time, each saying what was chosen, what
   was rejected, what it solves and what it costs.
 - The user is about to run a project with TEAM > 1 for the first time, which
