@@ -32,6 +32,7 @@ my-project/
 ├── kit/
 │   ├── VERSION
 │   ├── entry-points.txt
+│   ├── project-requirements.txt
 │   ├── skills/
 │   ├── agents/
 │   └── scripts/
@@ -47,6 +48,7 @@ my-project/
 | ⚙️ `AGENTS.md` | 入口，也是唯一做路由的檔案。放 `MODE`、`TEAM`、你這個專案的環境指令、硬規則，以及把 agent 導向某個 skill 的那張表。 |
 | 🚪 各工具的入口檔 | `CLAUDE.md`、`GEMINI.md`、`.clinerules`、`.windsurfrules`、`.cursor/rules/`、`.github/`。每一個都只說一件事：先讀 `AGENTS.md`。詳見下一節。 |
 | 🗂️ `kit/entry-points.txt` | 那些入口檔的清單。兩支檢查器都讀它，所以一個工具不會在這裡有、在那裡漏。 |
+| 📋 `kit/project-requirements.txt` | 專案在 `kit/` 之外必須有的東西：`scripts/` 裡的薄殼、`AGENTS.md` 裡的 `TRANSLATION` 行、`STATE.md` 和 `SPEC.md` 裡的標題等等，每條都附一句該補什麼的提示。`check.sh` 會讓每條沒滿足的失敗；`update-kit.sh` 會點名那次更新新帶進來的。 |
 | 📐 `SPEC.md` | 批准過的契約：目標、非目標、驗收條件、資料和 API 的格式。只能透過規格門修改，所以不會隨著狀態更新被清掉。 |
 | 🧠 `METHOD.md` | 這個專案自己掙來的長效規則。**開始是空的，而且會一直空著**，直到真的踩到坑才填。 |
 | 📌 `STATE.md` | 當前工作狀態。整份替換，絕不往後追加。 |
@@ -195,6 +197,8 @@ bash scripts/check.sh
 📣 如果某次更新開始支援一個你沒有入口檔的工具，`update-kit.sh` 會把它列出來。
 它只報那次更新帶進來的，絕不報所有缺席的入口 —— 一個對每個你刻意不用的工具都
 叫一次的警告，看兩次之後就沒人讀了。
+
+📋 `update-kit.sh` 只寫 `kit/`，所以某個版本若需要 `kit/` 之外的新東西，它供應不了。它會列出 `kit/project-requirements.txt` 裡那次更新新增、而且還沒滿足的要求，每條附上該補什麼、從哪裡複製，以前列過的不再重複。在 Windows 上它還會把 `kit/` 下的 `.sh` 以可執行的模式放進暫存區，否則 Git for Windows 會把它們記成 `100644`，`check.sh` 就會失敗。
 
 📦 腳本搬進 `kit/scripts/` 之前就安裝的專案，`scripts/` 裡放的還是完整腳本。請手動
 從 SparkForge 的 `template/scripts/` 複製那兩個薄殼過去覆蓋一次。在那之前，舊的腳

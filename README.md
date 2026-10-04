@@ -33,6 +33,7 @@ my-project/
 ├── kit/
 │   ├── VERSION
 │   ├── entry-points.txt
+│   ├── project-requirements.txt
 │   ├── skills/
 │   ├── agents/
 │   └── scripts/
@@ -48,6 +49,7 @@ my-project/
 | ⚙️ `AGENTS.md` | The entry point, and the only file that routes. Holds `MODE`, `TEAM`, your project's environment commands, the hard rules, and the table that sends the agent to a skill. |
 | 🚪 The per-tool entry files | `CLAUDE.md`, `GEMINI.md`, `.clinerules`, `.windsurfrules`, `.cursor/rules/`, `.github/`. Each says one thing: read `AGENTS.md` first. See below. |
 | 🗂️ `kit/entry-points.txt` | The list of those entry files. Both checkers read it, so a tool cannot be covered in one place and missed in another. |
+| 📋 `kit/project-requirements.txt` | What a project must hold outside `kit/`: the stubs in `scripts/`, the `TRANSLATION` line in `AGENTS.md`, the headings in `STATE.md` and `SPEC.md`, and so on, each with a hint on what to add. `check.sh` fails each unmet line; `update-kit.sh` names the ones an update introduced. |
 | 📐 `SPEC.md` | The approved contract: goals, non-goals, acceptance criteria, the data and API shapes. Changed only through the spec gate, so it outlives every state change. |
 | 🧠 `METHOD.md` | Durable rules this project earned. **Starts empty and stays empty** until a real trap fills it. |
 | 📌 `STATE.md` | Current working state. Replaced wholesale, never appended to. |
@@ -207,6 +209,8 @@ bash scripts/check.sh
 `update-kit.sh` names it. It reports only what that update introduced, never
 every absent entry — a warning that fires on each tool you deliberately do not
 use is read twice and ignored afterwards.
+
+📋 `update-kit.sh` only writes `kit/`, so a version that needs something new outside it cannot supply it. It lists the requirements from `kit/project-requirements.txt` that are new in that update and not yet met, each with what to add and where to copy it from, and nothing it listed before. On Windows it also stages the `.sh` files under `kit/` as executable, since Git for Windows would otherwise record them as `100644` and `check.sh` would fail.
 
 📦 A project installed before the scripts moved into `kit/scripts/` still has
 the full scripts in `scripts/`. Copy the two stubs from SparkForge's

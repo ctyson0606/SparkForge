@@ -446,16 +446,28 @@ awk -v idpat="$COMP_PAT" -v refpat='^$' -v EM="—" "$JLIB $HEAD_AWK"'
     if (u > 0) { resp = trim(substr(r3, 1, u - 1)); uses = substr(r3, u + 7) }
     else if (substr(r3, 1, 5) == "uses ") { uses = substr(r3, 6) }
     else resp = r3
+    # A uses list is bare ids. A list holding any token that is not an id shape
+    # is not trusted at all: ids sitting in prose may mean something other than
+    # "uses" (through, instead of), and a wrong line would look true. Nothing is
+    # drawn from it; the whole list is kept as written (field 8) so a gap can
+    # name it.
+    rawuses = trim(uses); bad = 0
     gsub(/[,;]/, " ", uses); n = split(uses, parts, " "); uses = ""
-    for (k = 1; k <= n; k++) { sub(/[.]$/, "", parts[k]); if (parts[k] != "") uses = uses (uses == "" ? "" : ",") parts[k] }
-    print "C\037" id "\037" impl "\037" name "\037" path "\037" resp "\037" uses
+    for (k = 1; k <= n; k++) {
+      sub(/[.]$/, "", parts[k])
+      if (parts[k] == "") continue
+      if (parts[k] ~ /^C[0-9]+$/) uses = uses (uses == "" ? "" : ",") parts[k]
+      else bad = 1
+    }
+    if (bad) uses = ""
+    print "C\037" id "\037" impl "\037" name "\037" path "\037" resp "\037" uses "\037" (bad ? rawuses : "")
   }' "$T/comps.items" > "$T/comps.parsed"
 # Names and responsibilities are translation units.
 awk 'BEGIN { FS = "\037" } { if ($4 != "") print "cname\037" $4 "\037" $2; if ($6 != "") print "cresp\037" $6 "\037" $2 }' "$T/comps.parsed" > "$T/comp.in"
 resolve_batch "$T/comp.in" "$T/res.comp"
 # Whether each path exists, and the last commits that touched it.
 : > "$T/comps.exist"; : > "$T/cc.in"
-while IFS=$'\037' read -r ck cid cimpl cname cpath cresp cuses; do
+while IFS=$'\037' read -r ck cid cimpl cname cpath cresp cuses cbad; do
   [ -n "$cid" ] || continue
   ex=no; safe=0
   if [ -n "$cpath" ]; then
@@ -623,7 +635,7 @@ comps_json() {
     FILENAME == cf { CC[$8] = CC[$8] (CC[$8] == "" ? "" : ",") "{\"h\":" jesc($6) ",\"d\":" jesc($7) ",\"s\":" jesc($4) ",\"tr\":" jesc($5) ",\"st\":" jesc($2) "}"; next }
     FILENAME == pf {
       id = $2; dup = (id in U) ? 1 : 0; U[id] = 1
-      printf "%s{\"id\":%s,\"impl\":%s,\"dup\":%s,\"name\":%s,\"path\":%s,\"exists\":%s,\"resp\":%s,\"uses\":%s,\"commits\":[%s]}", (n++ ? "," : ""), jesc(id), ($3 == 1 ? "true" : "false"), (dup ? "true" : "false"), ($4 == "" ? "null" : unit(NMS[id], $4, NMT[id])), jesc($5), (EX[id] == "yes" ? "true" : "false"), ($6 == "" ? "null" : unit(RSS[id], $6, RTT[id])), jarr($7), CC[id]
+      printf "%s{\"id\":%s,\"impl\":%s,\"dup\":%s,\"name\":%s,\"path\":%s,\"exists\":%s,\"resp\":%s,\"uses\":%s,\"badUses\":%s,\"commits\":[%s]}", (n++ ? "," : ""), jesc(id), ($3 == 1 ? "true" : "false"), (dup ? "true" : "false"), ($4 == "" ? "null" : unit(NMS[id], $4, NMT[id])), jesc($5), (EX[id] == "yes" ? "true" : "false"), ($6 == "" ? "null" : unit(RSS[id], $6, RTT[id])), jarr($7), jesc($8), CC[id]
     }
     END { printf "]" }' "$T/res.comp" "$T/comps.exist" "$T/res.cc" "$T/comps.parsed"
 }
@@ -1149,6 +1161,7 @@ cat <<'EOF'
     if (c.impl) gap("medium", "A component in `SPEC.md` has no id written; it is numbered " + bt(c.id) + " by position.", "`SPEC.md` 裡有一個元件沒有寫編號，依位置編為 " + bt(c.id) + "。", r);
     if (!c.path) gap("medium", bt(c.id) + " has no path written, so nothing can check that it exists.", bt(c.id) + " 沒有寫路徑，所以無法確認它是否存在。", r);
     else if (!c.exists) gap("high", bt(c.id) + " says its path is " + bt(c.path) + ", which does not exist in the project.", bt(c.id) + " 寫的路徑 " + bt(c.path) + " 在專案裡不存在。", r);
+    if (c.badUses) gap("high", bt(c.id) + "'s uses list has text that is not an id: " + bt(c.badUses.replace(/`/g, "'")) + ". Nothing was drawn from that text; write bare ids only.", bt(c.id) + " 的 uses 清單含有不是編號的文字：" + bt(c.badUses.replace(/`/g, "'")) + "。這段文字沒有被畫成任何連線；請只寫編號。", r);
     c.uses.forEach(function (u) { if (!compBy[u]) gap("high", bt(c.id) + " uses " + bt(u) + ", which is not a component in `SPEC.md`.", bt(c.id) + " 使用的 " + bt(u) + " 不是 `SPEC.md` 裡的元件。", r); });
   });
   [["dev", true], ["install", false], ["build", false]].forEach(function (p) {
