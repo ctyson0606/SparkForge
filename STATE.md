@@ -55,8 +55,12 @@ projects, the other two in none.
   opening through open, xdg-open or Git Bash's start; anything on a Mac
   (written for bash 3.2 and BSD awk, never run); the language button and its
   remembered choice. The user's verdict on the first look: too plain and not
-  clear enough; they want cards on a canvas joined by arrows and lines, which
-  is being planned. Unverified: whether an agent writes acceptance status lines and
+  clear enough, the information scattered and vague; they want cards on a
+  canvas joined by arrows and lines. Agreed on 2026-10-04 and being built:
+  every line comes from an id written in a file (goal ids in SPEC.md, an AC
+  naming its goal, an AC id in a commit subject or a Next Steps entry), never
+  from a guess, and a card with no id stays unlinked; layout is automatic and
+  cards cannot be dragged, so every viewer sees the same picture. Unverified: whether an agent writes acceptance status lines and
   fills translations unprompted. Known limits: the page cannot tell a stale
   translation from a missing one, so the marker says both; a criterion edited
   after its evidence was recorded still shows evidenced, the date being the
