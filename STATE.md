@@ -217,7 +217,7 @@ Also, none of them rules:
   it now compares FILENAME. The same scratch trap: a scratch project holds a
   copy of kit/, so a fix to template/kit is not under test until it is copied
   in again.
-- In Windows PowerShell 5.1, `-replace '\x27` is an invalid regular expression;
+- In Windows PowerShell 5.1, `-replace` with a lone backslash pattern is an invalid regular expression;
   use .Replace with [char]92.
 - The working tree's file mode is not real here, so an executable bit has to
   be set with `git update-index --chmod=+x` rather than `chmod`.
