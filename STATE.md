@@ -80,15 +80,23 @@ projects, the other two in none.
   bilingual notes written at decision time, each saying what was chosen, what
   was rejected, what it solves and what it costs.
   The user's verdict on the canvas, 2026-10-04: the Chinese view is a mess.
-  Causes found: the fixture translated 7 of 20 units on purpose; commit
-  subjects and evidence are never translated and nothing says so; and a bug,
-  the untranslated marker is appended to the text inside a line-clamped box,
-  so truncation hides it and untranslated English looks like a normal card.
-  Agreed fix, being built: marker in the card header, fallback English styled
-  as such, original-language records labelled, a zh summary line of how many
-  units lack translation, a fully translated fixture shown beside the partial
-  one; plus the duplicated problem card, the bundled next-step lines, and
-  gaps ranked by severity.
+  Causes: the fixture translated 7 of 20 units on purpose; commit subjects
+  and evidence are never translated and nothing said so; and a bug, the
+  untranslated marker was appended inside a line-clamped box, so truncation
+  hid it. Built in kit 0.4.1: the marker is a "未翻譯" tag in the card or box
+  header plus a leading EN tag on each unit, never trailing text; fallback
+  English is muted; commits and evidence carry "原文" when TRANSLATION is set;
+  a zh-only line near the top counts units lacking a translation and hides at
+  zero. The problem card and the problem-to-goal line are gone (the header
+  shows the problem), so that relation no longer exists on the canvas. Each
+  next-step line has its own lane, verticals and colour, shared with its card.
+  Gaps are ranked high (shown complete or true but is not), medium (missing),
+  low (housekeeping), the rule being a comment in progress.sh. Observed in
+  headless Edge over the DevTools protocol, dark and light, 1600 and 390 wide,
+  on a partial fixture and a fully translated copy (no tags, no summary line,
+  原文 only on commits and evidence); truncated untranslated cards keep their
+  header tag. Not observed: a real user's reading of the new view, pinch,
+  Mac. Colours cycle after six linked next steps.
 - The user is about to run a project with TEAM > 1 for the first time, which
   team-contract has never seen. Read on 2026-10-01, it only asks for a contract
   reference and a file-ownership list, and says neither where that list is
