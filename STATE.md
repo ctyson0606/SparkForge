@@ -116,7 +116,12 @@ projects, the other two in none.
   fails right after an update; nothing lists the hand edits an install of
   0.3.0 or later needs, and check.sh misses most of them; spec-gate does not
   say that "uses" takes bare comma-separated ids and nothing else, and a
-  prose "uses" line parsed as junk ids.
+  prose "uses" line parsed as junk ids. The user asked on 2026-10-04 for all
+  three to be fixed now, being built as 0.6.1: update-kit.sh stages kit/'s
+  .sh files executable; kit/ ships a list of what a project needs outside
+  kit/, which check.sh enforces and update-kit.sh diffs old against new to
+  print what this update newly needs by hand; spec-gate states the "uses"
+  form and the page reports a non-id in it as a gap.
 - The user is about to run a project with TEAM > 1 for the first time, which
   team-contract has never seen. Read on 2026-10-01, it only asks for a contract
   reference and a file-ownership list, and says neither where that list is
