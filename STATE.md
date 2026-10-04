@@ -95,8 +95,13 @@ projects, the other two in none.
   headless Edge over the DevTools protocol, dark and light, 1600 and 390 wide,
   on a partial fixture and a fully translated copy (no tags, no summary line,
   原文 only on commits and evidence); truncated untranslated cards keep their
-  header tag. Not observed: a real user's reading of the new view, pinch,
-  Mac. Colours cycle after six linked next steps.
+  header tag. Not observed: pinch, Mac. Colours cycle after six linked next
+  steps.
+  The user's reading of that view, 2026-10-04: still not user friendly, the
+  lines dazzle; an AC's one sentence does not tell them what it means; and
+  they want everything translated, commits and evidence included. Three
+  rounds of drawing lines better did not fix it, so the lines themselves are
+  the suspect: the next proposal replaces them with containment and links.
 - The user is about to run a project with TEAM > 1 for the first time, which
   team-contract has never seen. Read on 2026-10-01, it only asks for a contract
   reference and a file-ownership list, and says neither where that list is
