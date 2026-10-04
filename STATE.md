@@ -50,10 +50,13 @@ projects, the other two in none.
   AGENTS.md. Run on Git Bash and through powershell.exe against a scratch
   project (space in the path, CRLF sources, missing, stale and orphaned
   translations, escaping, marker behaviour) and against a clone of GameBrake
-  (all ten criteria not started, as expected). Not observed: a browser
-  actually opening, on any platform; anything on a Mac (written for bash 3.2
-  and BSD awk, never run); the in-page language button, which no browser
-  exercised. Unverified: whether an agent writes acceptance status lines and
+  (all ten criteria not started, as expected). On 2026-10-04 the user ran
+  progress.ps1 on Windows and the page opened in their browser. Not observed:
+  opening through open, xdg-open or Git Bash's start; anything on a Mac
+  (written for bash 3.2 and BSD awk, never run); the language button and its
+  remembered choice. The user's verdict on the first look: too plain and not
+  clear enough; they want cards on a canvas joined by arrows and lines, which
+  is being planned. Unverified: whether an agent writes acceptance status lines and
   fills translations unprompted. Known limits: the page cannot tell a stale
   translation from a missing one, so the marker says both; a criterion edited
   after its evidence was recorded still shows evidenced, the date being the
