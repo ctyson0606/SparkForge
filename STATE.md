@@ -40,69 +40,65 @@ projects, the other two in none.
 
 - Progress page, decided with the user on 2026-10-04. Origin: at a hackathon,
   without SparkForge, the user accepted AI suggestions until they no longer
-  knew what the demo did or how to run it. Built, in kit 0.5.0:
+  knew what the demo did or how to run it. Built, in kit 0.6.0:
   scripts/progress.sh (progress.ps1 on Windows) generates one self-contained
   bilingual HTML page from SPEC.md, STATE.md, AGENTS.md and git, and stores
   nothing: bash and awk emit JSON, inline JS renders it. A graph of cards
   joined by lines was tried for three rounds and removed because the user found
-  it unusable. Now a normal scrolling page: a "what this is" box (problem,
-  focus, start commands with copy) beside a progress box; a one-line alert
-  when high-severity gaps exist; one section per goal holding its criteria as
-  cards (status icon, plain title, id); criteria naming no goal, or an unlisted
-  one, in a section of their own, and goals nothing names last. A card opens a
-  drawer: what it means, how to try it, the criterion, evidence (commands as
-  code, result, date), related commits and next steps. A criterion serving two
-  goals appears under both. Changes since the last view and next steps are
-  lists whose AC chips jump to the card and open it. Gaps sit behind a header
-  button, ranked high, medium, low (the rule is a comment in progress.sh).
-  Belonging is by written id only: "AC3 (G1)" for a goal, an AC id in a commit
-  subject or a Next Steps entry (whole token), "Means:" and "Try:" indented
-  under a criterion for its explanation (spec-gate.md; the Try lines together
-  are the project's usage guide). Old forms still parse and show as gaps.
-  Translation covers every unit including Means, Try, commit subjects and the
-  result part of evidence (commands are never translated); a translated
-  commit subject or evidence result has a button showing the original. The
-  honesty features stay: a "未翻譯" pill in the header of any card or box with
-  untranslated text, an EN tag and muted colour on fallback text, and a zh-only
-  line counting untranslated units, hidden at zero. Observed in headless Edge
-  on Windows over the DevTools protocol, dark and light, 1600 and 390 wide,
-  English and Chinese, on a partial fixture, a fully translated copy and a
-  GameBrake clone: opening a card by click and Enter, Esc, click outside, chip
-  jump, reveal of the original, language toggle, hostile text inert, and a
-  DOM scan of the fully translated page in every drawer state finding no Latin
-  words outside code, ids, the project name, the "English" button, the EN tag
-  and the word commit. Not observed: touch, other browsers, anything on a Mac
-  (written for bash 3.2 and BSD awk, never run), opening through open,
-  xdg-open or Git Bash's start. The user's first look on 2026-10-04, at the
-  two fixtures in their browser: "seems pretty good", not yet tried on a real
-  project of theirs. Their next objection, the same day: the page shows one
-  spec, not the whole project, because spec-gate rewrites SPEC.md in place and
-  nothing records phases. Asked what "whole project" means, they chose a
-  roadmap of versions or phases, an overview of every feature, and the
-  project's structure; not work done outside the spec. Agreed the same day,
-  being built as kit 0.6.0: four tabs, progress (the current milestone),
-  roadmap, features, structure. SPEC.md gains Milestones (M1 one line each,
-  goals tagged "G1 (M1)") and Components (C1 with a path, a responsibility
-  and "uses C2"). A milestone's state is computed, never written: done when
-  every criterion is evidenced, planned when it has no goals. Finished
-  milestones stay in SPEC.md, which becomes the project's accumulated
-  contract, so spec-gate adds rather than replaces. The features tab is
-  derived: evidenced criteria only, with Means and Try. A component whose
-  path is gone is a gap; its card lists the commits touching that path.
-  Accepted cost: SPEC.md, imported every session, grows.
-  Unverified: whether an agent writes ids, Means and Try lines, status lines
-  and translations unprompted. Known limits: the page cannot tell a stale
-  translation from a missing one; a criterion edited after its evidence was
-  recorded still shows evidenced, the date being the only hint; a run takes a
-  few seconds on Windows because each translated section unit spawns a git
-  hash. The three installed projects need, by hand, since update-kit.sh writes
-  only kit/: scripts/progress.sh and progress.ps1 stubs (their check.sh fails
-  on the missing stubs until then, by design), the TRANSLATION declaration and
+  it unusable. The user then said the page showed one spec, not the project,
+  and chose three views: a roadmap of versions, an overview of every feature,
+  and the project's structure. Now four tabs, remembered in localStorage and
+  in the address hash (#roadmap, #progress/M1). Progress: a scope selector
+  (each milestone, all, unassigned; default the current milestone), a "what
+  this is" box, a progress box counting only the scope, goal sections with
+  criteria cards, and project-wide lists of changes and next steps. A card
+  opens a drawer: meaning, how to try it, the criterion, evidence, related
+  commits and next steps. Roadmap: milestones in listed order with a computed
+  state badge, evidenced counts and their goals; the current one marked. Features:
+  the usage guide, only criteria with evidence, each under its first goal and
+  milestone, with a quiet count of what is left out. Structure: one card per
+  component with its path, responsibility and uses and computed used-by chips
+  that jump between cards; its drawer lists the last five commits touching the
+  path. Everything is computed or read, nothing is written to drift: a
+  milestone is planned when no goal names it, done when it has criteria and
+  all are evidenced (evidence recorded, not just a status), in progress
+  otherwise, and the current one is the first neither done nor planned;
+  a criterion counts toward every milestone its goals name. Without a
+  Milestones section the progress tab is as before and the others show an empty
+  state with an example. SPEC.md accumulates across milestones (spec-gate
+  adds, rewrites only what changes), at the accepted cost that it, imported
+  every session, grows. Gaps are ranked high (a state that looks true and is
+  not: a path not on disk, a uses or milestone reference to nothing, evidence
+  claimed without evidence), medium (missing links, tags, Means or Try) and low
+  (housekeeping), the rule being a comment in progress.sh. Belonging is by
+  written id only. Translation covers milestone titles, component names and
+  responsibilities, Means, Try, commit subjects (including a component's) and
+  the result part of evidence; commands, paths and ids never; the original is
+  one click away and untranslated text is marked with a pill and an EN tag.
+  Observed in headless Edge on Windows over the DevTools protocol, light, dark
+  and 390 wide, on a three-milestone fixture, a fully translated copy and a
+  GameBrake clone: every tab, scope, drawer, hash links, tab memory, chip jumps
+  and keyboard opening; a DOM scan of the fully translated page over every tab,
+  scope and drawer found no Latin words outside code, ids, the project name,
+  the "English" button, the EN tag and the word commit; the state computation is
+  unit-tested against the page's own data, including a sabotage. Not observed:
+  touch, other browsers, anything on a Mac (written for bash 3.2 and BSD awk,
+  never run), opening through open, xdg-open or Git Bash's start, and whether
+  the user finds this version usable. Unverified: whether an agent writes ids,
+  Means and Try lines, milestones, components, status lines and translations
+  unprompted. Known limits: the page cannot tell a stale translation from a
+  missing one; a criterion edited after its evidence was recorded still shows
+  evidenced, the date being the only hint; a run takes several seconds on
+  Windows because each translated section unit spawns a git hash. The three
+  installed projects need, by hand, since update-kit.sh writes only kit/:
+  scripts/progress.sh and progress.ps1 stubs (their check.sh fails on the
+  missing stubs until then, by design), the TRANSLATION declaration and
   progress paragraph in AGENTS.md, an Acceptance status heading in STATE.md,
-  and Means and Try lines under their criteria. Solo use first; team use waits
-  for the paused TEAM > 1 design. Phase 2, after the user has used this: a
-  LEARNING switch and bilingual notes written at decision time, each saying
-  what was chosen, what was rejected, what it solves and what it costs.
+  and Means and Try lines, milestones and components in SPEC.md. Solo use
+  first; team use waits for the paused TEAM > 1 design. Phase 2, after the
+  user has used this: a LEARNING switch and bilingual notes written at
+  decision time, each saying what was chosen, what was rejected, what it
+  solves and what it costs.
 - The user is about to run a project with TEAM > 1 for the first time, which
   team-contract has never seen. Read on 2026-10-01, it only asks for a contract
   reference and a file-ownership list, and says neither where that list is
