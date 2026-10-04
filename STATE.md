@@ -73,7 +73,9 @@ projects, the other two in none.
   words outside code, ids, the project name, the "English" button, the EN tag
   and the word commit. Not observed: touch, other browsers, anything on a Mac
   (written for bash 3.2 and BSD awk, never run), opening through open,
-  xdg-open or Git Bash's start, and whether the user finds this one usable.
+  xdg-open or Git Bash's start. The user's first look on 2026-10-04, at the
+  two fixtures in their browser: "seems pretty good", not yet tried on a real
+  project of theirs.
   Unverified: whether an agent writes ids, Means and Try lines, status lines
   and translations unprompted. Known limits: the page cannot tell a stale
   translation from a missing one; a criterion edited after its evidence was
