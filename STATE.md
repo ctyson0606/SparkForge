@@ -79,7 +79,17 @@ projects, the other two in none.
   spec, not the whole project, because spec-gate rewrites SPEC.md in place and
   nothing records phases. Asked what "whole project" means, they chose a
   roadmap of versions or phases, an overview of every feature, and the
-  project's structure; not work done outside the spec. Being planned.
+  project's structure; not work done outside the spec. Agreed the same day,
+  being built as kit 0.6.0: four tabs, progress (the current milestone),
+  roadmap, features, structure. SPEC.md gains Milestones (M1 one line each,
+  goals tagged "G1 (M1)") and Components (C1 with a path, a responsibility
+  and "uses C2"). A milestone's state is computed, never written: done when
+  every criterion is evidenced, planned when it has no goals. Finished
+  milestones stay in SPEC.md, which becomes the project's accumulated
+  contract, so spec-gate adds rather than replaces. The features tab is
+  derived: evidenced criteria only, with Means and Try. A component whose
+  path is gone is a gap; its card lists the commits touching that path.
+  Accepted cost: SPEC.md, imported every session, grows.
   Unverified: whether an agent writes ids, Means and Try lines, status lines
   and translations unprompted. Known limits: the page cannot tell a stale
   translation from a missing one; a criterion edited after its evidence was
