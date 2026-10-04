@@ -38,24 +38,33 @@ projects, the other two in none.
 
 ## Next Steps
 
-- Build a progress page, decided with the user on 2026-10-04. Origin: at a
-  hackathon, without SparkForge, the user accepted AI suggestions until they
-  no longer knew what the demo did or how to run it. Phase 1, being built: a
-  command (scripts/progress.sh, scripts/progress.ps1 on Windows) that
-  generates a self-contained HTML page from SPEC.md, STATE.md, AGENTS.md and
-  git log and opens it in the browser. It stores nothing: blocks are what it
-  does and how to start it, acceptance status (evidenced, claimed, not
-  started, read from a new Acceptance status section in STATE.md), what
-  changed since this machine last looked, and next steps. English and
-  Traditional Chinese with a toggle; the Chinese is a translation file whose
-  entries carry a hash of their English source, shown only while it matches,
-  refreshed by the agent during memory updates. Solo use first; team use
-  waits for the paused TEAM > 1 design. Mac support is written for bash 3.2
-  and unverified until run on a Mac. Phase 2, after the user has used phase
-  1: a LEARNING switch and bilingual notes written at decision time, each
-  saying what was chosen, what was rejected, what it solves and what it
-  costs. Unverified either way: whether an agent fills the acceptance status
-  and translations without being prompted.
+- Progress page, decided with the user on 2026-10-04. Origin: at a hackathon,
+  without SparkForge, the user accepted AI suggestions until they no longer
+  knew what the demo did or how to run it. Phase 1 is built and in kit 0.3.0:
+  scripts/progress.sh (progress.ps1 on Windows) generates a self-contained
+  bilingual HTML page from SPEC.md, STATE.md, AGENTS.md and git, and stores
+  nothing. Acceptance status comes from a new section in STATE.md; ids are
+  the ones SPEC.md writes (AC1, G1), AC<n> by position when a criterion has
+  none, since spec-gate fixes no scheme. The Chinese is translations/<lang>.md,
+  entries keyed by the hash of the English unit, with TRANSLATION in
+  AGENTS.md. Run on Git Bash and through powershell.exe against a scratch
+  project (space in the path, CRLF sources, missing, stale and orphaned
+  translations, escaping, marker behaviour) and against a clone of GameBrake
+  (all ten criteria not started, as expected). Not observed: a browser
+  actually opening, on any platform; anything on a Mac (written for bash 3.2
+  and BSD awk, never run); the in-page language button, which no browser
+  exercised. Unverified: whether an agent writes acceptance status lines and
+  fills translations unprompted. Known limits: the page cannot tell a stale
+  translation from a missing one, so the marker says both; a criterion edited
+  after its evidence was recorded still shows evidenced, the date being the
+  only hint. The three installed projects need, by hand, since update-kit.sh
+  writes only kit/: scripts/progress.sh and progress.ps1 stubs (their check.sh
+  fails on the missing stubs until then, by design), the TRANSLATION
+  declaration and progress paragraph in AGENTS.md, and an Acceptance status
+  heading in STATE.md. Solo use first; team use waits for the paused TEAM > 1
+  design. Phase 2, after the user has used phase 1: a LEARNING switch and
+  bilingual notes written at decision time, each saying what was chosen, what
+  was rejected, what it solves and what it costs.
 - The user is about to run a project with TEAM > 1 for the first time, which
   team-contract has never seen. Read on 2026-10-01, it only asks for a contract
   reference and a file-ownership list, and says neither where that list is
@@ -202,6 +211,14 @@ Also, none of them rules:
 
 ## Known Annoyances
 
+- An awk join that tells its two files apart by FNR==NR reads the second file as
+  the first when the first is empty. progress.sh did, and every scratch fixture
+  had a non-empty status section, so only the real GameBrake clone showed it;
+  it now compares FILENAME. The same scratch trap: a scratch project holds a
+  copy of kit/, so a fix to template/kit is not under test until it is copied
+  in again.
+- In Windows PowerShell 5.1, `-replace '\x27` is an invalid regular expression;
+  use .Replace with [char]92.
 - The working tree's file mode is not real here, so an executable bit has to
   be set with `git update-index --chmod=+x` rather than `chmod`.
 - `grep -c $'\r'` cannot be trusted as a carriage-return count on this
