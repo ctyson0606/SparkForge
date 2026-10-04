@@ -55,7 +55,7 @@ my-project/
 | 🪝 `.claude/` | 薄殼 stub。每個都是一段 frontmatter 加一行指向 `kit/` 的路徑。 |
 | ✅ `scripts/check.sh` | 對整個目錄結構做的結構檢查。只有一行的薄殼：真正的檢查器是 `kit/scripts/check.sh`，所以它的修正會跟著 `kit/` 一起更新。 |
 | 🔄 `scripts/update-kit.sh` | 從上游拉一份新的 `kit/` 下來，連同 `kit/scripts/` 裡的腳本。它也是薄殼，所以會連自己一起更新。 |
-| 📊 `scripts/progress.sh` | 用 `SPEC.md`、`STATE.md` 和 git 產生一頁獨立的 HTML —— 目標分區，每條驗收條件做成一張卡片，點開就能看到它的意思、怎麼親自試、記錄下來的證據，以及上次檢視之後的變更、下一步 —— 然後開啟。它不儲存任何東西，所以不會過期。Windows 請用 `scripts/progress.ps1`。在 `AGENTS.md` 設定 `TRANSLATION` 就能有第二種語言。 |
+| 📊 `scripts/progress.sh` | 用 `SPEC.md`、`STATE.md` 和 git 產生一頁獨立的 HTML —— 四個分頁：進度（目標分區，每條驗收條件做成一張卡片，點開就能看到它的意思、怎麼親自試、記錄下來的證據，以及上次檢視之後的變更、下一步）、里程碑路線圖、功能指南和元件結構 —— 然後開啟。它不儲存任何東西，所以不會過期。Windows 請用 `scripts/progress.ps1`。在 `AGENTS.md` 設定 `TRANSLATION` 就能有第二種語言。 |
 
 分成兩層正是重點：📚 `kit/` 把每條規則只寫一次，每個 AI 工具各自拿到一個目錄的
 🪝 薄殼 stub 指過去。要支援第二個工具，是再生一組 stub，而不是把規則再抄一遍。

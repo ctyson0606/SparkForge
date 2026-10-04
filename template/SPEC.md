@@ -9,11 +9,15 @@ rewritten in place, not appended to; git holds the history.
 
 ## Problem
 
+## Milestones
+
 ## Goals
 
 ## Non-goals
 
 ## Acceptance criteria
+
+## Components
 
 ## Data and API contract
 

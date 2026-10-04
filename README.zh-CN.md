@@ -55,7 +55,7 @@ my-project/
 | 🪝 `.claude/` | 薄壳 stub。每个都是一段 frontmatter 加一行指向 `kit/` 的路径。 |
 | ✅ `scripts/check.sh` | 对整个目录结构做的结构检查。只有一行的薄壳：真正的检查器是 `kit/scripts/check.sh`，所以它的修正会跟着 `kit/` 一起更新。 |
 | 🔄 `scripts/update-kit.sh` | 从上游拉一份新的 `kit/` 下来，连同 `kit/scripts/` 里的脚本。它也是薄壳，所以会连自己一起更新。 |
-| 📊 `scripts/progress.sh` | 用 `SPEC.md`、`STATE.md` 和 git 生成一页独立的 HTML —— 目标分区，每条验收条件做成一张卡片，点开就能看到它的意思、怎么亲自试、记录下来的证据，以及上次查看之后的变更、下一步 —— 然后打开。它不存储任何东西，所以不会过期。Windows 请用 `scripts/progress.ps1`。在 `AGENTS.md` 里设置 `TRANSLATION` 就能有第二种语言。 |
+| 📊 `scripts/progress.sh` | 用 `SPEC.md`、`STATE.md` 和 git 生成一页独立的 HTML —— 四个分页：进度（目标分区，每条验收条件做成一张卡片，点开就能看到它的意思、怎么亲自试、记录下来的证据，以及上次查看之后的变更、下一步）、里程碑路线图、功能指南和元件结构 —— 然后打开。它不存储任何东西，所以不会过期。Windows 请用 `scripts/progress.ps1`。在 `AGENTS.md` 里设置 `TRANSLATION` 就能有第二种语言。 |
 
 分成两层正是重点：📚 `kit/` 把每条规则只写一次，每个 AI 工具各自拿到一个目录的
 🪝 薄壳 stub 指过去。要支持第二个工具，是再生成一组 stub，而不是把规则再抄一遍。
