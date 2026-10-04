@@ -426,6 +426,13 @@ HEAD_SHORT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo none)"
 TRFILE_OK=true
 [ "$TRANS_ON" -eq 1 ] && [ ! -f "$TRFILE" ] && TRFILE_OK=false
 TRANS_JS=false; [ "$TRANS_ON" -eq 1 ] && TRANS_JS=true
+# Translations whose hash matches no displayed unit (the same ones --untranslated
+# lists for pruning).
+ORPHANS=0
+for f in "$T"/tr/*; do
+  [ -e "$f" ] || continue
+  [ -e "$T/used/$(basename "$f")" ] || ORPHANS=$((ORPHANS + 1))
+done
 
 {
 printf '<!doctype html>\n<html lang="%s" data-lang="%s" data-tlang="%s">\n' "$DEF_LANG" "$DEF_LANG" "$TLANG"
@@ -440,12 +447,14 @@ cat <<'EOF'
 :root { --bg:#f5f4ef; --fg:#1d1d1b; --muted:#66655f; --line:#d6d4ca; --card:#fff; --panel:#fbfaf7;
   --ok:#14663a; --okbg:#e0f3e7; --mid:#8a5a00; --midbg:#fbefd0; --none:#55554f; --nonebg:#ececea;
   --warn:#9c2a1a; --warnbg:#fbe7e2; --code:#efeee8; --dot:#dedcd2; --acc:#1b5fa8;
-  --e-pg:#8d8b80; --e-ga:#23806f; --e-ca:#1b5fa8; --e-na:#8a3fb0; }
+  --e-pg:#8d8b80; --e-ga:#23806f; --e-ca:#1b5fa8; --e-na:#8a3fb0;
+  --n0:#8a3fb0; --n1:#d1530f; --n2:#c0267e; --n3:#8b5a2b; --n4:#5f7d12; --n5:#5b4bd6; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg:#141417; --fg:#e8e6df; --muted:#9d9b93; --line:#37373a; --card:#1f1f24; --panel:#1a1a1e;
   --ok:#6fd49a; --okbg:#173325; --mid:#f0c460; --midbg:#3a2e12; --none:#b0b0aa; --nonebg:#2b2b2e;
   --warn:#ff9d8a; --warnbg:#3b1d19; --code:#2a2a2e; --dot:#26262a; --acc:#7db6f0;
-  --e-pg:#8d8b82; --e-ga:#4fc2ab; --e-ca:#6fb0f0; --e-na:#c78ae6; } }
+  --e-pg:#8d8b82; --e-ga:#4fc2ab; --e-ca:#6fb0f0; --e-na:#c78ae6;
+  --n0:#c78ae6; --n1:#ff9a5c; --n2:#ff7ab8; --n3:#d6a574; --n4:#a9d05a; --n5:#9c93ff; } }
 * { box-sizing:border-box; }
 [hidden] { display:none !important; }
 html, body { height:100%; }
@@ -497,10 +506,15 @@ em.stale { color:var(--warn); font-style:normal; font-size:.85em; }
 #gaps h2 { font-size:1rem; margin:0 0 .4rem; }
 #gaps ul { list-style:none; margin:0; padding:0; }
 #gaps li.g { display:flex; gap:.5rem; padding:.4rem .5rem; margin:.3rem 0; background:var(--card); border:1px solid var(--line); border-radius:6px; font-size:.9rem; }
-#gaps li.g.w { border-color:var(--warn); background:var(--warnbg); }
+#gaps li.g.high { border-color:var(--warn); background:var(--warnbg); }
+#gaps li.g.medium { border-color:#d9a21b; background:var(--midbg); }
+#gaps li.g.low { color:var(--muted); }
+#gaps li.g.high .ic { color:var(--warn); } #gaps li.g.medium .ic { color:var(--mid); } #gaps li.g.low .ic { color:var(--muted); }
+#gaps h3.sev { font-size:.78rem; letter-spacing:.05em; text-transform:uppercase; margin:.9rem 0 .2rem; }
+#gaps h3.sev-high { color:var(--warn); } #gaps h3.sev-medium { color:var(--mid); } #gaps h3.sev-low { color:var(--muted); }
 #gaps li.g.ref { cursor:pointer; }
 #gaps li.g.ref:hover { border-color:var(--acc); }
-#gaps li.g .ic { flex:none; font-weight:700; color:var(--warn); width:1rem; text-align:center; }
+#gaps li.g .ic { flex:none; font-weight:700; width:1rem; text-align:center; }
 #gaps .none { color:var(--ok); font-weight:600; }
 #gaps details { margin-top:1rem; }
 #gaps summary { cursor:pointer; font-weight:600; }
@@ -519,12 +533,18 @@ em.stale { color:var(--warn); font-style:normal; font-size:.85em; }
 .warnmini { margin-left:auto; color:var(--warn); font-weight:600; font-size:.74rem; }
 .card .u { margin:0; }
 .card .u + .u { margin-top:.25rem; }
+.fb { color:var(--muted); }
+.enTag { font-size:.66em; font-weight:700; border:1px solid var(--line); border-radius:4px; padding:0 .3em; margin-right:.35em; color:var(--muted); font-style:normal; vertical-align:.1em; }
+.untr { font-size:.72rem; font-weight:700; color:var(--warn); background:var(--warnbg); border:1px solid var(--warn); border-radius:99px; padding:0 .45rem; white-space:nowrap; }
+.hb h2 .untr { margin-left:.5rem; text-transform:none; letter-spacing:0; }
+.orig { font-size:.68rem; font-weight:600; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:0 .3em; margin-left:.3rem; }
+#trline { margin-top:.4rem; padding:.3rem .6rem; border:1px solid var(--warn); background:var(--warnbg); border-radius:6px; font-size:.88rem; }
 .badge { font-size:.76rem; font-weight:700; padding:.02rem .5rem; border-radius:99px; white-space:nowrap; }
 .b-evidenced { color:var(--ok); background:var(--okbg); }
 .b-claimed { color:var(--mid); background:var(--midbg); }
 .b-none { color:var(--none); background:var(--nonebg); }
 .s-evidenced { border-left-color:var(--ok); } .s-claimed { border-left-color:#d9a21b; } .s-none { border-left-color:#9a9a92; }
-.t-problem { border-left-color:var(--acc); } .t-goal { border-left-color:var(--e-ga); }
+.t-goal { border-left-color:var(--e-ga); }
 .t-commit { border-left-color:var(--e-ca); } .t-next { border-left-color:var(--e-na); }
 .card.ac { border-width:1.5px; border-left-width:6px; font-size:14.5px; }
 .ev { margin-top:.35rem; padding:.3rem .45rem; background:var(--code); border-radius:6px; font-size:.92em; }
@@ -539,9 +559,9 @@ em.stale { color:var(--warn); font-style:normal; font-size:.85em; }
 .colhead small { display:block; font-weight:400; color:var(--muted); font-size:.78rem; }
 .sep { position:absolute; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); border-top:1.5px dashed var(--line); padding-top:.2rem; }
 .edge { fill:none; stroke-width:1.8; stroke-linecap:round; transition:opacity .12s; }
-.edge.pg { stroke:var(--e-pg); } .edge.ga { stroke:var(--e-ga); } .edge.ca { stroke:var(--e-ca); } .edge.na { stroke:var(--e-na); stroke-dasharray:6 3; }
-.mk-pg { fill:var(--e-pg); } .mk-ga { fill:var(--e-ga); } .mk-ca { fill:var(--e-ca); } .mk-na { fill:var(--e-na); }
-.lg-pg { stroke:var(--e-pg); } .lg-ga { stroke:var(--e-ga); } .lg-ca { stroke:var(--e-ca); } .lg-na { stroke:var(--e-na); stroke-dasharray:6 3; }
+.edge.ga { stroke:var(--e-ga); } .edge.ca { stroke:var(--e-ca); } .edge.na { stroke:var(--e-na); stroke-dasharray:6 3; }
+.mk-n0 { fill:var(--n0); } .mk-n1 { fill:var(--n1); } .mk-n2 { fill:var(--n2); } .mk-n3 { fill:var(--n3); } .mk-n4 { fill:var(--n4); } .mk-n5 { fill:var(--n5); } .mk-ga { fill:var(--e-ga); } .mk-ca { fill:var(--e-ca); } .mk-na { fill:var(--e-na); }
+.lg-ga { stroke:var(--e-ga); } .lg-ca { stroke:var(--e-ca); } .lg-na { stroke:var(--e-na); stroke-dasharray:6 3; }
 .legend path { fill:none; stroke-width:2; }
 #view.has-sel .card:not(.hl) { opacity:.22; }
 #view.has-sel .edge:not(.hl) { opacity:.08; }
@@ -566,6 +586,7 @@ noscript { display:block; padding:1rem; }
 <h1 id="title"></h1>
 <div class="tools"><button id="gapsbtn" type="button" hidden></button><button id="lang" type="button" hidden></button></div>
 </div>
+<div id="trline" class="zh" hidden></div>
 <div class="hgrid">
 <section class="hb" id="hproblem"></section>
 <section class="hb" id="hfocus"></section>
@@ -587,7 +608,7 @@ printf '<script type="application/json" id="data">\n'
 printf '{"name":%s,"updated":%s,"now":%s,"head":%s,"trans":%s,"tlang":%s,"trfileOk":%s,' \
   "$(json_str "$NAME")" "$(json_str "$UPDATED")" "$(json_str "$NOW")" "$(json_str "$HEAD_SHORT")" \
   "$TRANS_JS" "$(json_str "$LANG2")" "$TRFILE_OK"
-printf '"trfile":%s,' "$(json_str "translations/$LANG2.md")"
+printf '"orphans":%s,"trfile":%s,' "$ORPHANS" "$(json_str "translations/$LANG2.md")"
 printf '"problem":%s,' "$(units_json "$T/res.problem")"
 printf '"focus":%s,' "$(units_json "$T/res.focus")"
 printf '"goals":%s,' "$(goals_json "$T/res.goals")"
@@ -634,13 +655,19 @@ cat <<'EOF'
     f.appendChild(rich(el("span", "zh"), zh));
     return f;
   }
-  var MARK_EN = "[translation missing or out of date]", MARK_ZH = "[翻譯缺漏或過期]";
-  // A unit read from a file: English, and the translation when there is a current one.
+  // A translation that is missing or out of date. The English then shows as a
+  // fallback in the zh view. What says so must never sit where line clamping
+  // can cut it off, so it is a leading tag on each unit and a tag in the header
+  // of the card or box, never text at the end.
+  function isFb(u) { return D.trans && !u.tr; }
+  function untrTag() { var t = el("span", "untr zh", "未翻譯"); t.title = "No current translation: showing the English"; return t; }
+  function origTag() { return el("span", "orig zh", "原文"); }
   function unitFrag(u) {
     var f = document.createDocumentFragment();
     f.appendChild(rich(el("span", "en"), u.en));
-    var z = rich(el("span", "zh"), u.tr || u.en);
-    if (D.trans && !u.tr && u.st === "stale") { z.appendChild(document.createTextNode(" ")); z.appendChild(el("em", "stale", MARK_ZH)); }
+    var z = el("span", isFb(u) ? "zh fb" : "zh");
+    if (isFb(u)) z.appendChild(el("span", "enTag", "EN"));
+    rich(z, u.tr || u.en);
     f.appendChild(z);
     return f;
   }
@@ -667,16 +694,29 @@ cat <<'EOF'
 
   /* ---------- model ---------- */
   var gaps = [];
-  function gap(en, zh, ref) { gaps.push({ en: en, zh: zh, ref: ref || null }); }
+  // How a gap is ranked, so the panel can be read top down:
+  //   high    an incomplete or false state shown as if it were complete or true:
+  //           evidenced with no evidence, a status line for an id that is not in
+  //           SPEC.md, a criterion naming a goal SPEC.md does not list, a status
+  //           line that cannot be read, an id used twice (one card silently lost)
+  //   medium  something needed to link or finish the picture is missing: a
+  //           criterion with no goal, a goal with no criterion, no status line,
+  //           claimed without evidence, an empty dev command, no problem, goals
+  //           or criteria at all, a missing translation file
+  //   low     housekeeping: empty install or build, empty focus or next steps,
+  //           untranslated units, orphaned translations, a lost marker commit
+  // Within a rank the order is the order the checks run in.
+  var SEV = ["high", "medium", "low"];
+  function gap(sev, en, zh, ref) { gaps.push({ sev: sev, en: en, zh: zh, ref: ref || null }); }
 
   var goals = [], acs = [], goalBy = {}, acBy = {};
   D.goals.forEach(function (g) {
-    if (g.dup) { gap("`" + g.id + "` appears more than once under Goals in SPEC.md; only the first is drawn.", "`" + g.id + "` 在 SPEC.md 的 Goals 裡重複出現，只畫第一個。"); return; }
+    if (g.dup) { gap("high", "`" + g.id + "` appears more than once under Goals in SPEC.md; only the first is drawn.", "`" + g.id + "` 在 SPEC.md 的 Goals 裡重複出現，只畫第一個。"); return; }
     goalBy[g.id] = g; goals.push(g); g.acs = [];
-    if (g.impl) gap("A goal in SPEC.md has no id written; it is numbered `" + g.id + "` by position.", "SPEC.md 裡有一個目標沒有寫 id，依位置編為 `" + g.id + "`。", "g:" + g.id);
+    if (g.impl) gap("medium", "A goal in SPEC.md has no id written; it is numbered `" + g.id + "` by position.", "SPEC.md 裡有一個目標沒有寫 id，依位置編為 `" + g.id + "`。", "g:" + g.id);
   });
   D.ac.acs.forEach(function (a) {
-    if (a.dup) { gap("`" + a.id + "` appears more than once under Acceptance criteria in SPEC.md; only the first is drawn.", "`" + a.id + "` 在 SPEC.md 的驗收條件裡重複出現，只畫第一個。"); return; }
+    if (a.dup) { gap("high", "`" + a.id + "` appears more than once under Acceptance criteria in SPEC.md; only the first is drawn.", "`" + a.id + "` 在 SPEC.md 的驗收條件裡重複出現，只畫第一個。"); return; }
     acBy[a.id] = a; acs.push(a);
     a.eff = a.decl === "evidenced" ? (a.ev ? "evidenced" : "claimed") : (a.decl === "claimed" ? "claimed" : "none");
     a.nodes = { c: [], n: [] };
@@ -695,7 +735,7 @@ cat <<'EOF'
     a.gids = [];
     a.goals.forEach(function (gid) {
       if (goalBy[gid]) { if (a.gids.indexOf(gid) < 0) { a.gids.push(gid); goalBy[gid].acs.push(a); edge("ga", "g:" + gid, "a:" + a.id); } }
-      else gap("`" + a.id + "` names goal `" + gid + "`, which SPEC.md does not list.", "`" + a.id + "` 指名的目標 `" + gid + "` 不在 SPEC.md 裡。", "a:" + a.id);
+      else gap("high", "`" + a.id + "` names goal `" + gid + "`, which SPEC.md does not list.", "`" + a.id + "` 指名的目標 `" + gid + "` 不在 SPEC.md 裡。", "a:" + a.id);
     });
   });
 
@@ -711,54 +751,63 @@ cat <<'EOF'
     return k;
   });
   var hasProblem = D.problem.length > 0;
-  if (hasProblem) goals.forEach(function (g) { edge("pg", "P", "g:" + g.id); });
 
   /* ---------- gaps: what is missing, named ---------- */
-  if (!hasProblem) gap("SPEC.md has nothing under Problem: the spec gate has not run.", "SPEC.md 的 Problem 是空的：規格門還沒跑過。");
-  if (!goals.length) gap("SPEC.md lists no goals (list items under Goals).", "SPEC.md 沒有列出任何目標（Goals 底下的清單項目）。");
-  if (!acs.length) gap("SPEC.md lists no acceptance criteria (list items under Acceptance criteria).", "SPEC.md 沒有列出任何驗收條件（Acceptance criteria 底下的清單項目）。");
+  if (!hasProblem) gap("medium", "SPEC.md has nothing under Problem: the spec gate has not run.", "SPEC.md 的 Problem 是空的：規格門還沒跑過。");
+  if (!goals.length) gap("medium", "SPEC.md lists no goals (list items under Goals).", "SPEC.md 沒有列出任何目標（Goals 底下的清單項目）。");
+  if (!acs.length) gap("medium", "SPEC.md lists no acceptance criteria (list items under Acceptance criteria).", "SPEC.md 沒有列出任何驗收條件（Acceptance criteria 底下的清單項目）。");
   // Up to two of the same kind are named one by one; more become one line that
   // lists them, so the panel reads as a short list of problems, not a wall.
   function fmt(s, a, n) { return s.replace("%", function () { return a; }).replace("#", function () { return n; }); }
-  function group(ids, ref, one, many) {
+  function group(sev, ids, ref, one, many) {
     if (!ids.length) return;
-    if (ids.length <= 2) { ids.forEach(function (id) { gap(fmt(one[0], "`" + id + "`", 1), fmt(one[1], "`" + id + "`", 1), ref + id); }); return; }
-    gap(fmt(many[0], ids.join(", "), ids.length), fmt(many[1], ids.join(", "), ids.length), ref + ids[0]);
+    if (ids.length <= 2) { ids.forEach(function (id) { gap(sev, fmt(one[0], "`" + id + "`", 1), fmt(one[1], "`" + id + "`", 1), ref + id); }); return; }
+    gap(sev, fmt(many[0], ids.join(", "), ids.length), fmt(many[1], ids.join(", "), ids.length), ref + ids[0]);
   }
-  group(goals.filter(function (g) { return !g.acs.length; }).map(function (g) { return g.id; }), "g:",
+  group("medium", goals.filter(function (g) { return !g.acs.length; }).map(function (g) { return g.id; }), "g:",
     ["% has no acceptance criteria: no criterion names it.", "% 沒有驗收條件：沒有任何條件指名它。"],
     ["# goals have no acceptance criteria, because no criterion names them: %.", "# 個目標沒有驗收條件，因為沒有任何條件指名它們：%。"]);
   acs.forEach(function (a) {
     var r = "a:" + a.id;
-    if (a.impl) gap("A criterion in SPEC.md has no id written; it is numbered `" + a.id + "` by position.", "SPEC.md 裡有一項驗收條件沒有寫 id，依位置編為 `" + a.id + "`。", r);
-    if (a.decl === "evidenced" && !a.ev) gap("`" + a.id + "` is marked evidenced but records no evidence, so it counts as claimed.", "`" + a.id + "` 標為有證據，但沒有記錄證據，因此算作僅宣稱。", r);
-    else if (a.decl === "claimed" && !a.ev) gap("`" + a.id + "` is claimed but records no evidence.", "`" + a.id + "` 是僅宣稱，而且沒有記錄證據。", r);
+    if (a.impl) gap("medium", "A criterion in SPEC.md has no id written; it is numbered `" + a.id + "` by position.", "SPEC.md 裡有一項驗收條件沒有寫 id，依位置編為 `" + a.id + "`。", r);
+    if (a.decl === "evidenced" && !a.ev) gap("high", "`" + a.id + "` is marked evidenced but records no evidence, so it counts as claimed.", "`" + a.id + "` 標為有證據，但沒有記錄證據，因此算作僅宣稱。", r);
+    else if (a.decl === "claimed" && !a.ev) gap("medium", "`" + a.id + "` is claimed but records no evidence.", "`" + a.id + "` 是僅宣稱，而且沒有記錄證據。", r);
   });
-  if (goals.length) group(acs.filter(function (a) { return !a.goals.length; }).map(function (a) { return a.id; }), "a:",
+  if (goals.length) group("medium", acs.filter(function (a) { return !a.goals.length; }).map(function (a) { return a.id; }), "a:",
     ["% names no goal.", "% 沒有指名任何目標。"],
     ["# criteria name no goal: %.", "# 項驗收條件沒有指名任何目標：%。"]);
-  group(acs.filter(function (a) { return a.decl === "missing"; }).map(function (a) { return a.id; }), "a:",
+  group("medium", acs.filter(function (a) { return a.decl === "missing"; }).map(function (a) { return a.id; }), "a:",
     ["% has no status line in STATE.md.", "% 在 STATE.md 沒有狀態行。"],
     ["# criteria have no status line in STATE.md, so they show as not started: %.", "# 項驗收條件在 STATE.md 沒有狀態行，因此顯示為未開始：%。"]);
-  D.ac.unknown.slice().sort().forEach(function (id) { gap("STATE.md has a status line for `" + id + "`, which SPEC.md does not list.", "STATE.md 有 `" + id + "` 的狀態行，但 SPEC.md 沒有這一項。"); });
-  D.ac.bad.forEach(function (t) { gap("Unreadable status line: `" + t.replace(/`/g, "'") + "` (expected `id: evidenced|claimed|not started - evidence (date)`).", "無法解讀的狀態行：`" + t.replace(/`/g, "'") + "`（格式：`id: evidenced|claimed|not started - 證據 (日期)`）。"); });
+  D.ac.unknown.slice().sort().forEach(function (id) { gap("high", "STATE.md has a status line for `" + id + "`, which SPEC.md does not list.", "STATE.md 有 `" + id + "` 的狀態行，但 SPEC.md 沒有這一項。"); });
+  D.ac.bad.forEach(function (t) { gap("high", "Unreadable status line: `" + t.replace(/`/g, "'") + "` (expected `id: evidenced|claimed|not started - evidence (date)`).", "無法解讀的狀態行：`" + t.replace(/`/g, "'") + "`（格式：`id: evidenced|claimed|not started - 證據 (日期)`）。"); });
   [["dev", true], ["install", false], ["build", false]].forEach(function (p) {
     var e = D.env[p[0]];
-    if (!e.p) { if (p[1]) gap("`dev` is not listed in AGENTS.md, so nothing says how to start the project.", "AGENTS.md 裡沒有 `dev`，沒有任何地方說明怎麼啟動專案。"); }
-    else if (e.v === "") gap("`" + p[0] + "` command is empty in AGENTS.md: not established yet.", "AGENTS.md 的 `" + p[0] + "` 指令是空的：尚未確立。");
+    if (!e.p) { if (p[1]) gap("medium", "`dev` is not listed in AGENTS.md, so nothing says how to start the project.", "AGENTS.md 裡沒有 `dev`，沒有任何地方說明怎麼啟動專案。"); }
+    else if (e.v === "") gap(p[1] ? "medium" : "low", "`" + p[0] + "` command is empty in AGENTS.md: not established yet.", "AGENTS.md 的 `" + p[0] + "` 指令是空的：尚未確立。");
   });
-  if (!D.focus.length) gap("STATE.md has nothing under Current Focus.", "STATE.md 的 Current Focus 是空的。");
-  if (!nexts.length) gap("STATE.md has no Next Steps (list items).", "STATE.md 沒有 Next Steps（清單項目）。");
-  if (D.changes.kind === "lost") gap("The marker commit is no longer in this repository (history was rewritten?), so the changes column shows the last commits instead.", "標記的 commit 已不在這個 repository（歷史被改寫過？），因此變更欄改為顯示最近的 commit。");
-  if (D.trans && !D.trfileOk) gap("`" + D.trfile + "` does not exist, so every unit shows in English as untranslated.", "`" + D.trfile + "` 不存在，所有單位都以英文顯示為未翻譯。");
-  if (D.trans) {
-    var seen = {}, miss = 0;
-    [D.problem, D.focus, D.goals, D.ac.acs, D.next, D.open].forEach(function (list) { list.forEach(function (u) { if (!u.tr && u.st === "stale") { var k = u.en; if (!seen[k]) { seen[k] = 1; miss++; } } }); });
-    if (miss) gap(miss + " displayed unit(s) have no current translation; `scripts/progress.sh --untranslated` lists them.", miss + " 個顯示的單位沒有最新的翻譯；`scripts/progress.sh --untranslated` 會列出它們。");
-  }
+  if (!D.focus.length) gap("low", "STATE.md has nothing under Current Focus.", "STATE.md 的 Current Focus 是空的。");
+  if (!nexts.length) gap("low", "STATE.md has no Next Steps (list items).", "STATE.md 沒有 Next Steps（清單項目）。");
+  if (D.changes.kind === "lost") gap("low", "The marker commit is no longer in this repository (history was rewritten?), so the changes column shows the last commits instead.", "標記的 commit 已不在這個 repository（歷史被改寫過？），因此變更欄改為顯示最近的 commit。");
+  if (D.trans && !D.trfileOk) gap("medium", "`" + D.trfile + "` does not exist, so every unit shows in English as untranslated.", "`" + D.trfile + "` 不存在，所有單位都以英文顯示為未翻譯。");
+  // Every distinct displayed unit, and how many of them have no current translation.
+  var trTotal = 0, trMiss = 0;
+  (function () {
+    var seen = {};
+    [D.problem, D.focus, D.goals, D.ac.acs, D.next, D.open].forEach(function (list) { list.forEach(function (u) { if (seen[u.en]) return; seen[u.en] = 1; trTotal++; if (isFb(u)) trMiss++; }); });
+  })();
+  if (D.trans && trMiss) gap("low", trMiss + " of " + trTotal + " displayed units have no current translation; `scripts/progress.sh --untranslated` lists them.", trTotal + " 段中 " + trMiss + " 段沒有最新的翻譯；`scripts/progress.sh --untranslated` 會列出它們。");
+  if (D.trans && D.orphans) gap("low", D.orphans + " translation(s) in `" + D.trfile + "` match no displayed unit; `scripts/progress.sh --untranslated` lists them to prune.", "`" + D.trfile + "` 裡有 " + D.orphans + " 筆翻譯對不到任何顯示的單位；`scripts/progress.sh --untranslated` 會列出，請清掉。");
 
   /* ---------- the header ---------- */
   document.getElementById("title").textContent = D.name;
+  (function trline() {
+    var t = document.getElementById("trline");
+    if (!D.trans || !trMiss) return;
+    t.appendChild(document.createTextNode(trTotal + " 段中 " + trMiss + " 段尚未翻譯，以淡色 EN 顯示英文原文。列出：")); t.appendChild(el("code", null, "scripts/progress.sh --untranslated"));
+    t.appendChild(document.createTextNode("。Commit 標題與證據不翻譯，標為「原文」。"));
+    t.hidden = false;
+  })();
 
   function clampBox(content, lines) {
     var wrap = el("div", "cw"), box = el("div", "cl" + (lines ? " l" + lines : ""));
@@ -774,17 +823,18 @@ cat <<'EOF'
   }
   var clamps = [];
 
-  function section(id, en, zh) {
+  function section(id, en, zh, units) {
     var s = document.getElementById(id);
     var h = el("h2"); h.appendChild(bi(en, zh)); s.appendChild(h);
+    if (units && units.some(isFb)) h.appendChild(untrTag());
     return s;
   }
   (function header() {
-    var s = section("hproblem", "Problem", "問題");
+    var s = section("hproblem", "Problem", "問題", D.problem);
     if (!D.problem.length) { var e = el("p", "u"); e.style.color = "var(--warn)"; e.appendChild(bi("Not written: the spec gate has not run.", "還沒寫：規格門還沒跑過。")); s.appendChild(e); }
     else { var c = el("div"); D.problem.forEach(function (u) { c.appendChild(unitDiv(u)); }); s.appendChild(clampBox(c, 3)); }
 
-    s = section("hfocus", "Current focus", "目前焦點");
+    s = section("hfocus", "Current focus", "目前焦點", D.focus);
     if (!D.focus.length) { var e2 = el("p", "u"); e2.style.color = "var(--warn)"; e2.appendChild(bi("Nothing written under Current Focus in STATE.md.", "STATE.md 的 Current Focus 沒有內容。")); s.appendChild(e2); }
     else { var c2 = el("div"); D.focus.forEach(function (u) { c2.appendChild(unitDiv(u)); }); s.appendChild(clampBox(c2, 3)); }
 
@@ -836,15 +886,22 @@ cat <<'EOF'
     var h = el("h2"); h.appendChild(bi("Gaps (" + gaps.length + ")", "缺口（" + gaps.length + "）")); aside.appendChild(h);
     if (!gaps.length) { var p = el("p", "none"); p.appendChild(bi("No gaps found.", "沒有發現缺口。")); aside.appendChild(p); }
     else {
-      var ul = el("ul");
-      gaps.forEach(function (g) {
-        var li = el("li", "g w" + (g.ref ? " ref" : ""));
-        li.appendChild(el("span", "ic", "!"));
-        var t = el("span"); t.appendChild(bi(g.en, g.zh)); li.appendChild(t);
-        if (g.ref) li.addEventListener("click", function () { focusNode(g.ref); });
-        ul.appendChild(li);
+      var HEAD = { high: ["High: shown as complete or true, but is not", "高：看起來完整或正確，其實不是"], medium: ["Medium: something needed is missing", "中：缺少必要的東西"], low: ["Low: housekeeping", "低：整理類"] };
+      var MARK = { high: "▲", medium: "◆", low: "·" };
+      SEV.forEach(function (sv) {
+        var list = gaps.filter(function (g) { return g.sev === sv; });
+        if (!list.length) return;
+        var hh = el("h3", "sev sev-" + sv); hh.appendChild(bi(HEAD[sv][0] + " (" + list.length + ")", HEAD[sv][1] + "（" + list.length + "）")); aside.appendChild(hh);
+        var ul = el("ul");
+        list.forEach(function (g) {
+          var li = el("li", "g " + sv + (g.ref ? " ref" : ""));
+          li.appendChild(el("span", "ic", MARK[sv]));
+          var t = el("span"); t.appendChild(bi(g.en, g.zh)); li.appendChild(t);
+          if (g.ref) li.addEventListener("click", function () { focusNode(g.ref); });
+          ul.appendChild(li);
+        });
+        aside.appendChild(ul);
       });
-      aside.appendChild(ul);
     }
     var det = el("details"), sm = el("summary"); sm.appendChild(bi("Open questions (" + D.open.length + ")", "未解問題（" + D.open.length + "）")); det.appendChild(sm);
     if (!D.open.length) { var e = el("p", "u"); e.style.color = "var(--muted)"; e.appendChild(bi("STATE.md has no Open Questions.", "STATE.md 沒有 Open Questions。")); det.appendChild(e); }
@@ -885,19 +942,11 @@ cat <<'EOF'
   var ICON = { evidenced: "✓", claimed: "◐", none: "○" };
   var LABEL = { evidenced: ["evidenced", "有證據"], claimed: ["claimed", "僅宣稱"], none: ["not started", "未開始"] };
 
-  var problemNode = null;
-  if (hasProblem) {
-    var pd = el("div");
-    var ph = el("div", "ch"); ph.appendChild(kindLabel(pd, "Problem", "問題")); pd.appendChild(ph);
-    var pc = el("div"); D.problem.forEach(function (u) { pc.appendChild(unitDiv(u)); });
-    pd.appendChild(clampBox(pc, 7));
-    problemNode = addNode("P", "problem", pd, {});
-  }
-
   goals.forEach(function (g) {
     var d = el("div");
     var h = el("div", "ch"); h.appendChild(el("span", "id", g.id)); h.appendChild(kindLabel(d, "Goal", "目標"));
     if (!g.acs.length) { var w = el("span", "warnmini"); w.appendChild(bi("no criteria", "沒有條件")); h.appendChild(w); d.classList.add("nolink"); }
+    if (isFb(g)) h.appendChild(untrTag());
     d.appendChild(h);
     d.appendChild(clampBox(unitDiv(g), 5));
     var f = el("div", "foot");
@@ -918,10 +967,11 @@ cat <<'EOF'
     var b = el("span", "badge b-" + a.eff); b.appendChild(document.createTextNode(ICON[a.eff] + " ")); b.appendChild(bi(LABEL[a.eff][0], LABEL[a.eff][1])); h.appendChild(b);
     if (a.gids.length) { var sv2 = el("span", "meta"); sv2.appendChild(bi("serves " + a.gids.join(", "), "對應 " + a.gids.join(", "))); h.appendChild(sv2); }
     else noLink(d, h, "no goal", "沒有目標");
+    if (isFb(a)) h.insertBefore(untrTag(), h.querySelector(".warnmini"));
     d.appendChild(h);
     d.appendChild(clampBox(unitDiv(a), 4));
     if (a.ev) {
-      var e = el("div", "ev"); var l = el("span", "lbl"); l.appendChild(bi("Evidence", "證據")); e.appendChild(l);
+      var e = el("div", "ev"); var l = el("span", "lbl"); l.appendChild(bi("Evidence", "證據")); e.appendChild(l); if (D.trans) e.appendChild(origTag());
       var body = el("span"); rich(body, a.ev); e.appendChild(body);
       if (a.date) e.appendChild(el("span", "date", " (" + a.date + ")"));
       var w = el("div"); w.appendChild(e); d.appendChild(clampBox(w, 3));
@@ -938,24 +988,28 @@ cat <<'EOF'
 
   commits.forEach(function (k) {
     var d = el("div");
-    var h = el("div", "ch"); h.appendChild(el("code", null, k.c.h)); h.appendChild(el("span", "date", k.c.d));
+    var h = el("div", "ch"); h.appendChild(el("code", null, k.c.h)); h.appendChild(el("span", "date", k.c.d)); if (D.trans) h.appendChild(origTag());
     if (k.ids.length) arrows(h, k.ids); else noLink(d, h, "no id link", "沒有 id 連結");
     d.appendChild(h);
     d.appendChild(el("div", null, k.c.s));
     addNode(k.key, "commit", d, { ids: k.ids });
   });
 
+  var colN = 0;
   nexts.forEach(function (k) {
+    k.col = k.ids.length ? (colN++ % 6) : -1;
     var d = el("div");
     var h = el("div", "ch"); h.appendChild(kindLabel(d, "Next step", "下一步"));
+    if (isFb(k.u)) h.appendChild(untrTag());
     if (k.ids.length) arrows(h, k.ids); else noLink(d, h, "no id link", "沒有 id 連結");
     d.appendChild(h);
     d.appendChild(clampBox(unitDiv(k.u), 5));
-    addNode(k.key, "next", d, { ids: k.ids });
+    addNode(k.key, "next", d, { ids: k.ids, col: k.col });
+    if (k.col >= 0) { d.style.borderLeftColor = "var(--n" + k.col + ")"; var ar = h.querySelector(".meta"); if (ar) ar.style.color = "var(--n" + k.col + ")"; ar && (ar.style.fontWeight = "700"); }
   });
 
   /* ---------- layout ---------- */
-  var COLW = { g: 220, a: 340, c: 240, n: 270 }, GAPX = 88, PADL = 40, ROW = 12, HEADH = 44;
+  var COLW = { g: 220, a: 340, c: 240, n: 270 }, GAPX = 104, PADL = 24, ROW = 12, HEADH = 58, LANE = 14;
   var view = document.getElementById("view"), svg = document.getElementById("edges"), cv = document.getElementById("canvas");
   var W = 0, H = 0, decor = [], LX = { a: 0 };
 
@@ -1008,7 +1062,7 @@ cat <<'EOF'
 
     // 2. columns
     var skip = edges.filter(function (e) { return e.kind === "na"; });
-    var H0 = skip.length ? 18 + skip.length * 9 : 12;
+    var H0 = skip.length ? 20 + skip.length * LANE : 12;
     var top = H0 + HEADH;
     var xg = PADL, xa = xg + COLW.g + GAPX, xc = xa + COLW.a + GAPX, xn = xc + COLW.c + GAPX;
     LX.a = xa;
@@ -1059,9 +1113,8 @@ cat <<'EOF'
     }
     function n_w(x) { return x === xc ? COLW.c : COLW.n; }
 
-    // goals, with the problem above them
+    // goals, level with their criteria
     var gy = top;
-    if (problemNode) { problemNode.x = xg; problemNode.y = top; gy = top + problemNode.h + 28; }
     var gl = goals.map(function (g) { return nodes["g:" + g.id]; });
     var gLinked = gl.filter(function (n) { return n.goal.acs.length; }), gFree = gl.filter(function (n) { return !n.goal.acs.length; });
     gLinked.forEach(function (n) { n.want = n.goal.acs.reduce(function (s, a) { return s + cyOf(nodes["a:" + a.id]); }, 0) / n.goal.acs.length; });
@@ -1093,7 +1146,6 @@ cat <<'EOF'
     // 3. lines
     var ge = edges.filter(function (e) { return e.kind === "ga"; });
     var ce = edges.filter(function (e) { return e.kind === "ca"; });
-    var pe = edges.filter(function (e) { return e.kind === "pg"; });
     ports(ge, function (e) { return e.from; }, function (e) { return e.to; });
     ports(ge, function (e) { return e.to; }, function (e) { return e.from; });
     ports(ce.concat(skip), function (e) { return e.to; }, function (e) { return e.from; });
@@ -1101,30 +1153,30 @@ cat <<'EOF'
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     svg.setAttribute("width", W); svg.setAttribute("height", H);
     var defs = sv("defs", {});
-    ["pg", "ga", "ca", "na"].forEach(function (k) {
+    ["ga", "ca", "na", "n0", "n1", "n2", "n3", "n4", "n5"].forEach(function (k) {
       var m = sv("marker", { id: "mk-" + k, viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "8", markerHeight: "8", orient: "auto", markerUnits: "userSpaceOnUse" });
       m.appendChild(sv("path", { d: "M0 0 L10 5 L0 10 z", "class": "mk-" + k })); defs.appendChild(m);
     });
     svg.appendChild(defs);
     function draw(e, d) {
-      var p = sv("path", { d: d, "class": "edge " + e.kind, "marker-end": "url(#mk-" + e.kind + ")" });
+      var c = e.kind === "na" ? "n" + nodes[e.from].col : e.kind;
+      var p = sv("path", { d: d, "class": "edge " + e.kind, "marker-end": "url(#mk-" + c + ")" });
+      if (e.kind === "na") p.style.stroke = "var(--" + c + ")";
       svg.appendChild(p); e.path = p;
     }
     ge.forEach(function (e) { var a = nodes[e.from], b = nodes[e.to]; draw(e, bez(a.x + a.w, e["y_" + e.from], b.x, e["y_" + e.to])); });
     ce.forEach(function (e) { var a = nodes[e.from], b = nodes[e.to]; draw(e, bez(a.x, e["y_" + e.from], b.x + b.w, e["y_" + e.to])); });
     // next step -> criterion crosses the commits column, so it goes round the
-    // top of it instead of behind the cards
-    var lane = 0;
-    skip.slice().sort(function (p, q) { return cyOf(nodes[p.to]) - cyOf(nodes[q.to]); }).forEach(function (e, i) {
+    // top of it instead of behind the cards. Each line has its own lane, its own
+    // vertical on each side, and the colour of its next step. Ordered by the
+    // criterion's height: the higher the criterion, the higher the lane and the
+    // nearer its vertical to the criteria, which keeps lines from crossing on
+    // that side; the verticals on the next-step side run the other way.
+    var span = Math.max(0, GAPX - 40), step = skip.length > 1 ? Math.min(14, span / (skip.length - 1)) : 0;
+    skip.slice().sort(function (p, q) { return cyOf(nodes[p.to]) - cyOf(nodes[q.to]) || cyOf(nodes[p.from]) - cyOf(nodes[q.from]); }).forEach(function (e, i) {
       var a = nodes[e.from], b = nodes[e.to];
-      var j = (i % 5 - 2) * 6;
-      var xB = xn - GAPX * 0.5 + j, xA = xc - GAPX * 0.5 + j, ly = 10 + (lane++) * 9;
+      var xA = xc - GAPX + 20 + i * step, xB = xn - 20 - i * step, ly = 10 + i * LANE;
       draw(e, rpath([[a.x, e["y_" + e.from]], [xB, e["y_" + e.from]], [xB, ly], [xA, ly], [xA, e["y_" + e.to]], [b.x + b.w, e["y_" + e.to]]], 8));
-    });
-    // problem -> goals leaves the problem by its left side and runs down the margin
-    pe.forEach(function (e, i) {
-      var a = nodes[e.from], b = nodes[e.to], gx = xg - 20, sy = a.y + 22;
-      draw(e, rpath([[a.x, sy], [gx, sy], [gx, b.y + Math.min(22, b.h / 2)], [b.x, b.y + Math.min(22, b.h / 2)]], 8));
     });
     view.style.width = W + "px"; view.style.height = H + "px";
     applySel();
@@ -1179,7 +1231,7 @@ cat <<'EOF'
     btn("−", function () { var r = cv.getBoundingClientRect(); zoomAt(r.width / 2, r.height / 2, 0.8); });
     btn(null, function () { fit(true); }, "Fit", "全覽");
     var lg = document.getElementById("legend");
-    [["pg", "problem → goal", "問題 → 目標"], ["ga", "goal → criterion", "目標 → 條件"], ["ca", "commit → criterion", "commit → 條件"], ["na", "next step → criterion", "下一步 → 條件"]].forEach(function (p) {
+    [["ga", "goal → criterion", "目標 → 條件"], ["ca", "commit → criterion", "commit → 條件"], ["na", "next step → criterion (a colour each)", "下一步 → 條件（各一種顏色）"]].forEach(function (p) {
       var s = el("span"), g = sv("svg", { viewBox: "0 0 26 8" });
       g.appendChild(sv("path", { d: "M0 4 L26 4", "class": "lg-" + p[0] })); s.appendChild(g); s.appendChild(bi(p[1], p[2])); lg.appendChild(s);
     });
