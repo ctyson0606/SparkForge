@@ -3,6 +3,7 @@
 ## Declarations
 MODE: project        # project | sprint
 TEAM: 1
+TRANSLATION:         # blank = none; a language tag such as zh-TW gives the progress page that language
 
 ## Environment facts
 install:
@@ -37,6 +38,9 @@ e2e:
   SPEC.md, METHOD.md, STATE.md and GOTCHAS.md. Talking to the user, and the
   README, follow whatever language they ask for. A memory file that
   accumulated in two languages is what this prevents, and it only accumulates.
+  The one exception is translations/<lang>.md, which exists only when
+  TRANSLATION is set and holds a translation for the progress page; the memory
+  files themselves stay English.
 - Write memory as you go, not when asked: the moment state changes, by
   kit/skills/memory-update.md. The memory files are always in scope. A session
   can stop without warning, and what was not written is lost with it.
@@ -87,6 +91,12 @@ SPEC.md, METHOD.md, STATE.md and GOTCHAS.md, which are never
 overwritten.
 scripts/check.sh verifies the invariants of this layout. Run it after
 any change to kit/, the stubs, or AGENTS.md itself.
+scripts/progress.sh (Windows: `powershell -ExecutionPolicy Bypass -File
+scripts/progress.ps1`) opens a page built from SPEC.md, STATE.md and git: the
+acceptance criteria with the evidence recorded for each, what changed since
+the last look, and the next steps. It stores nothing, so it cannot go stale.
+With TRANSLATION set, `scripts/progress.sh --untranslated` lists what lacks a
+translation in translations/<lang>.md.
 Anything that belongs to SparkForge rather than to this project — a
 rule that proved wrong or useless here, a check that missed something,
 a stub or script that did not work, a framework rule this project was

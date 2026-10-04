@@ -18,6 +18,8 @@ Do not write into this file:
 
 ## Open Questions
 
+## Acceptance status
+
 ## Known Annoyances
 
 ## Recent Decisions

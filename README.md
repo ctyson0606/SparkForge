@@ -38,6 +38,8 @@ my-project/
 │   └── scripts/
 └── scripts/
     ├── check.sh
+    ├── progress.sh
+    ├── progress.ps1
     └── update-kit.sh
 ```
 
@@ -54,6 +56,7 @@ my-project/
 | 🪝 `.claude/` | Thin stubs. Each is a frontmatter block plus one line pointing into `kit/`. |
 | ✅ `scripts/check.sh` | Structural checks for the whole layout. A one-line stub: the checker is `kit/scripts/check.sh`, so its fixes arrive with `kit/`. |
 | 🔄 `scripts/update-kit.sh` | Pulls a newer `kit/` from upstream, the scripts in `kit/scripts/` included. Also a stub, so it updates itself. |
+| 📊 `scripts/progress.sh` | Builds one self-contained HTML page from `SPEC.md`, `STATE.md` and git — acceptance criteria with the evidence recorded for each, what changed since you last looked, next steps — and opens it. Stores nothing, so it cannot go stale. On Windows use `scripts/progress.ps1`. Set `TRANSLATION` in `AGENTS.md` for a second language. |
 
 The two-layer split is the point: 📚 `kit/` holds each rule once, and every AI
 tool gets a directory of 🪝 thin stubs pointing at them. Supporting a second
