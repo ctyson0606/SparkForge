@@ -1,6 +1,6 @@
 # STATE
 
-> Last updated: 2026-10-04
+> Last updated: 2026-10-21
 
 Current working state. Superseded content is deleted, not archived.
 For durable rules see METHOD.md.
@@ -20,24 +20,31 @@ Do not write into this file:
 SparkForge uses its own method: this file and METHOD.md at the repository root
 are its memory, kept separate from the empty shells under template/.
 
-Three projects have adopted the framework, all on Windows, all in sibling
-directories of this repository: ../GameBrake, the first install, a C# tray tool
-built through every acceptance criterion of its v1 and in daily use;
-../LearningProject, a Markdown-only template for learning projects; and
-../dsh/dsh-docker+remote-access, which merges two Docker repositories into one
-public one. ../TempTime never adopted it, but source/METHOD.md is a copy of its
-METHOD.md, and it kept growing afterwards. A survey of all four on 2026-10-01
-is where most of the Next Steps below came from.
+The projects that have adopted the framework, all in sibling directories of
+this repository: ../GameBrake, the first install, a C# tray tool built through
+every acceptance criterion of its v1 and in daily use; ../LearningProject, a
+Markdown-only template for learning projects; ../dsh/dsh-docker+remote-access,
+which merges two Docker repositories into one public one; ../dsh-mobile-mode,
+a DeepSeek Harness Web client plugin adopted on 2026-10-18 and worked on in a
+Linux container, the first install off this Windows machine; and ../test, the
+backend half of the qryvox hackathon (2026-10-01), MODE sprint and TEAM > 1,
+which is not a git repository and whose spec never reached the team's real
+repository, ../qryvox (see Open Questions). ../TempTime never adopted it, but
+source/METHOD.md is a copy of its METHOD.md. Surveys on 2026-10-01 and
+2026-10-21 are where most of the Next Steps below came from.
 
 kit/ has two halves with different standing, and the split is by how each was
 written rather than by what it covers. verification, diagnosis and
 memory-update were transformed from TempTime's methodology and carry its
 incidents. spec-gate, team-contract, bootstrap and evidence-reviewer were
-written from a specification; bootstrap and spec-gate have now run in all three
-projects, the other two in none.
+written from a specification; bootstrap and spec-gate have run in every
+adopting project, the other two in none.
 
 ## Next Steps
 
+- The progress page is the current work. On 2026-10-21 the user said it still
+  falls short of what they have in mind and chose to finish it before any of
+  the survey findings in the next item. What falls short is not yet recorded.
 - Progress page, decided with the user on 2026-10-04. Origin: at a hackathon,
   without SparkForge, the user accepted AI suggestions until they no longer
   knew what the demo did or how to run it. Built, in kit 0.6.0:
@@ -100,7 +107,8 @@ projects, the other two in none.
   knows it and its data is real, not because it tests the main unknown — it
   has no development under way, so whether an agent writes status, ids and
   translations unprompted waits for a project with work in progress. Plan:
-  update-kit from the local SparkForge path (the new commits are unpushed),
+  update-kit from the local SparkForge path (the new commits were not pushed
+  until 2026-10-21),
   the hand-copied pieces, status lines backed by commands actually rerun,
   and a spec-gate draft of milestones, components, Means and Try for the
   user to approve before SPEC.md changes. Done the same day except the
@@ -124,8 +132,53 @@ projects, the other two in none.
   GameBrake meets the new code only on its second update, or by running the new
   script against it directly (SPARKFORGE_ROOT and SPARKFORGE_UPDATE_COPY set
   to the project and a copy of the new script).
-- The user is about to run a project with TEAM > 1 for the first time, which
-  team-contract has never seen. Read on 2026-10-01, it only asks for a contract
+- Survey of 2026-10-21, discussed with the user, to do after the progress
+  page. Proposed in this order, nothing built:
+  1. kit 0.6.x stayed local for seventeen days, so dsh-mobile-mode, adopted
+     from the remote on 2026-10-18, received 0.2.1 and never the progress
+     page built for exactly its kind of project. collect-upstream.sh compares
+     projects against the local template and printed "0.6.1 here" throughout,
+     which hid it. Make it also print the version origin/main holds.
+  2. ../test reported two bootstrap defects 0.6.1 does not fix. The entry
+     condition, METHOD.md and STATE.md both empty, is falsified on day one by
+     writing memory as you go, so bootstrap can never fire once the first
+     conversation has written STATE.md: key it on SPEC.md being an empty
+     shell, or on MODE and TEAM not yet declared. Step 1 assumes a git
+     repository: add a step before it that settles where the code lives
+     (git init here, or clone the real repository in).
+  3. Upstream has no return path. GameBrake's three entries were fixed in
+     0.6.1 and still stand there, so every survey shows them again. Proposal:
+     a kit/CHANGES that names, per version, the Upstream entries it answers;
+     update-kit.sh prints it, and the project's agent deletes what it answers.
+  4. STATE.md grows into a changelog in every project. dsh-mobile-mode's
+     Recent Decisions logs each version and each README rewrite;
+     LearningProject's are long dated narratives; GameBrake's STATE.md was
+     29.6 KB with v1 long finished. Nothing pushes back on "STATE.md is
+     replaced". Give Recent Decisions an exit test (already in code, git or
+     SPEC and no longer steering the next step: delete), and have check.sh
+     warn when STATE.md grows past a size, only on growth.
+  5. Joining a repository someone else owns, which already has its own
+     AGENTS.md. ../qryvox is that case: the teammate's repository carries
+     git and directory rules and an ADR choosing TypeScript on Vercel, where
+     ../test's spec chose FastAPI on Render. SparkForge assumes it owns the
+     root AGENTS.md and has no way in. Belongs with the paused TEAM > 1 design.
+  6. LearningProject's findings never reached Upstream, because Upstream is
+     defined as kit/, stubs and scripts, while what it learned is how agents
+     follow memory rules: compliance depends mainly on the model (DeepSeek
+     V4.1 Flash followed everything, free and local models did not), the
+     first evidence of writing as you go outside Claude Code; commit right
+     after every memory write, which memory-update.md does not mention and
+     TEAM > 1 will need; which clock a date comes from when two machines
+     write (dsh-mobile-mode commits at +0000 beside this machine's local
+     time); one project, one session. Widen the Upstream definition to cover
+     observations of agents following the framework, and weigh each of these
+     as a candidate rule.
+  7. A SPEC.md line found false stays false: dsh-mobile-mode's AC8 names
+     `node --test test/`, which does not run there; STATE.md records it,
+     SPEC.md, changeable only through the gate, does not. Consider requiring
+     a pending spec change under Next Steps when a SPEC line is found false.
+- The qryvox backend (../test, 2026-10-01) is the first TEAM > 1 use found,
+  and team-contract never ran there. Read on 2026-10-01, it only asks for a contract
   reference and a file-ownership list, and says neither where that list is
   written nor anything about memory: every rule in memory-update.md assumes one
   writer, and STATE.md is replaced on each write, so two people's agents
@@ -142,12 +195,13 @@ projects, the other two in none.
   Claude Code) rather than a line in AGENTS.md. Untried.
 - Memory does not load in DeepSeek Harness; see Open Questions. Unsolved. The
   obvious patch is rejected in METHOD.md, Anti-Patterns.
-- The three installed projects are at 0.2.1. They were brought to 0.2.0 on
-  2026-10-01, kit/ through each project's own update-kit.sh over SSH and the
-  rest copied in once by hand, with each spec moved out of STATE.md into
-  SPEC.md and checked line for line; then to 0.2.1 the same day through the
-  new stubs, with nothing left to do by hand. collect-upstream.sh reports all
-  three current.
+- GameBrake is on 0.6.0 and every other project on 0.2.1. The first three
+  were brought to 0.2.0 on 2026-10-01, kit/ through each project's own
+  update-kit.sh over SSH and the rest copied in once by hand, with each spec
+  moved out of STATE.md into SPEC.md and checked line for line; then to 0.2.1
+  the same day through the new stubs, with nothing left to do by hand.
+  GameBrake's spec-gate draft of milestones, components, Means and Try has
+  waited for the user's approval since 2026-10-04.
 - Remind the user, at the start of the next session that touches update-kit.sh
   or the projects: decide whether update-kit.sh's default upstream stays HTTPS.
   It was chosen for readers without an SSH key, which assumes a public
@@ -198,7 +252,14 @@ projects, the other two in none.
   and GOTCHAS.md never load there. The one lever the loader offers is its
   instructionFileCandidates list, which could name the memory files, but that
   lives in the user's DSH profile rather than in the project, so the framework
-  cannot ship it. Untried. All of this is read, not watched.
+  cannot ship it. Untried. All of this is read, not watched. LearningProject
+  works around the same loader by keeping project instructions inside
+  AGENTS.md itself, the "content placed where it is already loaded" option.
+- Why the qryvox hackathon went without SparkForge is inferred, not
+  confirmed: ../test holds an approved backend spec, and ../qryvox, the team's
+  repository, has its own AGENTS.md and a different stack, with no trace of
+  the framework. The inference is that the framework had no way into a
+  repository it does not own. Ask the user.
 - Every tool entry except Claude Code's reaches AGENTS.md only by asking the
   agent to open it. Cursor's alwaysApply loads the pointer, not the file it
   points at. That is the same request the rejected memory patch made, and the
@@ -236,10 +297,15 @@ Also, none of them rules:
   asked for by name. In the first it stopped at the spec gate for want of a
   requirement, which is the hard rule about vague requirements firing rather
   than a fault.
-- spec-gate has produced its four artifacts in all three projects, and
+- spec-gate has produced its four artifacts in every adopting project, and
   GameBrake's run also recorded its assumptions as the second step asks. Every
-  recorded run was bootstrap's step 4. The gate has never been seen firing on
-  its own.
+  recorded run was bootstrap's step 4. dsh-mobile-mode later grew its SPEC.md
+  (G8, AC11, AC12) inside the feature commits, so whether a gate ran with
+  approval there cannot be told. The gate has never been seen firing on its
+  own.
+- The first install off this machine, dsh-mobile-mode in a Linux container
+  on 0.2.1, passed check.sh with every script at 100755 and sent nothing
+  upstream.
 - update-kit.sh has pulled real changes from the real remote into all three
   projects, twice on 2026-10-01: to 0.2.0 through each project's old copy, and
   to 0.2.1 through the self-copying one, which replaced itself mid-run in all
@@ -327,8 +393,9 @@ Also, none of them rules:
   against the real projects and a scratch set covering current, behind, empty,
   filled and missing. It does not make the survey happen: the root AGENTS.md
   asks for it before choosing work, which is the depends-on-remembering shape
-  every hole so far has had. All three installed projects now carry an
-  Upstream section, and on 2026-10-01 every one of them was empty.
+  every hole so far has had. Every adopting project carries an Upstream
+  section. Nothing removes an entry once upstream has acted on it; see Next
+  Steps, survey item 3.
 
 ## Recent Decisions
 
@@ -343,8 +410,9 @@ in METHOD.md, or visible in the code itself, has been dropped from here.
   document restate.
 - The first use-driven change came from one install on one machine, and three
   of its four findings were assumptions about the reader's environment. Expect
-  the next batch to have that shape too, and to arrive from the first machine
-  that is not this one.
+  the next batch to have that shape too. The first machine that is not this
+  one, a Linux container, reported nothing, so the shape still holds but has
+  not been confirmed from the other side.
 - The consuming project's agent checked a claim sent downstream from here,
   found it did not hold, and said why with the command that showed it. The
   arrangement runs in that direction as well as the intended one, so a claim
