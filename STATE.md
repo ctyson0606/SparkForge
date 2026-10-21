@@ -67,10 +67,19 @@ adopting project, the other two in none.
   a GameBrake clone: a real mouse click downloaded the en to zh-Hant model in
   about a minute (first ~40 s with no progress event), all 62 units cached,
   inline code identical, every displayed span translated after the reload,
-  no errors; a page with TRANSLATION blank shows no banner. Not observed: the
-  copy button's clipboard, other browsers (where only the agent button
-  shows), the user's judgement of the machine translation's quality, and
-  whether an agent fills the file when asked for the page.
+  no errors; a page with TRANSLATION blank shows no banner. The copied
+  instruction was then walked for real: the user pasted it into Claude Code
+  here, which wrote all 62 of GameBrake's units into
+  ../GameBrake/translations/zh-TW.md by hand (left uncommitted there for the
+  user), --untranslated then listed nothing missing or orphaned, and the page
+  opened. Not observed: the copy button's clipboard, other browsers (where
+  only the agent button shows), the user's judgement of the machine
+  translation's quality, and whether an agent fills the file unprompted when
+  merely asked to open the page.
+  A page defect the translation exposed, not yet fixed: an evidence result
+  has its inline-code commands cut out and shown apart, so the text left
+  behind reads "passed ( : 29 passed; : 17 passed", and every translation has
+  to carry the same holes. Fix it in the page, not in the translations.
 - Progress page, decided with the user on 2026-10-04. Origin: at a hackathon,
   without SparkForge, the user accepted AI suggestions until they no longer
   knew what the demo did or how to run it. Built, in kit 0.6.0:
