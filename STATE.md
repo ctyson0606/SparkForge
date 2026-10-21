@@ -44,7 +44,33 @@ adopting project, the other two in none.
 
 - The progress page is the current work. On 2026-10-21 the user said it still
   falls short of what they have in mind and chose to finish it before any of
-  the survey findings in the next item. What falls short is not yet recorded.
+  the survey findings in the next item. What falls short is not yet recorded,
+  except translation: on GameBrake's page all 62 units showed untranslated,
+  because translations/zh-TW.md was never written. The rule that an agent
+  fills it after every memory write asks for an unprompted action and did not
+  happen. A local model (Ollama) was rejected by the user: not every machine
+  has one. Decided 2026-10-21: (1) the agent fills translations when the user
+  asks it to open the page, a prompted moment, and the page offers a button
+  that copies that instruction for any agent; (2) code, paths and ids carry
+  translate="no" so the browser's own translation can cover what is left
+  without breaking them; (3) Chrome's built-in Translator API only if a test
+  shows the user's browser has it. The after-every-write rule goes.
+  Built the same day, kit 0.6.2: code carries translate="no", untranslated
+  spans lang="en"; the banner has a button copying the agent instruction and,
+  where self.Translator exists, one that machine translates what the file
+  lacks, per segment between code spans, cached per viewer in localStorage,
+  tagged 機器翻譯 with the original one click away, then reloads; with the
+  model already present it runs on load without a click. AGENTS.md says to
+  fill the file when asked to open the page, project-requirements.txt makes
+  check.sh ask for that paragraph, and memory-update.md no longer asks for it
+  after every write. Observed in headless Edge 155 and Chrome 155 over CDP on
+  a GameBrake clone: a real mouse click downloaded the en to zh-Hant model in
+  about a minute (first ~40 s with no progress event), all 62 units cached,
+  inline code identical, every displayed span translated after the reload,
+  no errors; a page with TRANSLATION blank shows no banner. Not observed: the
+  copy button's clipboard, other browsers (where only the agent button
+  shows), the user's judgement of the machine translation's quality, and
+  whether an agent fills the file when asked for the page.
 - Progress page, decided with the user on 2026-10-04. Origin: at a hackathon,
   without SparkForge, the user accepted AI suggestions until they no longer
   knew what the demo did or how to run it. Built, in kit 0.6.0:

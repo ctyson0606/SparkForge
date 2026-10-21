@@ -763,6 +763,8 @@ html[data-lang="zh"] .en { display:none; }
 .acard .title { overflow-wrap:anywhere; font-size:1rem; font-weight:600; line-height:1.4; flex:1; }
 .acard .foot { display:flex; align-items:center; justify-content:space-between; gap:.5rem; }
 .untr { font-size:.72rem; font-weight:700; color:var(--warn); background:var(--warnbg); border:1px solid var(--warn); border-radius:99px; padding:0 .5rem; white-space:nowrap; margin-left:auto; }
+.mtTag { font-size:.66em; font-weight:700; border:1px solid var(--acc); border-radius:4px; padding:0 .3em; margin-right:.35em; color:var(--acc); font-style:normal; vertical-align:.1em; white-space:nowrap; }
+.trbtns { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.45rem; }
 .enTag { font-size:.66em; font-weight:700; border:1px solid var(--line); border-radius:4px; padding:0 .3em; margin-right:.35em; color:var(--muted); font-style:normal; vertical-align:.1em; }
 .fb { color:var(--muted); }
 .cl { overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; }
@@ -944,6 +946,8 @@ cat <<'EOF'
     var e = document.createElement(tag);
     if (cls) e.className = cls;
     if (text != null) e.textContent = text;
+    // Commands, paths and ids stay as written when the browser translates the page.
+    if (tag === "code") e.setAttribute("translate", "no");
     return e;
   }
   // Inline code is the one piece of markdown shown: `like this`.
@@ -968,14 +972,32 @@ cat <<'EOF'
   // A translation that is missing or out of date: the zh view shows the English
   // as a fallback. What says so never sits where line clamping can cut it off:
   // a leading EN tag on the unit, and a pill in the header of the card or box.
-  function isFb(u) { return D.trans && !u.tr; }
-  function untrTag() { var t = el("span", "untr zh", "未翻譯"); t.title = "No current translation: showing the English"; return t; }
+  //
+  // A unit the file does not cover can be machine translated by the browser's
+  // own Translator API (Chrome, Edge). That is kept per viewer in localStorage,
+  // never written to the file, and marked as a machine translation: the file
+  // holds what an agent or a person wrote.
+  var MTKEY = "sparkforge-progress-mt:" + (root.getAttribute("data-tlang") || "zh-TW"), MT = {};
+  try { MT = JSON.parse(localStorage.getItem(MTKEY) || "{}") || {}; } catch (e) { MT = {}; }
+  function mtOf(u) { return D.trans && !u.tr && Object.prototype.hasOwnProperty.call(MT, u.en) ? MT[u.en] : null; }
+  function isFb(u) { return D.trans && !u.tr && mtOf(u) === null; }
+  function untrTag() { var t = el("span", "untr zh", "未翻譯"); t.title = "No current translation: showing the English"; t.setAttribute("translate", "no"); return t; }
+  function zhSpan(u) {
+    var mt = mtOf(u), z = el("span", isFb(u) ? "zh fb" : mt !== null ? "zh mt" : "zh");
+    if (isFb(u)) {
+      z.setAttribute("lang", "en");
+      var t = el("span", "enTag", "EN"); t.setAttribute("translate", "no"); z.appendChild(t);
+    } else if (mt !== null) {
+      var g = el("span", "mtTag", "機器翻譯"); g.title = "Machine translated by this browser, not in the translation file"; g.setAttribute("translate", "no"); z.appendChild(g);
+    }
+    rich(z, u.tr || (mt !== null ? mt : u.en));
+    return z;
+  }
   function unitFrag(u) {
     var f = document.createDocumentFragment();
     f.appendChild(rich(el("span", "en"), u.en));
-    var z = el("span", isFb(u) ? "zh fb" : "zh");
-    if (isFb(u)) z.appendChild(el("span", "enTag", "EN"));
-    rich(z, u.tr || u.en);
+    var z = zhSpan(u);
+    if (mtOf(u) !== null) z.title = u.en;
     f.appendChild(z);
     return f;
   }
@@ -986,10 +1008,8 @@ cat <<'EOF'
   function revealFrag(u) {
     var f = document.createDocumentFragment();
     f.appendChild(rich(el("span", "en"), u.en));
-    var z = el("span", isFb(u) ? "zh fb" : "zh");
-    if (isFb(u)) z.appendChild(el("span", "enTag", "EN"));
-    rich(z, u.tr || u.en);
-    if (D.trans && u.tr) {
+    var z = zhSpan(u);
+    if (D.trans && (u.tr || mtOf(u) !== null)) {
       var b = el("button", "origbtn", "原文"); b.type = "button"; b.title = "Show the original English"; b.setAttribute("aria-expanded", "false");
       var o = el("span", "origtext"); o.hidden = true; rich(o, u.en);
       b.addEventListener("click", function (e) { e.stopPropagation(); o.hidden = !o.hidden; b.setAttribute("aria-expanded", o.hidden ? "false" : "true"); });
@@ -1173,11 +1193,12 @@ cat <<'EOF'
   if (!nexts.length) gap("low", "`STATE.md` has no `Next Steps` (list items).", "`STATE.md` 沒有 `Next Steps`（清單項目）。");
   if (D.changes.kind === "lost") gap("low", "The marker commit is no longer in this repository (history was rewritten?), so the changes list shows the last commits instead.", "標記的 commit 已不在這個 repository（歷史被改寫過？），因此變更清單改為顯示最近的 commit。");
   if (D.trans && !D.trfileOk) gap("medium", bt(D.trfile) + " does not exist, so every unit shows in English as untranslated.", bt(D.trfile) + " 不存在，所有單位都以英文顯示為未翻譯。");
-  // Every distinct unit the page shows, and how many have no current translation.
-  var trTotal = 0, trMiss = 0;
+  // Every distinct unit the page shows, and the ones with no current translation
+  // in the file. A machine translation does not take a unit off that list.
+  var trTotal = 0, trMiss = 0, trUnits = [];
   (function () {
     var seen = {};
-    function count(u) { if (!u || seen[u.en]) return; seen[u.en] = 1; trTotal++; if (isFb(u)) trMiss++; }
+    function count(u) { if (!u || seen[u.en]) return; seen[u.en] = 1; trTotal++; if (D.trans && !u.tr) { trMiss++; trUnits.push(u); } }
     [D.problem, D.focus, D.ms, D.goals, D.next, D.open].forEach(function (l) { l.forEach(count); });
     D.ac.acs.forEach(function (a) { count(a); a.means.forEach(count); a.tries.forEach(count); if (a.evr) count(a.evr); });
     D.comps.forEach(function (c) { count(c.name); count(c.resp); c.commits.forEach(function (k) { count(subj(k)); }); });
@@ -1231,14 +1252,82 @@ cat <<'EOF'
 
   /* ---------- the header ---------- */
   document.getElementById("title").textContent = D.name;
-  (function trline() {
+  function copyText(text, done) {
+    function fallback() {
+      try { var t = el("textarea"); t.value = text; t.style.position = "fixed"; t.style.opacity = "0"; document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t); done(); } catch (y) {}
+    }
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (x) { fallback(); }
+  }
+
+  // What the file lacks can be filled two ways, both offered here: an agent
+  // writes the translation file (the copied instruction works in any agent),
+  // or this browser machine translates for this viewer only.
+  var AGENT_ASK = "Fill the progress page's translations: run `scripts/progress.sh --untranslated`, " +
+    "write each unit it lists into " + D.trfile + " under its `## <hash>` line, keeping every `inline code` span exactly as written, " +
+    "delete the entries it lists as orphaned, then open the page with scripts/progress.sh.";
+  function tlCode() {
+    var l = root.getAttribute("data-tlang") || "zh-TW";
+    if (/^zh-(TW|HK|MO|Hant)/i.test(l)) return "zh-Hant";
+    if (/^zh/i.test(l)) return "zh";
+    return l;
+  }
+  function mtTodo() { return trUnits.filter(function (u) { return mtOf(u) === null; }); }
+  // Inline code is never sent: only the text between code spans is translated,
+  // and a backtick the translator returns is dropped so the spans stay where they were.
+  function machineTranslate(btn) {
+    var todo = mtTodo(), opts = { sourceLanguage: "en", targetLanguage: tlCode() };
+    if (!todo.length) return;
+    if (btn) btn.disabled = true;
+    function say(s) { if (btn) btn.textContent = s; }
+    function save() { try { localStorage.setItem(MTKEY, JSON.stringify(MT)); } catch (e) {} }
+    var o = {}; for (var k in opts) o[k] = opts[k];
+    o.monitor = function (m) { m.addEventListener("downloadprogress", function (e) { say("下載翻譯模型 " + Math.round((e.loaded || 0) * 100) + "%"); }); };
+    say("準備翻譯…（第一次要先下載翻譯模型，約一分鐘）");
+    return Promise.resolve().then(function () { return Translator.create(o); }).then(function (tr) {
+      var i = 0;
+      function next() {
+        if (i >= todo.length) return;
+        var u = todo[i++];
+        say("翻譯中 " + i + " / " + todo.length);
+        var parts = u.en.split("`");
+        if (parts.length % 2 === 0) parts = [u.en];
+        return Promise.all(parts.map(function (p, j) {
+          if (j % 2 === 1 || !/[A-Za-z]/.test(p)) return p;
+          return tr.translate(p).then(function (r) { return String(r).replace(/`/g, "'"); });
+        })).then(function (out) { MT[u.en] = out.join("`"); }).then(next);
+      }
+      return next();
+    // Parts of the page are drawn once, at load, so it reloads to show the
+    // translations; the address keeps the tab and scope.
+    }).then(function () { save(); location.reload(); }, function (err) {
+      save();
+      if (btn) { btn.disabled = false; btn.textContent = "瀏覽器翻譯失敗，可再試一次"; btn.title = String(err && err.message || err); }
+    });
+  }
+  function renderTrline() {
     var t = document.getElementById("trline");
-    if (!D.trans || !trMiss) return;
-    t.appendChild(document.createTextNode(trTotal + " 段中 " + trMiss + " 段尚未翻譯，尚未翻譯的以淡色英文並標上 EN 顯示。列出它們："));
-    t.appendChild(el("code", null, "scripts/progress.sh --untranslated"));
-    t.appendChild(document.createTextNode("。"));
+    t.textContent = "";
+    if (!D.trans || !trMiss) { t.hidden = true; return; }
+    var left = mtTodo().length, mtN = trMiss - left, p = el("div");
+    rich(p, trTotal + " 段中 " + trMiss + " 段在 `" + D.trfile + "` 裡沒有翻譯" +
+      (mtN ? "；其中 " + mtN + " 段由這個瀏覽器機器翻譯，標上「機器翻譯」" : "") +
+      (left ? "；" + left + " 段以淡色英文並標上 EN 顯示。" : "。"));
+    t.appendChild(p);
+    var row = el("div", "trbtns");
+    var a = el("button", null, "複製給 agent 的翻譯指令"); a.type = "button";
+    a.title = "Copies an instruction that any agent can follow to write " + D.trfile;
+    a.addEventListener("click", function () { copyText(AGENT_ASK, function () { a.textContent = "已複製，貼給 agent 即可"; setTimeout(function () { a.textContent = "複製給 agent 的翻譯指令"; }, 2000); }); });
+    row.appendChild(a);
+    if (left && typeof self.Translator !== "undefined") {
+      var m = el("button", null, "用瀏覽器翻譯剩下的 " + left + " 段"); m.type = "button"; m.id = "mtbtn";
+      m.title = "Machine translation by this browser's built-in translator; kept in this browser only";
+      m.addEventListener("click", function () { machineTranslate(m); });
+      row.appendChild(m);
+    }
+    t.appendChild(row);
     t.hidden = false;
-  })();
+  }
+  renderTrline();
 
   function boxHead(s, en, zh, units) {
     var h = el("h2"); h.appendChild(bi(en, zh));
@@ -1264,11 +1353,7 @@ cat <<'EOF'
         row.appendChild(el("code", null, e.v));
         var b = el("button"); b.type = "button"; b.appendChild(bi("copy", "複製"));
         b.addEventListener("click", function () {
-          function done() { b.textContent = "✓"; setTimeout(function () { b.textContent = ""; b.appendChild(bi("copy", "複製")); }, 1200); }
-          function fallback() {
-            try { var t = el("textarea"); t.value = e.v; t.style.position = "fixed"; t.style.opacity = "0"; document.body.appendChild(t); t.select(); document.execCommand("copy"); document.body.removeChild(t); done(); } catch (y) {}
-          }
-          try { navigator.clipboard.writeText(e.v).then(done, fallback); } catch (x) { fallback(); }
+          copyText(e.v, function () { b.textContent = "✓"; setTimeout(function () { b.textContent = ""; b.appendChild(bi("copy", "複製")); }, 1200); });
         });
         row.appendChild(b);
       }
@@ -1801,6 +1886,14 @@ cat <<'EOF'
   if (!first) { try { first = localStorage.getItem(TABKEY); } catch (e) {} }
   renderProgress(); renderRoadmap(); renderFeatures(); renderStructure();
   showTab(first);
+  // A translator model already on this machine needs no click: fill in what the file lacks.
+  if (D.trans && mtTodo().length && typeof self.Translator !== "undefined") {
+    try {
+      Translator.availability({ sourceLanguage: "en", targetLanguage: tlCode() }).then(function (a) {
+        if (a === "available") machineTranslate(document.getElementById("mtbtn"));
+      }, function () {});
+    } catch (e) {}
+  }
   var rz = 0;
   window.addEventListener("resize", function () { clearTimeout(rz); rz = setTimeout(refreshClamps, 120); });
 })();

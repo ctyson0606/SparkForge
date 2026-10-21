@@ -39,3 +39,4 @@ AGENTS.md|scripts/progress.sh|add the paragraph about scripts/progress.sh from u
 STATE.md|## Acceptance status|add an "## Acceptance status" heading to STATE.md, as in upstream template/STATE.md
 SPEC.md|## Milestones|add a "## Milestones" heading to SPEC.md, as in upstream template/SPEC.md
 SPEC.md|## Components|add a "## Components" heading to SPEC.md, as in upstream template/SPEC.md
+AGENTS.md|Asked to open the page while TRANSLATION|replace the paragraph about scripts/progress.sh in AGENTS.md with the one in upstream template/AGENTS.md
