@@ -261,7 +261,7 @@ adopting project, the other two in none.
   SPEC.md uses its own headings, so its page will find no Goals or Acceptance
   criteria there. check.sh passes in the four git projects; in ../test it
   fails only on the index, since it is not a repository (survey item 2).
-  Committed in each git project; pushing them was left to the user.
+  Committed in each git project and pushed at the user's request.
   GameBrake's two Upstream entries answered by 0.6.1 were deleted by hand,
   the return path survey item 3 asks for; its third stays. Its spec-gate
   draft of 2026-10-04 was never saved and has to be drafted again.
