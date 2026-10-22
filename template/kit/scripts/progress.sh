@@ -8,7 +8,8 @@
 # the commits and next steps that name it. Commits and Next Steps entries belong
 # to a criterion only where its id is written in them (whole token), and a
 # criterion belongs to a goal only where it names the goal "(G1)". Nothing is
-# guessed from wording or position.
+# guessed from wording or position. Below them, a timeline of the commits by
+# day, each opening to its body.
 #
 # The work is split in two. This script reads the files and git and writes the
 # result as JSON inside the page; JavaScript inside the page does the rendering
@@ -537,6 +538,56 @@ awk 'BEGIN { FS = "\037" } NF >= 3 { print "commit\037" $3 "\037" $1 "\037" $2 }
 resolve_batch "$T/ch.in" "$T/res.changes"
 resolve_batch "$T/hi.in" "$T/res.hist"
 
+# --- the timeline ---------------------------------------------------------------------
+# The last TL_N commits, newest first: subject, date, whether it is new since the
+# last view, and its body split into paragraphs, trailers such as Co-Authored-By
+# dropped. A commit is a record when every file it touched is memory or
+# framework: the memory files, AGENTS.md, the entry files kit/entry-points.txt
+# lists, kit/, the skill stubs under .claude/, the script stubs and translations/. The page folds records away so
+# the timeline shows the work. Subjects and paragraphs are translation units.
+# Output lines, joined by octal 037: tls, subject, hash, date, record (1|0),
+# new (1|0); then tlb, paragraph, hash for each paragraph of its body.
+TL_N=300
+: > "$T/tl.in"; : > "$T/tl.new"; : > "$T/tl.entry"
+if [ -n "$HEADC" ]; then
+  [ "$CH_KIND" = "some" ] && awk -F '\037' '{ print $1 }' "$T/changes.log" > "$T/tl.new"
+  [ -f "$ROOT/kit/entry-points.txt" ] && grep -v -e '^#' -e '^[[:space:]]*$' "$ROOT/kit/entry-points.txt" > "$T/tl.entry"
+  git -C "$ROOT" log -n "$TL_N" --date=short --name-only --format='%x1e%h%x1f%ad%x1f%s%x1f%b%x1d' HEAD 2>/dev/null \
+    | awk -v nf="$T/tl.new" -v ef="$T/tl.entry" '
+      BEGIN {
+        RS = "\036"; FS = "\035"
+        while ((getline l < nf) > 0) NEW[l] = 1; close(nf)
+        while ((getline l < ef) > 0) { sub(/\r$/, "", l); ENT[l] = 1 } close(ef)
+      }
+      function isrec(f) {
+        if (f ~ /^(SPEC|METHOD|STATE|GOTCHAS|AGENTS)\.md$/) return 1
+        if (f ~ /^(kit|translations|\.claude)\//) return 1
+        if (f ~ /^scripts\/(check|update-kit|progress)\.(sh|ps1)$/) return 1
+        return (f == ".gitattributes" || (f in ENT))
+      }
+      $1 != "" {
+        n = split($1, H, "\037"); if (n < 3) next
+        h = H[1]; d = H[2]; s = H[3]; b = (n >= 4) ? H[4] : ""
+        rec = 1; nfl = split($2, F, "\n")
+        for (i = 1; i <= nfl; i++) { f = F[i]; sub(/\r$/, "", f); if (f != "" && !isrec(f)) { rec = 0; break } }
+        print "tls\037" s "\037" h "\037" d "\037" rec "\037" ((h in NEW) ? 1 : 0)
+        m = split(b, L, "\n"); para = ""
+        for (i = 1; i <= m + 1; i++) {
+          line = (i <= m) ? L[i] : ""
+          sub(/\r$/, "", line)
+          if (line ~ /^[A-Za-z]+(-[A-Za-z]+)*-[Bb]y: / || line ~ /^Change-Id: /) line = ""
+          gsub(/^[ \t]+|[ \t]+$/, "", line)
+          if (line == "" || line ~ /^[-*] /) {
+            if (para != "") print "tlb\037" para "\037" h
+            para = ""
+            if (line == "") continue
+          }
+          para = (para == "") ? line : para " " line
+        }
+      }' > "$T/tl.in"
+fi
+resolve_batch "$T/tl.in" "$T/res.tl"
+
 # --- --untranslated: report and stop ------------------------------------------------
 if [ "$UNTRANS" -eq 1 ]; then
   echo "# Language: $LANG2 (translations/$LANG2.md)"
@@ -544,7 +595,7 @@ if [ "$UNTRANS" -eq 1 ]; then
   echo "# entry: keep the '## <hash>' line, replace the English with the translation."
   echo "# Commands and inline code (between backticks) are kept exactly as written."
   echo
-  cat "$T/res.problem" "$T/res.focus" "$T/res.ms" "$T/res.goals" "$T/res.ac" "$T/res.ev" "$T/res.next" "$T/res.open" "$T/res.changes" "$T/res.hist" "$T/res.comp" "$T/res.cc" \
+  cat "$T/res.problem" "$T/res.focus" "$T/res.ms" "$T/res.goals" "$T/res.ac" "$T/res.ev" "$T/res.next" "$T/res.open" "$T/res.changes" "$T/res.hist" "$T/res.tl" "$T/res.comp" "$T/res.cc" \
     | awk 'BEGIN { FS = "\037" } $2 == "stale" && !($3 in seen) { seen[$3] = 1; print "## " $3; print $4; print "" }'
   echo "# Orphaned entries: their hash matches no displayed unit, so prune them."
   orph=0
@@ -621,6 +672,20 @@ commits_json() {
     BEGIN { FS = "\037"; printf "[" }
     NF >= 7 { printf "%s{\"h\":%s,\"d\":%s,\"s\":%s,\"tr\":%s,\"st\":%s}", (n++ ? "," : ""), jesc($6), jesc($7), jesc($4), jesc($5), jesc($2) }
     END { printf "]" }' "$1"
+}
+
+# tl_json: the timeline's commits, each with its body paragraphs as units.
+tl_json() {
+  awk "$JLIB"'
+    function unit() { return "{\"en\":" jesc($4) ",\"tr\":" jesc($5) ",\"st\":" jesc($2) "}" }
+    BEGIN { FS = "\037"; printf "[" }
+    $1 == "tls" {
+      if (open) printf "]}"
+      printf "%s{\"h\":%s,\"d\":%s,\"s\":%s,\"tr\":%s,\"st\":%s,\"rec\":%s,\"isnew\":%s,\"body\":[", (n++ ? "," : ""), jesc($6), jesc($7), jesc($4), jesc($5), jesc($2), ($8 == 1 ? "true" : "false"), ($9 == 1 ? "true" : "false")
+      open = 1; nb = 0; next
+    }
+    $1 == "tlb" && open { printf "%s%s", (nb++ ? "," : ""), unit() }
+    END { if (open) printf "]}"; printf "]" }' "$1"
 }
 
 # comps_json: the components with their translated names and responsibilities,
@@ -776,7 +841,35 @@ html[data-lang="zh"] .en { display:none; }
 @keyframes flash { 0%, 40% { box-shadow:0 0 0 4px var(--acc); } 100% { box-shadow:var(--shadow); } }
 
 /* lists */
-#lists { margin-top:2.2rem; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; }
+#lists { margin-top:2.2rem; display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:16px; align-items:start; }
+.lead .leadtext { margin:.15rem 0 .2rem; font-size:1.02rem; font-weight:600; line-height:1.55; }
+.leadfull > .u { margin:.15rem 0 .65rem; line-height:1.6; }
+.gnote { color:var(--muted); font-size:.88rem; margin:-.35rem 0 .7rem; }
+.glist { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:.9rem 1.2rem; box-shadow:var(--shadow); margin:0 0 1.6rem; }
+.glist h3 { margin:0 0 .5rem; font-size:1rem; }
+.glist ul { list-style:none; margin:0; padding:0; }
+.glist li { display:flex; gap:.7rem; align-items:baseline; padding:.4rem 0; border-top:1px solid var(--line); }
+.glist li:first-child { border-top:0; }
+.glist .gid { font:700 .8rem ui-monospace, Consolas, Menlo, monospace; background:var(--nonebg); border-radius:6px; padding:.05rem .4rem; flex:none; }
+.glist .gt { flex:1; min-width:0; }
+.tl { margin-top:.3rem; }
+.tlday { position:relative; border-left:2px solid var(--line); margin-left:.35rem; padding:0 0 1.1rem 1.1rem; }
+.tlday::before { content:""; position:absolute; left:-7px; top:.3rem; width:12px; height:12px; border-radius:50%; background:var(--acc); border:2px solid var(--card); }
+.tlday:last-child { border-left-color:transparent; }
+.tlhead { display:flex; flex-wrap:wrap; gap:.2rem .8rem; align-items:baseline; }
+.tldate { font-weight:700; font-variant-numeric:tabular-nums; }
+.tlcount, .tlidl { color:var(--muted); font-size:.85rem; }
+.tlids { display:flex; flex-wrap:wrap; gap:.3rem .5rem; align-items:center; margin-top:.25rem; }
+.tlids .chips { margin-top:0; }
+.lcol .tlday ul { margin-top:.35rem; }
+.lcol li.tlitem { padding:.45rem 0; }
+.tlsubj { flex:1; min-width:0; }
+.newb { font-size:.7rem; font-weight:700; color:var(--acc); border:1px solid var(--acc); border-radius:99px; padding:0 .45rem; }
+.tltog, .tlolder { margin-top:.3rem; padding:.05rem .55rem; font-size:.78rem; color:var(--muted); }
+.tlbody { margin:.4rem 0 .2rem; padding:.6rem .8rem; border-radius:10px; background:var(--code); font-size:.92rem; }
+.tlbody > .u { margin:0 0 .55rem; line-height:1.6; }
+.tlmeta { color:var(--muted); font-size:.8rem; }
+.tlrec { opacity:.85; }
 .lcol { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:1rem 1.2rem; box-shadow:var(--shadow); min-width:0; }
 .lcol h2 { margin:0; font-size:1.05rem; }
 .lcol .sub { color:var(--muted); font-size:.85rem; margin:.1rem 0 .6rem; }
@@ -932,6 +1025,7 @@ printf '"next":%s,' "$(units_json "$T/res.next")"
 printf '"open":%s,' "$(units_json "$T/res.open")"
 printf '"env":%s,' "$(env_json)"
 printf '"changes":{"kind":%s,"n":%s,"total":%s,"items":%s},' "$(json_str "$CH_KIND")" "$(json_str "$CH_N")" "$CH_TOTAL" "$(commits_json "$T/res.changes")"
+printf '"tl":%s,' "$(tl_json "$T/res.tl")"
 printf '"hist":%s}\n' "$(commits_json "$T/res.hist")"
 printf '</script>\n<script>\n'
 cat <<'EOF'
@@ -1204,6 +1298,7 @@ cat <<'EOF'
     D.comps.forEach(function (c) { count(c.name); count(c.resp); c.commits.forEach(function (k) { count(subj(k)); }); });
     D.changes.items.forEach(function (c) { count(subj(c)); });
     D.hist.forEach(function (c) { count(subj(c)); });
+    D.tl.forEach(function (c) { count(subj(c)); c.body.forEach(count); });
   })();
   if (D.trans && trMiss) gap("low", trMiss + " of " + trTotal + " displayed units have no current translation; `scripts/progress.sh --untranslated` lists them.", trTotal + " 段中 " + trMiss + " 段沒有最新的翻譯；`scripts/progress.sh --untranslated` 會列出它們。");
   if (D.trans && D.orphans) gap("low", D.orphans + " translation(s) in " + bt(D.trfile) + " match no displayed unit; `scripts/progress.sh --untranslated` lists them to prune.", bt(D.trfile) + " 裡有 " + D.orphans + " 筆翻譯對不到任何顯示的單位；`scripts/progress.sh --untranslated` 會列出，請清掉。");
@@ -1360,14 +1455,42 @@ cat <<'EOF'
       s.appendChild(row);
     });
   }
+  // A long section opens on its first sentence; the whole text, one paragraph
+  // per unit, is one click away. The sentence is cut from whichever text the
+  // view shows, so the zh view cuts the translation, not the English.
+  function firstSentence(s, zh) {
+    var m = zh ? s.match(/^[\s\S]*?[。！？](?=[^。！？]|$)/) : s.match(/^[\s\S]*?[.!?](?=\s+["'(A-Z0-9]|$)/);
+    return m ? m[0] : s;
+  }
+  function leadBlock(units) {
+    var wrap = el("div", "lead"), u = units[0], mt = mtOf(u), zt = u.tr || mt;
+    var p = el("p", "leadtext");
+    var en1 = firstSentence(u.en, false);
+    p.appendChild(rich(el("span", "en"), en1));
+    var z = el("span", D.trans && !zt ? "zh fb" : "zh");
+    if (D.trans && !zt) { z.setAttribute("lang", "en"); var t = el("span", "enTag", "EN"); t.setAttribute("translate", "no"); z.appendChild(t); }
+    else if (mt !== null) { var g = el("span", "mtTag", "機器翻譯"); g.setAttribute("translate", "no"); z.appendChild(g); }
+    rich(z, zt ? firstSentence(zt, true) : en1);
+    p.appendChild(z);
+    wrap.appendChild(p);
+    if (units.length === 1 && en1.length >= u.en.trim().length) return wrap;
+    var full = el("div", "leadfull"); full.hidden = true;
+    units.forEach(function (x) { full.appendChild(unitDiv(x)); });
+    var b = el("button", "more"); b.type = "button";
+    function label() { b.textContent = ""; b.appendChild(full.hidden ? bi("Read all", "看完整內容") : bi("Less", "收合")); }
+    b.addEventListener("click", function () { full.hidden = !full.hidden; p.hidden = !full.hidden; label(); });
+    label();
+    wrap.appendChild(full); wrap.appendChild(b);
+    return wrap;
+  }
   (function what() {
     var s = boxHead(document.getElementById("what"), "What this is", "這是什麼");
     sub(s, "The problem", "要解決的問題", D.problem);
     if (!D.problem.length) { var e = el("p", "empty"); e.appendChild(bi("Not written: the spec gate has not run.", "還沒寫：規格門還沒跑過。")); s.appendChild(e); }
-    else { var c = el("div"); D.problem.forEach(function (u) { c.appendChild(unitDiv(u)); }); s.appendChild(clampBox(c, 3)); }
+    else s.appendChild(leadBlock(D.problem));
     sub(s, "Current focus", "目前焦點", D.focus);
     if (!D.focus.length) { var e2 = el("p", "empty"); e2.appendChild(bi("Nothing written under Current Focus yet.", "目前焦點還沒有內容。")); s.appendChild(e2); }
-    else { var c2 = el("div"); D.focus.forEach(function (u) { c2.appendChild(unitDiv(u)); }); s.appendChild(clampBox(c2, 3)); }
+    else s.appendChild(leadBlock(D.focus));
     sub(s, "How to start", "怎麼啟動");
     startRows(s);
   })();
@@ -1479,14 +1602,43 @@ cat <<'EOF'
       if (g.acs.length) { var st = el("div", "gs"); st.appendChild(bi(ev + " of " + g.acs.length + " evidenced", g.acs.length + " 項中 " + ev + " 項有證據")); h.appendChild(st); }
       return section("sec-" + g.id, h, g.acs, "No acceptance criterion names " + g.id + " yet.", "還沒有任何驗收條件指名 " + g.id + "。");
     }
-    used.forEach(function (g) { host.appendChild(goalSection(g)); });
-    var rest = (!hasMs || scope === "all") ? acs.filter(function (a) { return !a.gids.length; }) : [];
-    if (rest.length) {
-      var h2 = el("div", "gh"); var t2 = el("div", "gt"); t2.appendChild(bi("Not under a goal", "未歸類")); h2.appendChild(t2);
-      var st2 = el("div", "gs"); st2.appendChild(bi(rest.length + " criteria name no goal, or one that is not listed", rest.length + " 項沒有指名目標，或指名的目標不存在")); h2.appendChild(st2);
-      host.appendChild(section("sec-none", h2, rest));
+    // Goals that no criterion names are one compact list, not a section each
+    // saying it is empty.
+    function goalList(list, en, zh) {
+      var box = el("section", "glist");
+      var h = el("h3"); h.appendChild(bi(en, zh)); box.appendChild(h);
+      var ul = el("ul");
+      list.forEach(function (g) {
+        var li = el("li"); li.id = "sec-" + g.id;
+        li.appendChild(el("span", "gid", g.id));
+        var t = el("div", "gt"); t.appendChild(unitDiv(g)); if (isFb(g)) t.appendChild(untrTag()); li.appendChild(t);
+        ul.appendChild(li);
+      });
+      box.appendChild(ul);
+      return box;
     }
-    unused.forEach(function (g) { host.appendChild(goalSection(g)); });
+    function critHead(list, en, zh) {
+      var h = el("div", "gh"); var t = el("div", "gt"); t.appendChild(bi(en, zh)); h.appendChild(t);
+      var ev = list.filter(function (a) { return a.eff === "evidenced"; }).length;
+      var st = el("div", "gs"); st.appendChild(bi(ev + " of " + list.length + " evidenced", list.length + " 項中 " + ev + " 項有證據")); h.appendChild(st);
+      return h;
+    }
+    var rest = (!hasMs || scope === "all") ? acs.filter(function (a) { return !a.gids.length; }) : [];
+    if (!used.length && rest.length) {
+      // Nothing links a criterion to a goal: the goals as a list, the criteria as one grid.
+      if (unused.length) host.appendChild(goalList(unused, "Goals", "目標"));
+      var s1 = section("sec-none", critHead(rest, "Acceptance criteria", "驗收標準"), rest);
+      s1.insertBefore(biEl("p", "gnote", "These criteria do not say which goal they serve, so they are listed apart from the goals.", "這些驗收標準沒有註明屬於哪個目標，所以和目標分開列出。"), s1.children[1]);
+      host.appendChild(s1);
+    } else {
+      used.forEach(function (g) { host.appendChild(goalSection(g)); });
+      if (rest.length) {
+        var s2 = section("sec-none", critHead(rest, "Other criteria", "其他驗收標準"), rest);
+        s2.insertBefore(biEl("p", "gnote", "These name no goal, or one that is not listed.", "這些沒有註明目標，或註明的目標不存在。"), s2.children[1]);
+        host.appendChild(s2);
+      }
+      if (unused.length) host.appendChild(goalList(unused, "Goals no criterion covers yet", "還沒有驗收標準的目標"));
+    }
     if (!sg.length && !rest.length) {
       var e = el("p", "empty");
       if (!hasMs && !goals.length && !acs.length) e.appendChild(bi("`SPEC.md` lists no goals or acceptance criteria yet.", "`SPEC.md` 還沒有列出目標或驗收條件。"));
@@ -1566,26 +1718,91 @@ cat <<'EOF'
   /* ---------- the two lists under the progress tab ---------- */
   (function lists() {
     var host = document.getElementById("lists");
-    var c1 = el("div", "lcol");
-    var h1 = el("h2"); h1.appendChild(bi("Changes since last view", "上次看之後的變更")); c1.appendChild(h1);
+    // The timeline: one entry per day, newest first. A day shows its work as one
+    // line per commit, and folds away the commits that only touched memory or the
+    // framework. A commit with a body opens to it: the detailed account of what was
+    // done. The criteria a day's commits name, and the evidence recorded that day,
+    // are chips that open the criterion.
+    var c1 = el("div", "lcol tlcol");
+    var h1 = el("h2"); h1.appendChild(bi("Timeline", "時間線")); c1.appendChild(h1);
     var ch = D.changes, sb;
-    if (ch.kind === "first") sb = ["First view on this machine: the last " + ch.items.length + " commits", "這台機器第一次檢視：最近 " + ch.items.length + " 個 commit"];
-    else if (ch.kind === "lost") sb = ["The marker is gone: the last " + ch.items.length + " commits", "標記已不存在：最近 " + ch.items.length + " 個 commit"];
+    if (ch.kind === "some") sb = [ch.total + " commit(s) since the last view (at `" + ch.n + "`), marked new", "自上次檢視（`" + ch.n + "`）以來有 " + ch.total + " 個新 commit，標上「新」"];
     else if (ch.kind === "none") sb = ["Nothing new since the last view (at `" + ch.n + "`)", "自上次檢視（`" + ch.n + "`）以來沒有新的 commit"];
-    else if (ch.kind === "some") sb = [ch.total + " commit(s) since the last view (at `" + ch.n + "`)", "自上次檢視（`" + ch.n + "`）以來共 " + ch.total + " 個 commit"];
+    else if (ch.kind === "lost") sb = ["The last-view marker is gone, so nothing is marked new", "上次檢視的標記已不存在，所以沒有標出新的 commit"];
+    else if (ch.kind === "first") sb = ["First view on this machine", "這台機器第一次檢視"];
     else sb = ["No commits yet", "還沒有任何 commit"];
     c1.appendChild(biEl("div", "sub", sb[0], sb[1]));
-    if (changes.length) {
-      var ul = el("ul");
-      changes.forEach(function (k) {
-        var li = el("li"); var row = el("div", "row");
-        row.appendChild(el("code", null, k.c.h)); row.appendChild(el("span", "date", k.c.d)); li.appendChild(row);
-        var sj = el("div"); sj.appendChild(revealFrag(subj(k.c))); li.appendChild(sj);
-        if (k.ids.length) li.appendChild(chipsFor(k.ids));
-        ul.appendChild(li);
-      });
-      c1.appendChild(ul);
+    var days = [], dayBy = {};
+    function dayOf(d) { if (!dayBy[d]) { dayBy[d] = { d: d, work: [], rec: [], named: [], ev: [] }; days.push(dayBy[d]); } return dayBy[d]; }
+    function addId(list, id) { if (list.indexOf(id) < 0) list.push(id); }
+    D.tl.forEach(function (c) {
+      var day = dayOf(c.d);
+      (c.rec ? day.rec : day.work).push(c);
+      acs.forEach(function (a) { if (hasTok(c.s, a.id)) addId(day.named, a.id); });
+    });
+    acs.forEach(function (a) { if (a.date) addId(dayOf(a.date).ev, a.id); });
+    days.sort(function (x, y) { return x.d < y.d ? 1 : x.d > y.d ? -1 : 0; });
+    function toggle(btnEn, btnZh, closeEn, closeZh, body) {
+      var b = el("button", "tltog"); b.type = "button"; body.hidden = true;
+      function label() { b.textContent = ""; b.appendChild(body.hidden ? bi(btnEn, btnZh) : bi(closeEn, closeZh)); b.setAttribute("aria-expanded", body.hidden ? "false" : "true"); }
+      b.addEventListener("click", function (e) { e.stopPropagation(); body.hidden = !body.hidden; label(); });
+      label();
+      return b;
     }
+    function tlItem(c) {
+      var li = el("li", "tlitem");
+      var row = el("div", "row");
+      if (c.isnew) row.appendChild(biEl("span", "newb", "new", "新"));
+      var sj = el("div", "tlsubj"); sj.appendChild(revealFrag(subj(c))); row.appendChild(sj);
+      li.appendChild(row);
+      var ids = acs.filter(function (a) { return hasTok(c.s, a.id); }).map(function (a) { return a.id; });
+      if (ids.length) li.appendChild(chipsFor(ids));
+      if (c.body.length) {
+        var body = el("div", "tlbody");
+        c.body.forEach(function (u) { body.appendChild(unitDiv(u)); });
+        var meta = el("div", "tlmeta"); meta.appendChild(el("code", null, c.h)); body.appendChild(meta);
+        li.appendChild(toggle("How it was done", "詳細過程", "Hide", "收起", body));
+        li.appendChild(body);
+      }
+      return li;
+    }
+    var DAYS_SHOWN = 6, WORK_SHOWN = 5, tl = el("div", "tl");
+    days.forEach(function (day, i) {
+      var dv = el("div", "tlday"); if (i >= DAYS_SHOWN) dv.hidden = true;
+      var hd = el("div", "tlhead");
+      hd.appendChild(el("span", "tldate", day.d));
+      var parts = [];
+      if (day.work.length) parts.push([day.work.length + " change(s)", day.work.length + " 項工作"]);
+      if (day.rec.length) parts.push([day.rec.length + " record(s)", day.rec.length + " 個記錄"]);
+      if (parts.length) hd.appendChild(biEl("span", "tlcount", parts.map(function (p) { return p[0]; }).join(" · "), parts.map(function (p) { return p[1]; }).join(" · ")));
+      dv.appendChild(hd);
+      if (day.named.length) { var r1 = el("div", "tlids"); r1.appendChild(biEl("span", "tlidl", "Criteria named:", "提到的驗收：")); r1.appendChild(chipsFor(day.named)); dv.appendChild(r1); }
+      if (day.ev.length) { var r2 = el("div", "tlids"); r2.appendChild(biEl("span", "tlidl", "Evidence recorded:", "記錄了證據：")); r2.appendChild(chipsFor(day.ev)); dv.appendChild(r2); }
+      if (day.work.length) {
+        var ul = el("ul"); day.work.slice(0, WORK_SHOWN).forEach(function (c) { ul.appendChild(tlItem(c)); }); dv.appendChild(ul);
+        if (day.work.length > WORK_SHOWN) {
+          var ul2 = el("ul"); day.work.slice(WORK_SHOWN).forEach(function (c) { ul2.appendChild(tlItem(c)); });
+          var wn = day.work.length - WORK_SHOWN;
+          dv.appendChild(toggle(wn + " more change(s) this day", "這天還有 " + wn + " 項工作", "Show fewer", "收起", ul2));
+          dv.appendChild(ul2);
+        }
+      }
+      if (day.rec.length) {
+        var rl = el("ul", "tlrec"); day.rec.forEach(function (c) { rl.appendChild(tlItem(c)); });
+        var rn = day.rec.length;
+        dv.appendChild(toggle(rn + " record commit(s): memory, framework, translations", "另有 " + rn + " 個記錄 commit：記憶、框架、翻譯", "Hide records", "收起記錄", rl));
+        dv.appendChild(rl);
+      }
+      tl.appendChild(dv);
+    });
+    c1.appendChild(tl);
+    if (days.length > DAYS_SHOWN) {
+      var older = el("button", "tlolder"); older.type = "button";
+      older.appendChild(bi("Show " + (days.length - DAYS_SHOWN) + " earlier day(s)", "顯示更早的 " + (days.length - DAYS_SHOWN) + " 天"));
+      older.addEventListener("click", function () { tl.querySelectorAll(".tlday").forEach(function (d) { d.hidden = false; }); older.hidden = true; });
+      c1.appendChild(older);
+    }
+    if (!days.length) { var e0 = el("p", "empty"); e0.appendChild(bi("No commits yet.", "還沒有任何 commit。")); c1.appendChild(e0); }
     host.appendChild(c1);
 
     var c2 = el("div", "lcol");

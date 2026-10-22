@@ -80,6 +80,26 @@ adopting project, the other two in none.
   has its inline-code commands cut out and shown apart, so the text left
   behind reads "passed ( : 29 passed; : 17 passed", and every translation has
   to carry the same holes. Fix it in the page, not in the translations.
+  The user's next complaints, 2026-10-22, on GameBrake's page: "未歸類" was a
+  mess (no criterion names a goal, so all ten sat under "not under a goal"
+  while six goal sections each said nothing named them), Current Focus was
+  too long to read, and the work had no timeline. Asked which timeline, the
+  user wanted both the work by date and the criteria on it, simple outside and
+  opening to the detailed process of each item. Built in kit 0.6.3: goals no
+  criterion names are one compact list; when no criterion names any goal the
+  criteria are one grid headed 驗收標準 with a note why; Problem and Current
+  Focus open on their first sentence (cut from the translation in the zh
+  view) with the whole text one click away, a paragraph per unit; the changes
+  list became a timeline of the last 300 commits by day, newest first, five
+  changes shown a day and the rest folded, commits touching only memory,
+  framework or translations folded as records, each commit opening to its
+  body by paragraph (trailers dropped), commits since the last view marked
+  新, and each day listing the criteria its commits name and the evidence
+  recorded that day as chips. Bodies and subjects are translation units, so
+  GameBrake went from 0 to 99 untranslated. Observed in headless Edge on a
+  GameBrake clone: no errors, the four views by screenshot. Not yet seen by
+  the user. The expanded Current Focus is still a wall: GameBrake's is long
+  because it was written for agents, which the page cannot fix.
 - Progress page, decided with the user on 2026-10-04. Origin: at a hackathon,
   without SparkForge, the user accepted AI suggestions until they no longer
   knew what the demo did or how to run it. Built, in kit 0.6.0:
