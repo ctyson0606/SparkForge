@@ -250,13 +250,25 @@ adopting project, the other two in none.
   Claude Code) rather than a line in AGENTS.md. Untried.
 - Memory does not load in DeepSeek Harness; see Open Questions. Unsolved. The
   obvious patch is rejected in METHOD.md, Anti-Patterns.
-- GameBrake is on 0.6.0 and every other project on 0.2.1. The first three
-  were brought to 0.2.0 on 2026-10-01, kit/ through each project's own
-  update-kit.sh over SSH and the rest copied in once by hand, with each spec
-  moved out of STATE.md into SPEC.md and checked line for line; then to 0.2.1
-  the same day through the new stubs, with nothing left to do by hand.
-  GameBrake's spec-gate draft of milestones, components, Means and Try has
-  waited for the user's approval since 2026-10-04.
+- Every adopting project, ../test included, was brought to 0.6.3 on
+  2026-10-22 at the user's request: kit/ by running the new update-kit.sh
+  against each (SPARKFORGE_ROOT and SPARKFORGE_UPDATE_COPY set) from the
+  pushed remote over SSH, so the old 0.2.1 updaters never ran; then the steps
+  update-kit.sh listed, applied by a scratch script: the progress stubs
+  (staged 100755), the TRANSLATION line (blank, except GameBrake's zh-TW), the
+  translations exception and the progress paragraph in AGENTS.md, and empty
+  Acceptance status, Milestones and Components headings. LearningProject's
+  SPEC.md uses its own headings, so its page will find no Goals or Acceptance
+  criteria there. check.sh passes in the four git projects; in ../test it
+  fails only on the index, since it is not a repository (survey item 2).
+  Committed in each git project; pushing them was left to the user.
+  GameBrake's two Upstream entries answered by 0.6.1 were deleted by hand,
+  the return path survey item 3 asks for; its third stays. Its spec-gate
+  draft of 2026-10-04 was never saved and has to be drafted again.
+  collect-upstream.sh called every project changed, because a project checks
+  .ps1 out with CRLF and template/kit holds LF; it now compares ignoring
+  carriage returns, and a changed file and an extra file still read as
+  changed.
 - Remind the user, at the start of the next session that touches update-kit.sh
   or the projects: decide whether update-kit.sh's default upstream stays HTTPS.
   It was chosen for readers without an SSH key, which assumes a public

@@ -20,6 +20,19 @@ set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 if [ "$#" -eq 0 ]; then set -- "$(cd "$ROOT/.." && pwd)"; fi
 
+# Same files, same contents, carriage returns aside. A project's .gitattributes
+# checks .ps1 files out with CRLF while this repository's own keeps template/kit
+# at LF, so a byte comparison of the two working trees calls every project with
+# a .ps1 in kit/ changed, current or not.
+kit_same() {
+  local a="$1" b="$2" f
+  [ "$(cd "$a" && find . -type f | sort)" = "$(cd "$b" && find . -type f | sort)" ] || return 1
+  while IFS= read -r f; do
+    cmp -s <(tr -d '\r' < "$a/$f") <(tr -d '\r' < "$b/$f") || return 1
+  done < <(cd "$a" && find . -type f)
+  return 0
+}
+
 found=0
 while IFS= read -r version; do
   project="$(cd "$(dirname "$version")/.." && pwd)"
@@ -29,7 +42,7 @@ while IFS= read -r version; do
 
   theirs="$(cat "$project/kit/VERSION" 2>/dev/null)"
   ours="$(cat "$ROOT/template/kit/VERSION" 2>/dev/null)"
-  if diff -rq "$project/kit" "$ROOT/template/kit" >/dev/null 2>&1; then
+  if kit_same "$project/kit" "$ROOT/template/kit"; then
     echo "kit/      current ($ours)"
   else
     echo "kit/      behind or changed: $theirs there, $ours here, and the contents differ"
