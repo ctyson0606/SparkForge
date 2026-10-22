@@ -122,9 +122,19 @@ adopting project, the other two in none.
   facts (test, survey) so its README is held to them too. SparkForge's three
   READMEs are rewritten, with docs/progress-page.png from the GameBrake page;
   the maturity section now says five installs, one in a Linux container.
-  Still to do: GameBrake, LearningProject, dsh-docker+remote-access, the
-  0.7.0 update and its hand steps in every project, and dsh-mobile-mode's
-  README against the skill.
+  Then done the same day: every project brought to 0.7.0 from the local
+  checkout, where update-kit.sh listed exactly the two new hand steps (stub,
+  routing line), applied after; GameBrake's, LearningProject's and
+  dsh-docker+remote-access's READMEs rewritten in all three editions, each
+  passing the translation, layout and command checks (LearningProject has
+  no commands, so that one is n/a there, and no LICENSE, so no licence
+  section). Writing them corrected stale claims: GameBrake's test counts are
+  gone, LearningProject's status said real agents had not been tried, and
+  SparkForge's said three installs. Two claims of the rewrite's own were
+  wrong and caught by reading the files before translating: a 403 remedy and
+  which services compose.yaml runs. dsh-mobile-mode's README, the model,
+  passes unchanged. ../test has no README and is not a repository. Committed
+  in each project; not yet pushed, nor is SparkForge's 0.7.0.
 - Progress page, decided with the user on 2026-10-04. Origin: at a hackathon,
   without SparkForge, the user accepted AI suggestions until they no longer
   knew what the demo did or how to run it. Built, in kit 0.6.0:
