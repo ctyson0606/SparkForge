@@ -124,6 +124,8 @@ fi
 # nothing and agreed only when someone compared them by hand.
 check_rule_grammar "METHOD.md" "$ROOT/METHOD.md"
 check_readme_translations "$ROOT"
+check_readme_layout "$ROOT"
+check_readme_commands "$ROOT"
 
 echo
 if [ "$FAILED" -eq 0 ]; then echo "check-repo.sh: all checks passed"; else echo "check-repo.sh: FAILED"; fi

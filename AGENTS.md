@@ -28,6 +28,14 @@ the stubs.
 Run `scripts/check-repo.sh` after any change. It runs the shipped checker
 against `template/` first, then the checks that belong only to this repository.
 
+## Environment facts
+
+The commands this repository runs. The README's development section is held
+to these, character for character, by scripts/check-repo.sh.
+
+test: bash scripts/check-repo.sh
+survey: bash scripts/collect-upstream.sh
+
 ## What the projects found
 
 `scripts/collect-upstream.sh` lists every project next to this repository that

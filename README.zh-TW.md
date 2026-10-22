@@ -1,250 +1,230 @@
-# 🔥 SparkForge
+<!-- Hero -->
+<div align="center">
+  <h1>🔥 SparkForge</h1>
+  <p><b>給 AI 編碼 agent 用的工作流程框架</b>：複製進新專案後，它讓 agent 擁有會累積的記憶，以及判斷證據是否成立的方法；它本身不帶任何專案知識。</p>
+  <p>
+    <img alt="for: AI coding agents" src="https://img.shields.io/badge/for-AI%20coding%20agents-4d6bfe">
+    <img alt="shell: bash" src="https://img.shields.io/badge/shell-bash-4d6bfe">
+    <img alt="dependencies: git, bash, awk" src="https://img.shields.io/badge/dependencies-git%2C%20bash%2C%20awk-brightgreen">
+    <img alt="license: MIT" src="https://img.shields.io/badge/license-MIT-blue">
+  </p>
+  <p>🌏 <a href="./README.zh-CN.md">简体中文</a> · 繁體中文 · <a href="./README.md">English</a></p>
+</div>
 
-[English](README.md) · **繁體中文** · [简体中文](README.zh-CN.md)
+<p align="center"><img src="docs/progress-page.png" alt="使用 SparkForge 的專案的進度頁" width="720"></p>
 
-給 AI coding agent 用的工作流框架層，複製進一個新專案裡使用。它本身不帶任何
-專案知識 —— 只帶兩樣東西：🧠 一套累積專案知識的機制，以及 🔬 一套判斷證據到底
-成不成立的方法論。
+## ✨ 功能
 
-## 📦 你會拿到什麼
-
-把 `template/` 複製進新專案，裡面的內容就是那個專案的根目錄：
-
-```text
-my-project/
-├── AGENTS.md
-├── CLAUDE.md
-├── GEMINI.md
-├── SPEC.md
-├── METHOD.md
-├── STATE.md
-├── GOTCHAS.md
-├── .clinerules
-├── .windsurfrules
-├── .gitattributes
-├── .claude/
-│   ├── skills/
-│   └── agents/
-├── .cursor/
-│   └── rules/
-├── .github/
-│   └── copilot-instructions.md
-├── kit/
-│   ├── VERSION
-│   ├── entry-points.txt
-│   ├── project-requirements.txt
-│   ├── skills/
-│   ├── agents/
-│   └── scripts/
-└── scripts/
-    ├── check.sh
-    ├── progress.sh
-    ├── progress.ps1
-    └── update-kit.sh
-```
-
-| 檔案 | 用途 |
-|---|---|
-| ⚙️ `AGENTS.md` | 入口，也是唯一做路由的檔案。放 `MODE`、`TEAM`、你這個專案的環境指令、硬規則，以及把 agent 導向某個 skill 的那張表。 |
-| 🚪 各工具的入口檔 | `CLAUDE.md`、`GEMINI.md`、`.clinerules`、`.windsurfrules`、`.cursor/rules/`、`.github/`。每一個都只說一件事：先讀 `AGENTS.md`。詳見下一節。 |
-| 🗂️ `kit/entry-points.txt` | 那些入口檔的清單。兩支檢查器都讀它，所以一個工具不會在這裡有、在那裡漏。 |
-| 📋 `kit/project-requirements.txt` | 專案在 `kit/` 之外必須有的東西：`scripts/` 裡的薄殼、`AGENTS.md` 裡的 `TRANSLATION` 行、`STATE.md` 和 `SPEC.md` 裡的標題等等，每條都附一句該補什麼的提示。`check.sh` 會讓每條沒滿足的失敗；`update-kit.sh` 會點名那次更新新帶進來的。 |
-| 📐 `SPEC.md` | 批准過的契約：目標、非目標、驗收條件、資料和 API 的格式。只能透過規格門修改，所以不會隨著狀態更新被清掉。 |
-| 🧠 `METHOD.md` | 這個專案自己掙來的長效規則。**開始是空的，而且會一直空著**，直到真的踩到坑才填。 |
-| 📌 `STATE.md` | 當前工作狀態。整份替換，絕不往後追加。 |
-| 🐛 `GOTCHAS.md` | 綁定版本的陷阱，每條都有日期。相依套件消失後可以隨手刪掉。 |
-| 📚 `kit/` | 框架的正典內容。**在消費端專案裡絕對不要改這裡** —— 更新時會被整個覆蓋。 |
-| 🪝 `.claude/` | 薄殼 stub。每個都是一段 frontmatter 加一行指向 `kit/` 的路徑。 |
-| ✅ `scripts/check.sh` | 對整個目錄結構做的結構檢查。只有一行的薄殼：真正的檢查器是 `kit/scripts/check.sh`，所以它的修正會跟著 `kit/` 一起更新。 |
-| 🔄 `scripts/update-kit.sh` | 從上游拉一份新的 `kit/` 下來，連同 `kit/scripts/` 裡的腳本。它也是薄殼，所以會連自己一起更新。 |
-| 📊 `scripts/progress.sh` | 用 `SPEC.md`、`STATE.md` 和 git 產生一頁獨立的 HTML —— 四個分頁：進度（目標分區，每條驗收條件做成一張卡片，點開就能看到它的意思、怎麼親自試、記錄下來的證據，以及上次檢視之後的變更、下一步）、里程碑路線圖、功能指南和元件結構 —— 然後開啟。它不儲存任何東西，所以不會過期。Windows 請用 `scripts/progress.ps1`。在 `AGENTS.md` 設定 `TRANSLATION` 就能有第二種語言。 |
-
-分成兩層正是重點：📚 `kit/` 把每條規則只寫一次，每個 AI 工具各自拿到一個目錄的
-🪝 薄殼 stub 指過去。要支援第二個工具，是再生一組 stub，而不是把規則再抄一遍。
-
-## 🚪 一道指令，所有工具
-
-你永遠不需要告訴 agent 要讀哪個檔案。不管是哪個工具打開這個專案，它的第一道
-指令都一樣：**去讀 `AGENTS.md`**。凡是不會自己找到那個檔案的工具，都在它一定
-會讀的位置上有一個小檔案，而那個檔案除了指路之外什麼都不說。
-
-| 工具 | 它的檔案 | 怎麼載入 |
-|---|---|---|
-| 🤖 Claude Code | `CLAUDE.md` | ⚙️ `@AGENTS.md`，真的匯入 |
-| ✏️ Cursor | `.cursor/rules/sparkforge.mdc` | ⚙️ frontmatter 裡的 `alwaysApply: true` |
-| 🐙 GitHub Copilot | `.github/copilot-instructions.md` | 📄 它一定會讀的路徑 |
-| 💠 Gemini CLI | `GEMINI.md` | 📄 它一定會讀的路徑 |
-| 🧵 Cline | `.clinerules` | 📄 它一定會讀的路徑 |
-| 🏄 Windsurf | `.windsurfrules` | 📄 它一定會讀的路徑 |
-| 🌊 Codex CLI、Amp、DeepSeek Harness | `AGENTS.md` 本身 | ✅ 原生就讀，不需要入口 |
-
-其中兩個是載入器自己認的機制，其餘是把話放在工具一定看得到的地方。⚠️ 絕對不要
-把任何指令寫進這些檔案裡。兩個工具讀到兩套不同的規則，正是這整個安排要防的
-那種失敗。
-
-🗑️ 不用某個工具？把它的入口刪掉。那就是官方的退出方式，也正是為什麼
-`check.sh` 把缺席的入口當成「刻意的」而不是「壞掉的」。
+- **會累積的記憶**：`SPEC.md`、`METHOD.md`、`STATE.md` 和 `GOTCHAS.md` 每個 session 都會載入，agent 在狀態一改變時就寫下來，不用等人叫。
+- **一個指令，所有工具**：Claude Code、Cursor、Copilot、Gemini CLI、Cline、Windsurf、Codex CLI、Amp 和 DeepSeek Harness 都從 `AGENTS.md` 開始。
+- **規格門**：一個功能從問題、目標和驗收標準開始，由人批准；碰到認證、付款、密鑰或資料庫遷移的改動不能跳過。
+- **站得住的證據**：從真實事故提煉的規則，判斷一次通過的測試到底證明了什麼，以及如何把失敗追到原因。
+- **進度頁**：一個指令就從規格、狀態和 git 生成一頁——帶證據的驗收標準、路線圖、功能指南、元件結構和工作時間線，支援英文加一種語言。
+- **會失敗的檢查**：`scripts/check.sh` 檢查結構、stub、執行權限、README 各版本，以及 README 對 repository 的描述是否屬實。
+- **從上游更新**：`scripts/update-kit.sh` 替換 `kit/`，並列出更新在 `kit/` 以外需要的東西。
 
 ## 🚀 安裝
 
-```bash
-# 1. 把整個 template 複製進去。要用 "template/." 而不是 "template/*"，
-#    否則會不聲不響地漏掉 .claude/、.cursor/、.github/ 和 .gitattributes。
-#    兩個路徑都要加引號：裡面只要有一個空格就會整行壞掉
-cp -R "/path/to/SparkForge/template/." "/path/to/my-project/"
+前提：git 和 bash。Windows 上就是 Git for Windows 附帶的 Git Bash。
 
+**方式一 · Git Bash、macOS 或 Linux**
+
+```bash
+# 複製整個範本。要用 "template/."，不能用 "template/*"，
+# 否則 .claude/、.cursor/、.github/ 和 .gitattributes 會被悄悄漏掉
+cp -R "/path/to/SparkForge/template/." "/path/to/my-project/"
 cd "/path/to/my-project"
 git init
 
-# 2. 打開 AGENTS.md，把第一行的 "# SparkForge" 換成你自己的專案名稱。
-#    這件事一定要在 stage 之前做：先 stage 的話，下面那個 commit 進去的
-#    會是舊標題，而工作目錄顯示的是新的，兩邊不一致又不會有提示
+# 在 stage 任何東西之前，把 AGENTS.md 第一行的 "# SparkForge"
+# 換成你的專案名稱
 
-# 3. 先 stage，再把可執行位元寫進 index。Windows 上工作樹裡的
-#    mode 是假的，所以 chmod 做不到這件事
+# 先 stage，再在 index 裡設定執行權限：Windows 的工作目錄
+# 沒有真正的權限位元，chmod 做不到
 git add -A
 git add --chmod=+x -- 'scripts/*.sh' 'kit/scripts/*.sh'
-
-#    下面這行印出來的每一行，開頭都必須是 100755
-git ls-files -s -- 'scripts/*.sh' 'kit/scripts/*.sh'
-
-# 4. 驗證結構，然後 commit
-bash scripts/check.sh
 git commit -m "Adopt SparkForge"
 ```
 
-⚠️ 在 Windows 上，請用 **Git Bash** 跑上面那段，不要用 PowerShell。在
-PowerShell 打 `bash` 會命中 `C:\Windows\System32\bash.exe`，那是 WSL 的啟動器
-而不是 Git Bash；沒裝發行版的話會噴 `execvpe(/bin/bash) failed`，而那個訊息
-跟真正的原因完全沾不上邊。想留在 PowerShell 的話，用完整路徑呼叫 Git 自己的
-bash：
+**方式二 · 從 PowerShell**
+
+<details>
+<summary>想留在 PowerShell 裡時用這個</summary>
+
+在 PowerShell 裡輸入 `bash`，會找到 `C:\Windows\System32\bash.exe`，那是 WSL 的啟動器；沒有安裝發行版時，它會報 `execvpe(/bin/bash) failed`。改用 Git 附帶的 bash：
 
 ```powershell
-# 先找出 Git 實際裝在哪 —— 它不一定在 C 槽
+# Git 裝在哪裡；不一定在 C: 槽
 (Get-Command git).Source
 
-# 然後呼叫它旁邊那個 bash。前面的 & 不能省：少了它，PowerShell 會把
-# 加引號的路徑當成字串直接印出來，而不是執行它
+# & 不能省：沒有它，PowerShell 只會把引號裡的路徑印出來
 & "C:\Program Files\Git\bin\bash.exe" scripts/check.sh
 ```
 
-接著打開你的 agent，**主動要它跑 bootstrap** —— 它不會自己觸發。🥾 Bootstrap
-只跑一次，而且只在 `METHOD.md` 和 `STATE.md` 都還是空的時候跑，它會：
+</details>
 
-1. 把腳本帶著可執行位元放進 index —— 跟上面第 3 步做的是同一件事，為的是
-   bootstrap 自己在主導安裝的那種情況。
-2. 問你 `MODE` 和 `TEAM`，然後寫進 `AGENTS.md`。
-3. 一項一項把環境指令填進去。如果這個專案真的沒有某個指令，它會寫 `none` ——
-   缺席本身就是一項發現，不是一格空白。
-4. 依 `MODE` 選定的深度跑一次規格門。
-5. 把結果寫進 `SPEC.md`，並在 `STATE.md` 的 `Current Focus` 註明先做哪一部分。
-6. **讓 `METHOD.md` 保持空白。** 這是硬規則。規則要從專案真正踩到的坑掙來，
-   絕不能事先用猜的。
-
-## 🧭 日常使用
-
-記憶會自己載入：入口檔匯入 `AGENTS.md`，後者再匯入 `SPEC.md`、`METHOD.md`、
-`STATE.md` 和 `GOTCHAS.md`。每個 session 一開場，這個專案學到的所有東西都已經在 context
-裡了。
-
-| 當你正在… | 讀這份 | 一句話版本 |
-|---|---|---|
-| 🚪 準備開一個新功能 | `kit/skills/spec-gate.md` | 把需求重述成一個*問題*，只問會卡住的問題，產出目標、非目標、驗收條件和資料／API 契約 —— 然後**停下來等人批准**。 |
-| 🧪 看著一次全綠的測試 | `kit/skills/verification.md` | 第一次跑就全過的套件是未經驗證，不是正確。故意把程式碼弄壞，確認該失敗的那幾條真的失敗了。 |
-| 🔍 在追一個失敗 | `kit/skills/diagnosis.md` | 間歇性失敗有它的*發生率*，跑一次量不出來。從結果讀出任何結論之前，先確認不是測試框架自己壞了。 |
-| 👥 和其他人一起做 | `kit/skills/team-contract.md` | 一次講定資料／API 契約，以及哪些目錄歸誰負責。除此之外什麼都不要加。 |
-| 💾 寫記憶 | `kit/skills/memory-update.md` | 狀態一變就寫，絕不留到最後。寫之前先重讀*整份*檔案：過期那一行永遠不在你剛才工作的地方。 |
-
-### 🚨 規格門在這幾種情況不是選配
-
-不管 `MODE` 寫什麼，只要改動碰到 🔐 認證、🛡️ 授權、💳 金流、🔑 secrets、
-🗄️ 資料庫 migration，或 🌐 跨越一個以上的服務，就一定要先過規格門。其他地方才是
-你自己判斷。
-
-### 🧠 記憶的行為方式
-
-- ✍️ **記憶是邊做邊寫的。** 狀態一改變 —— 完成一步、做了決定、有新發現、踩到坑
-  —— agent 就當場寫下來，不用你開口，也絕不留到最後，因為額度用完或你換工具時，
-  session 可能說斷就斷。開口要求仍然有效：說一聲，所有檔案就會立刻更新到最新。被
-  委派出去的 subagent 在回傳之前寫，因為它的 context 會跟著它一起消失。
-- 🔁 **`METHOD.md` 是累積的。** 要修一條規則就在原地改，而不是追加一條和它牴觸
-  的。刪除則必須附上理由。
-- 🧹 **`STATE.md` 是被整份替換的。** 不再為真的東西直接刪掉，不做封存。歷史由
-  git 保管。
-- ⚡ **被你自己的改動弄成假的那句話，要在同一步裡修掉**，修完才往下走。在那之前
-  它會被當真。讓記錄保持為真是工作的一部分。
-
-### 🕵️ 證據審查員
-
-`kit/agents/evidence-reviewer.md` 是一個唯讀的 subagent，它的工具清單短得刻意
-—— `Read`、`Grep`、`Glob`。它不能執行指令，因為一個能執行的 agent 會變成第二個
-實作者，而不是第二雙眼睛。它只會用三句話之一回答：**Evidence holds.** ／
-**Evidence insufficient.** 並指名是哪幾條規則沒過 ／ **Cannot judge.** 並指名
-缺了什麼。
-
-## 🔄 更新
+**驗證**
 
 ```bash
-# 從上游覆蓋 kit/。SPEC.md、METHOD.md、STATE.md、GOTCHAS.md
-# 以及 AGENTS.md 的每一個段落都是你的，永遠不會被碰
-scripts/update-kit.sh
-
-# 上游新增或移除一個 skill，對應的 stub 也要跟著加或刪，
-# 而這支腳本就是負責回報這件事的
+git ls-files -s -- 'scripts/*.sh' 'kit/scripts/*.sh'
 bash scripts/check.sh
 ```
 
-📣 如果某次更新開始支援一個你沒有入口檔的工具，`update-kit.sh` 會把它列出來。
-它只報那次更新帶進來的，絕不報所有缺席的入口 —— 一個對每個你刻意不用的工具都
-叫一次的警告，看兩次之後就沒人讀了。
+第一個指令的每一行都以 `100755` 開頭，第二個指令最後印出 `check.sh: all checks passed`。
 
-📋 `update-kit.sh` 只寫 `kit/`，所以某個版本若需要 `kit/` 之外的新東西，它供應不了。它會列出 `kit/project-requirements.txt` 裡那次更新新增、而且還沒滿足的要求，每條附上該補什麼、從哪裡複製，以前列過的不再重複。在 Windows 上它還會把 `kit/` 下的 `.sh` 以可執行的模式放進暫存區，否則 Git for Windows 會把它們記成 `100644`，`check.sh` 就會失敗。
+## 🕹️ 使用
 
-📦 腳本搬進 `kit/scripts/` 之前就安裝的專案，`scripts/` 裡放的還是完整腳本。請手動
-從 SparkForge 的 `template/scripts/` 複製那兩個薄殼過去覆蓋一次。在那之前，舊的腳
-本會一直被執行，`kit/scripts/` 裡送來的修正永遠用不到。
+### 第一個 session
 
-📮 發現了屬於 SparkForge、而不是你專案本身的問題？例如一條規則被證明是錯的、一個
-檢查漏抓了東西、一支腳本壞了。不要在本地改 `kit/`。agent 會像寫其他記憶一樣，把
-它寫進你 `STATE.md` 的 `Upstream` 段落，一直留到上游處理完為止。放在你專案旁邊的
-SparkForge 只要跑一個指令 `scripts/collect-upstream.sh`，就能一次讀出所有專案的這
-個段落。🏅 你的專案第一個真正走過的框架規則也要寫在那裡：它比大多數改進都值錢。
+打開你的 agent，叫它**執行 bootstrap**；它不會自己開始。bootstrap 只跑一次，它會：
+
+1. 把腳本連同執行權限 stage 進 index；
+2. 詢問 `MODE` 和 `TEAM`，寫進 `AGENTS.md`；
+3. 逐項填好 Environment facts，專案確實沒有的指令就寫 `none`；
+4. 按 `MODE` 選擇的深度執行規格門；
+5. 把結果寫進 `SPEC.md`，並讓 `STATE.md` 指向第一個要做的部分；
+6. **讓 `METHOD.md` 保持空白**：規則要從專案真正踩到的坑裡得來，不能預先猜。
+
+### 之後的每一天
+
+記憶會自己載入：入口檔案匯入 `AGENTS.md`，`AGENTS.md` 再匯入四個記憶檔。agent 按情境使用 skill：
+
+| 當你正在… | Skill | 一句話 |
+| --- | --- | --- |
+| 🚪 準備做一個功能 | `kit/skills/spec-gate.md` | 把需求重述成問題，只問會卡住的問題，寫出目標、非目標、驗收標準和合約，然後停下來等批准。 |
+| 🧪 看著一次全綠的測試 | `kit/skills/verification.md` | 第一次就通過的測試是未驗證的。故意弄壞程式碼，看該失敗的測試有沒有失敗。 |
+| 🔍 追查一個失敗 | `kit/skills/diagnosis.md` | 間歇性失敗有發生率，跑一次量不出來。 |
+| 👥 和別人一起工作 | `kit/skills/team-contract.md` | 只約定一次合約，以及誰負責哪些目錄。 |
+| 💾 寫記憶 | `kit/skills/memory-update.md` | 狀態一改變就寫；寫之前先重讀整個檔案。 |
+| 📝 寫 README | `kit/skills/readme.md` | 就是這一頁的格式，三個語言版本，結構和指令都會被檢查。 |
+
+### 這些情況下規格門不能省
+
+不管 `MODE` 是什麼，任何碰到 🔐 認證、🛡️ 授權、💳 付款、🔑 密鑰、🗄️ 資料庫遷移，或 🌐 不止一個服務的改動，都要過規格門。
+
+### 記憶怎麼運作
+
+- **邊做邊寫**：做完一步、做了決定、踩到坑——馬上寫下，因為 session 隨時可能中斷。
+- **`METHOD.md` 累積**：規則在原處修正，不另外加一條互相矛盾的。
+- **`STATE.md` 整份取代**：不再成立的內容直接刪掉；歷史由 git 保存。
+- **你的改動讓某個說法變錯，就在同一步修正**。
+
+### 進度頁
+
+```bash
+bash scripts/progress.sh
+```
+
+它讀取 `SPEC.md`、`STATE.md` 和 git，不儲存任何東西，所以不會過時。在 `AGENTS.md` 設定 `TRANSLATION` 可以加一種語言：你叫 agent 打開頁面時它會先寫好翻譯，剩下的可以用瀏覽器機器翻譯。
+
+### 更新
+
+```bash
+bash scripts/update-kit.sh
+bash scripts/check.sh
+```
+
+第一個指令替換 `kit/`，並列出更新在 `kit/` 以外新需要的東西；第二個確認結果。屬於 SparkForge 而不是你專案的發現，寫在你 `STATE.md` 的 `Upstream` 底下，旁邊 SparkForge checkout 裡的 `scripts/collect-upstream.sh` 會讀到它。
+
+## 🚪 一個指令，所有工具
+
+自己找不到 `AGENTS.md` 的工具，在它一定會讀的路徑放一個小檔案，裡面只說該去哪裡。⚠️ 絕不要在這些檔案裡寫指示：兩個工具讀到兩套規則，正是這個安排要防止的。不用某個工具？刪掉它的入口檔就好。
+
+| 工具 | 它的檔案 | 怎麼載入 |
+| --- | --- | --- |
+| 🤖 Claude Code | `CLAUDE.md` | `@AGENTS.md`，真正的匯入 |
+| ✏️ Cursor | `.cursor/rules/sparkforge.mdc` | `alwaysApply: true` |
+| 🐙 GitHub Copilot | `.github/copilot-instructions.md` | 它一定會讀的路徑 |
+| 💠 Gemini CLI | `GEMINI.md` | 它一定會讀的路徑 |
+| 🧵 Cline | `.clinerules` | 它一定會讀的路徑 |
+| 🏄 Windsurf | `.windsurfrules` | 它一定會讀的路徑 |
+| 🌊 Codex CLI、Amp、DeepSeek Harness | `AGENTS.md` 本身 | 原生讀取 |
+
+## 🧰 專案會得到什麼
+
+| 檔案 | 用途 |
+| --- | --- |
+| ⚙️ `AGENTS.md` | 入口，也是唯一負責分派的檔案：宣告、Environment facts、硬性規則、skill 表。 |
+| 📐 `SPEC.md` | 已批准的合約。只能經過規格門修改。 |
+| 🧠 `METHOD.md` | 這個專案掙來的規則。一開始是空的。 |
+| 📌 `STATE.md` | 工作進行到哪。整份取代，從不追加。 |
+| 🐛 `GOTCHAS.md` | 綁定版本的陷阱，每條都有日期。 |
+| 📚 `kit/` | 框架本身。在專案裡絕不修改；更新時會被覆蓋。 |
+| 🪝 `.claude/` | stub，每個都指向 `kit/`。 |
+| ✅ `scripts/` | `check.sh`、`update-kit.sh` 和 `progress.sh` 的 stub，交給 `kit/scripts/` 執行。 |
 
 ## 🌡️ 成熟度
 
-明講，因為這個框架自己的方法論就要求這樣。**它已經安裝在三個真實專案上，全都是
-Windows。其中一個桌面工具已經做完規格裡的每一條驗收條件，每天都在用；另外兩個也
-都通過了規格門，之後一直在開發。** 細節，以及哪些部分到現在都還沒被實際用過，記在
-這個 repo 的 `STATE.md` 裡。
+照實說明，因為這個框架自己的方法要求這樣做。它已安裝在五個專案：四個在 Windows，一個在 Linux 容器。其中一個桌面工具已經完成所有驗收標準，每天都在用。
 
-| 元件 | 狀態 |
-|---|---|
-| 🧪 `verification.md` | ✅ 規則萃取自真實事故，多數都附著一筆有記錄的。其中幾條現在已經有兩、三個專案的事件。 |
-| 🔍 `diagnosis.md` | ✅ 同上 —— 萃取自一套在用的方法論，不是照規格寫出來的。 |
-| 💾 `memory-update.md` | ✅ 同上。「邊做邊寫記憶」在出貨前實測過：完全不提記憶，agent 也會把下一步記下來；舊規則下則不會。 |
-| ✅ `check.sh` | ✅ 跑得起來，而且抓出過真的漏洞，在這個 repo 裡和在使用它的專案裡都有。 |
-| 🔄 `update-kit.sh` | ✅ 已經從真的遠端把真的改動拉進三個專案，包括現在這一版：腳本跟著 `kit/` 一起更新，在每個專案裡都在執行途中替換掉了自己。還沒遇過有人在本地改過 `kit/` 的情況。 |
-| 🚪 各工具的入口檔 | 🟡 Claude Code 那個是載入器自己認的匯入，也已經被看著把一個真實專案的規則帶進 session。其他的都是靠叫 agent 去打開 `AGENTS.md`，而這種要求在這裡的實驗中被 agent 忽略過。它們都沒打開過。 |
-| 📐 `SPEC.md` | 🟡 新加的。三個專案的規格都已經手動搬進來；規格門還沒有親自寫過一份。 |
-| 🚪 `spec-gate.md` | 🟡 照規格寫的。在三個專案裡都產出過它該產出的四樣東西，每次都是 bootstrap 的第 4 步。從沒看過它自己觸發。 |
-| 👥 `team-contract.md` | ⚠️ 照規格寫的。零執行。 |
-| 🥾 `bootstrap.md` | ✅ 照規格寫的，三個專案都跑過。它不會自己啟動：要指名叫它。 |
-| 🕵️ `evidence-reviewer.md` | ⚠️ 照規格寫的。零執行。 |
-| 🎚️ `T0`／`T1`／`T2` 分級系統 | ⚠️ 從未被執行過。到目前為止那些標籤只是註解。 |
+| 元件 | 狀況 |
+| --- | --- |
+| 🧪 `verification.md`、🔍 `diagnosis.md`、💾 `memory-update.md` | ✅ 從真實事故提煉；好幾條規則帶著兩三個專案的事故紀錄。 |
+| ✅ `check.sh`、🔄 `update-kit.sh` | ✅ 在每個專案都跑過；`update-kit.sh` 曾在執行中替換自己而不留痕跡。 |
+| 🥾 `bootstrap.md`、🚪 `spec-gate.md` | 🟡 按規格寫成，在每個專案都跑過；規格門每次都是 bootstrap 的第四步，從沒自己觸發過。 |
+| 📊 進度頁 | 🟡 每個專案都裝了；只在一個專案看到實際使用。 |
+| 📝 `readme.md` | 🟡 新的。這一頁是它的第一次使用。 |
+| 🚪 各工具的入口檔 | 🟡 Claude Code 的已觀察到有效；其他的是請 agent 打開 `AGENTS.md`，都還沒實際打開過。 |
+| 👥 `team-contract.md`、🕵️ `evidence-reviewer.md`、🎚️ T0/T1/T2 分級 | ⚠️ 從未使用過。 |
 
-上面那段安裝流程實際走過三次，全都在 Windows 上，並依第一次踩到的坑修正過。macOS
-和 Linux 上還沒人走過。🧗 在新平台上第一個照著跑的人是在開路 —— 把摩擦記下來，這
-一節第一次被修正，靠的就是那份記錄。
+## 🛠️ 開發與測試
 
-## 🚫 SparkForge 不包含什麼
+這個 repository 存放框架本身；`template/` 是專案會得到的東西。任何改動之後：
 
-以下描述的是框架本身的邊界 —— SparkForge 不出貨什麼。它們對「用 SparkForge 的
-專案可以做什麼」不作任何限制。
+```bash
+bash scripts/check-repo.sh
+```
 
-- ❌ 沒有內建的任務追蹤、看板或任務卡。
-- ❌ 不對既有的程式碼庫做冷啟動掃描。SparkForge 的設計對象只有從第一個 commit
-  就採用它的專案。
-- ❌ 沒有為非軟體工作做的設計。
-- ❌ 沒有 UI 設計系統，也沒有 mockup 關卡。
-- ❌ 不收任何價值取決於全隊都採用的模組。這是新模組的入場考題：如果團隊裡剛好
-  只有一個人用它，它還值得存在嗎？
+選擇下一步要做什麼之前，先讀旁邊各專案記錄下來的東西：
+
+```bash
+bash scripts/collect-upstream.sh
+```
+
+## 📦 專案結構
+
+```text
+template/
+template/kit/skills/
+template/kit/scripts/
+template/kit/readme-skeleton.md
+scripts/check-repo.sh
+scripts/collect-upstream.sh
+source/METHOD.md
+METHOD.md
+STATE.md
+docs/progress-page.png
+```
+
+- `template/`：專案複製進去的內容，它的內容會成為專案的根目錄；
+- `template/kit/skills/`：正式的 skill，一個檔案一個；
+- `template/kit/scripts/`：檢查器、更新器和進度頁；
+- `template/kit/readme-skeleton.md`：這一頁的格式，供複製；
+- `scripts/check-repo.sh`：先對 `template/` 執行附帶的檢查器，再執行只屬於這個 repository 的檢查；
+- `scripts/collect-upstream.sh`：列出這個 checkout 旁邊的每個專案、它的 `kit/` 是否最新，以及它的 `Upstream`；
+- `source/METHOD.md`：這些規則轉化前的方法論原文；
+- `METHOD.md`、`STATE.md`：SparkForge 自己的記憶，和 `template/` 裡的空殼分開；
+- `docs/progress-page.png`：上面那張截圖。
+
+## ⚠️ 相容性與限制
+
+- 在 Windows 上寫成，在 Linux 容器裡走過一遍；從沒在 macOS 上跑過，雖然腳本是照它的 bash 3.2 和 BSD awk 寫的。
+- 沒有任務追蹤、看板或任務卡。
+- 不掃描既有的程式碼：SparkForge 是給從第一個 commit 就採用它的專案。
+- 沒有針對非軟體工作的設計，沒有 UI 設計系統，沒有設計稿關卡。
+- 不收任何需要整個團隊都採用才有價值的模組。
+
+## ❓ 常見問題
+
+| 症狀 | 怎麼做 |
+| --- | --- |
+| PowerShell 裡出現 `execvpe(/bin/bash) failed` | 那是 WSL 的啟動器，不是 Git Bash；改用 Git Bash，或上面的方式二 |
+| `check.sh` 說某個 shell 腳本在 index 裡沒有執行權限 | 對它點名的檔案執行 `git add --chmod=+x`；Windows 上 `chmod` 設定不了 |
+| 複製後少了 `.claude/` 或 `.github/` | 複製時用了 `template/*`；重新複製 `template/.` |
+| `update-kit.sh` 抓不到上游 | 它從不等待登入；改傳它印出的 SSH URL |
+| 剛更新完 `check.sh` 就失敗 | 更新需要 `kit/` 以外的東西；照每一行失敗訊息的提示補上 |
+| 進度頁全是英文，帶著 EN 標記 | 叫 agent 打開頁面，或按頁面上的翻譯按鈕 |
+
+## 📄 授權
+
+MIT，見 [LICENSE](LICENSE)。

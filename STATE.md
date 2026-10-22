@@ -100,6 +100,31 @@ adopting project, the other two in none.
   GameBrake clone: no errors, the four views by screenshot. Not yet seen by
   the user. The expanded Current Focus is still a wall: GameBrake's is long
   because it was written for agents, which the page cannot fix.
+- README framework, decided with the user on 2026-10-22, modelled on
+  ../dsh-mobile-mode's README, which the user likes: a centred hero (name,
+  one-sentence tagline, shields.io badges, a 🌏 language line), a screenshot
+  slot, emoji-headed sections in a fixed order (✨ features, 🚀 install with a
+  verify step and <details> for the advanced option, 🕹️ usage, the project's
+  own sections, 💾 a settings table, 🛠️ development and testing, 📦 layout,
+  ⚠️ limits, ❓ FAQ as a symptom/action table, 📄 licence), three editions
+  (English, zh-TW, zh-CN) of identical structure. To build: a kit skill and an
+  English skeleton, routed from AGENTS.md, and two checks against the
+  restatement rule: every path in the 📦 layout block exists, and every command
+  in the 🛠️ section equals an Environment fact in AGENTS.md (dsh-mobile-mode's
+  README once named `node --test test/`, which does not run there). Then
+  rewrite every project's README in it: SparkForge's own, GameBrake, and the
+  rest ("全都都要更新"). Built as kit 0.7.0: kit/skills/readme.md with its
+  stub and routing line, kit/readme-skeleton.md, check_readme_layout and
+  check_readme_commands in rule-checks.sh (run by check.sh and check-repo.sh),
+  and two lines in project-requirements.txt. The checks passed on
+  dsh-mobile-mode's README and failed on a copy with lib/gone.js and
+  `node --test test/` put back. SparkForge's root AGENTS.md gained Environment
+  facts (test, survey) so its README is held to them too. SparkForge's three
+  READMEs are rewritten, with docs/progress-page.png from the GameBrake page;
+  the maturity section now says five installs, one in a Linux container.
+  Still to do: GameBrake, LearningProject, dsh-docker+remote-access, the
+  0.7.0 update and its hand steps in every project, and dsh-mobile-mode's
+  README against the skill.
 - Progress page, decided with the user on 2026-10-04. Origin: at a hackathon,
   without SparkForge, the user accepted AI suggestions until they no longer
   knew what the demo did or how to run it. Built, in kit 0.6.0:
@@ -421,11 +446,10 @@ Also, none of them rules:
 - `template/.gitattributes` cannot be verified in place, because the root
   file's attributes are inherited by everything under it. The checker copies
   it to a throwaway repository to get an answer that can differ.
-- The README also restates the project layout, the bootstrap procedure and
-  the execution record of several components, and nothing diffs any of them
-  against the files they describe. They are checked by hand when someone
-  remembers to, which is how all three went false at once. The maturity
-  section was brought up to date on 2026-10-01. One claim is false and stays:
+- The README restates the bootstrap procedure and the standing of each
+  component, and nothing diffs those against the files they describe; since
+  kit 0.7.0 its layout block and development commands are checked. The
+  maturity section was brought up to date on 2026-10-22. One claim is false and stays:
   it says memory loads by itself, which is not so in DeepSeek Harness, and
   that is left out of the README by decision; see Recent Decisions. The
   translations, at least, are now compared by check-repo.sh.
