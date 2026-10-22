@@ -134,7 +134,7 @@ adopting project, the other two in none.
   wrong and caught by reading the files before translating: a 403 remedy and
   which services compose.yaml runs. dsh-mobile-mode's README, the model,
   passes unchanged. ../test has no README and is not a repository. Committed
-  in each project; not yet pushed, nor is SparkForge's 0.7.0.
+  and pushed in each project and SparkForge, at the user's request.
 - Progress page, decided with the user on 2026-10-04. Origin: at a hackathon,
   without SparkForge, the user accepted AI suggestions until they no longer
   knew what the demo did or how to run it. Built, in kit 0.6.0:
