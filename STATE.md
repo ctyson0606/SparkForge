@@ -67,7 +67,18 @@ adopting project, the other two in none.
   AC6/9 to G4, AC3/4 to G6, leaving G3 and G5 without criteria, plus M1 and
   three components; it shows 3 of 6 features done, 1 partly, 2 unjudged.
   Observed in headless Edge, English and zh views, a row opened: no errors,
-  no untranslated span. Waiting on the user's verdict on the sample.
+  no untranslated span. The user accepted the sample "for now" on 2026-10-25
+  and asked for it to be finished and rolled out: committed as kit 0.8.0
+  (spec-gate.md shows How and Parts in the shape and states the exception;
+  memory-update.md, the template SPEC.md header and METHOD.md semantics carry
+  it; the AGENTS.md progress paragraph describes the new page; SparkForge's
+  README line and screenshot follow). Every project is on 0.8.0 with the
+  paragraph and the wording applied. GameBrake's SPEC.md now holds the
+  sample's draft (goal links, M1, How and Parts, three components), taken as
+  approved by that "for now", and its translations are complete. A
+  translation committed apart from the work it translates leaves its own
+  commit subject untranslated, one step behind forever; folding it into the
+  work commit avoids that.
   On 2026-10-21 the user said it still
   falls short of what they have in mind and chose to finish it before any of
   the survey findings in the next item. Earlier, what fell short was recorded
@@ -342,7 +353,8 @@ adopting project, the other two in none.
   Committed in each git project and pushed at the user's request.
   GameBrake's two Upstream entries answered by 0.6.1 were deleted by hand,
   the return path survey item 3 asks for; its third stays. Its spec-gate
-  draft of 2026-10-04 was never saved and has to be drafted again.
+  draft of 2026-10-04 was never saved; it was drafted again for the 0.8.0
+  sample and is now in its SPEC.md.
   collect-upstream.sh called every project changed, because a project checks
   .ps1 out with CRLF and template/kit holds LF; it now compares ignoring
   carriage returns, and a changed file and an extra file still read as
