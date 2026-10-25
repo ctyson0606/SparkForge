@@ -79,6 +79,21 @@ adopting project, the other two in none.
   translation committed apart from the work it translates leaves its own
   commit subject untranslated, one step behind forever; folding it into the
   work commit avoids that.
+  LearningProject's page read 0 goals and 0 criteria: its SPEC uses "## Goal"
+  (one paragraph) and "## Acceptance (...)" with bare numbers, written before
+  the format existed. Agreed 2026-10-25 to convert it through the gate rather
+  than teach the page other headings. A draft built on a scratch clone
+  (lpdraft.mjs): five goals (start a subject, memory as it teaches, switching
+  agents, migrating a Project, sources untouched), AC1..AC8 linked (3-6 to
+  G3), M1, five components, How and Parts on the three done goals, and status
+  lines from its STATE (AC1-6 evidenced, AC7 and AC8 claimed); the page shows
+  3 of 5 features done. Waiting for the user's approval before it goes into
+  LearningProject. Its TRANSLATION stays blank unless the user wants zh-TW.
+  Found while building it, fixed in kit 0.8.1: a fresh Windows clone fails
+  check.sh, because kit/project-requirements.txt had no eol attribute and a
+  CRLF blank line read as a requirement with an empty path; and in 0.8.2 an
+  Environment fact of none showed as a command to copy. Neither is rolled out
+  to the projects yet.
   On 2026-10-21 the user said it still
   falls short of what they have in mind and chose to finish it before any of
   the survey findings in the next item. Earlier, what fell short was recorded
