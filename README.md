@@ -19,7 +19,7 @@
 - **One instruction, every tool**: Claude Code, Cursor, Copilot, Gemini CLI, Cline, Windsurf, Codex CLI, Amp and DeepSeek Harness all start from `AGENTS.md`.
 - **A spec gate**: a feature starts as a problem, goals and acceptance criteria that a person approves, and anything touching auth, payments, secrets or migrations cannot skip it.
 - **Evidence that holds**: rules taken from real incidents for judging whether a green run proves anything, and for chasing a failure to its cause.
-- **A progress page**: one command builds a page from the spec, the state and git — criteria with their evidence, a roadmap, a features guide, the components, and a timeline of the work, in English and one more language.
+- **A progress page**: one command builds a page a stranger can read at a glance — what the project is, which features are done and how each was done, which are not and what they lack — with the timeline, roadmap and structure below, in English and one more language.
 - **Checks that can fail**: `scripts/check.sh` verifies the layout, the stubs, the executable bits, the README editions and the README's own claims about the repository.
 - **Updates from upstream**: `scripts/update-kit.sh` replaces `kit/` and names anything an update needs outside it.
 

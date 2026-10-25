@@ -42,10 +42,36 @@ adopting project, the other two in none.
 
 ## Next Steps
 
-- The progress page is the current work. On 2026-10-21 the user said it still
+- The progress page is the current work. What the user wants, stated
+  2026-10-25 and still unmet: someone who knows nothing about the project
+  opens the page and at a glance knows what it is, which features are done,
+  which are not, and for each done one how it was done — clear and orderly.
+  Proposed and agreed the same day: the progress tab becomes a feature list,
+  one row per goal with a computed status (done, partly, not started, or no
+  criterion to judge by), each done one opening to how it was done, the
+  parts it uses, how it was verified and the related work, each unfinished
+  one saying what is left; the one-line "what it is" read from the README
+  hero; timeline, structure, roadmap and gaps moved below, for developers.
+  How it was done is a new `How:` line under a goal in SPEC.md, written by
+  the agent when the goal's criteria have evidence, without the spec gate:
+  the user decided it records what was built, not the contract. First a real
+  sample on a scratch copy of GameBrake, with drafted goal links, components
+  and How lines, before the kit changes and before any draft goes into
+  GameBrake's SPEC.md for approval. Built in template/kit/scripts/progress.sh,
+  uncommitted, kit/VERSION not yet bumped (check-repo fails on that until it
+  is): goals parsed with How: and Parts: sub-lines, the README tagline at the
+  top, progress counted in features, done and not-done groups, a done-without
+  -How gap and a Parts-to-nothing gap, the usage tab renamed How to use, a
+  "for developers" heading above the timeline, whose per-commit toggle is now
+  Details. The scratch GameBrake draft maps AC1/2/7/8 to G1, AC5/10 to G2,
+  AC6/9 to G4, AC3/4 to G6, leaving G3 and G5 without criteria, plus M1 and
+  three components; it shows 3 of 6 features done, 1 partly, 2 unjudged.
+  Observed in headless Edge, English and zh views, a row opened: no errors,
+  no untranslated span. Waiting on the user's verdict on the sample.
+  On 2026-10-21 the user said it still
   falls short of what they have in mind and chose to finish it before any of
-  the survey findings in the next item. What falls short is not yet recorded,
-  except translation: on GameBrake's page all 62 units showed untranslated,
+  the survey findings in the next item. Earlier, what fell short was recorded
+  only as translation: on GameBrake's page all 62 units showed untranslated,
   because translations/zh-TW.md was never written. The rule that an agent
   fills it after every memory write asks for an unprompted action and did not
   happen. A local model (Ollama) was rejected by the user: not every machine
