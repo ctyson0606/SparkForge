@@ -375,14 +375,12 @@ adopting project, the other two in none.
   .ps1 out with CRLF and template/kit holds LF; it now compares ignoring
   carriage returns, and a changed file and an extra file still read as
   changed.
-- Remind the user, at the start of the next session that touches update-kit.sh
-  or the projects: decide whether update-kit.sh's default upstream stays HTTPS.
-  It was chosen for readers without an SSH key, which assumes a public
-  repository, and this one needs a login, so the default reaches nobody
-  as things stand; the user, who has SSH, has to pass the SSH URL every time.
-  On 2026-10-01 they chose to keep HTTPS for now and asked to be reminded.
-  Since 0.2.1 the default at least fails in seconds and prints the SSH
-  command, where it used to wait on a login prompt until killed.
+- SparkForge is public since 2026-10-25, which settles the HTTPS question:
+  update-kit.sh's default upstream was chosen for readers without an SSH key
+  and only failed because the repository needed a login. Confirmed the same
+  day by an anonymous clone and by update-kit.sh run with no argument on a
+  scratch copy of dsh-mobile-mode, which fetched 0.8.2 over HTTPS. Nothing in
+  the code changed.
 - The count rule is not yet promotable, and should not be promoted early: its
   only incidents are this repository's. GameBrake's STATE.md and READMEs carry
   test counts nothing keeps in step, and GameBrake recorded that as a gap, but
