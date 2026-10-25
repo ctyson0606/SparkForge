@@ -304,7 +304,8 @@ adopting project, the other two in none.
      fails that, and was seen failing on it and passing after the restore.
      Every project is on 0.7.2; ../test's two Upstream entries were deleted
      as answered, and its check.sh still fails only because it is not a
-     repository, which is the user's to settle.
+     repository. The user chose on 2026-10-25 to leave ../test as it is; do
+     not raise it again unless they do.
   3. Upstream has no return path. GameBrake's three entries were fixed in
      0.6.1 and still stand there, so every survey shows them again. Proposal:
      a kit/CHANGES that names, per version, the Upstream entries it answers;
