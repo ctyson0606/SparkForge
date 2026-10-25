@@ -381,6 +381,16 @@ adopting project, the other two in none.
   day by an anonymous clone and by update-kit.sh run with no argument on a
   scratch copy of dsh-mobile-mode, which fetched 0.8.2 over HTTPS. Nothing in
   the code changed.
+- update-kit.sh's remaining limits, explained to the user on 2026-10-25 and
+  left for later at their request:
+  1. A first update runs the project's old updater, so anything new in the
+     updater itself takes effect only on the following update; so far worked
+     around by running the new script against each project directly.
+  2. Whatever a version needs outside kit/ is only listed, never done: every
+     rollout so far needed a hand step (stubs, AGENTS.md paragraphs,
+     .gitattributes, headings) and check.sh is what confirms them.
+  3. Nothing updates a project by itself: someone has to run it, which has
+     always been this repository updating every sibling project at once.
 - The count rule is not yet promotable, and should not be promoted early: its
   only incidents are this repository's. GameBrake's STATE.md and READMEs carry
   test counts nothing keeps in step, and GameBrake recorded that as a gap, but
