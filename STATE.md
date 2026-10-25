@@ -1,6 +1,6 @@
 # STATE
 
-> Last updated: 2026-10-21
+> Last updated: 2026-10-25
 
 Current working state. Superseded content is deleted, not archived.
 For durable rules see METHOD.md.
@@ -76,10 +76,17 @@ adopting project, the other two in none.
   only the agent button shows), the user's judgement of the machine
   translation's quality, and whether an agent fills the file unprompted when
   merely asked to open the page.
-  A page defect the translation exposed, not yet fixed: an evidence result
-  has its inline-code commands cut out and shown apart, so the text left
-  behind reads "passed ( : 29 passed; : 17 passed", and every translation has
-  to carry the same holes. Fix it in the page, not in the translations.
+  A page defect the translation exposed, fixed in kit 0.7.1 (2026-10-25): an
+  evidence result had its inline-code commands cut out, leaving "passed ( :
+  29 passed", and a list of the commands above it read as if every one had
+  run, including two the sentence says were refused or not run. The result
+  is now the whole sentence, commands inline, and the list is gone.
+  GameBrake's translations were then completed the same day: 114 units
+  written, 9 orphaned evidence entries deleted, and the page showed no
+  English fallback; all 175 translated units keep their inline code
+  identical to the English. A small fault in --untranslated: it previews an
+  orphan with head -c 60, which cuts a Chinese character in half and makes
+  the report invalid UTF-8. Not fixed.
   The user's next complaints, 2026-10-22, on GameBrake's page: "未歸類" was a
   mess (no criterion names a goal, so all ten sat under "not under a goal"
   while six goal sections each said nothing named them), Current Focus was
@@ -229,13 +236,23 @@ adopting project, the other two in none.
      page built for exactly its kind of project. collect-upstream.sh compares
      projects against the local template and printed "0.6.1 here" throughout,
      which hid it. Make it also print the version origin/main holds.
-  2. ../test reported two bootstrap defects 0.6.1 does not fix. The entry
-     condition, METHOD.md and STATE.md both empty, is falsified on day one by
-     writing memory as you go, so bootstrap can never fire once the first
-     conversation has written STATE.md: key it on SPEC.md being an empty
-     shell, or on MODE and TEAM not yet declared. Step 1 assumes a git
-     repository: add a step before it that settles where the code lives
-     (git init here, or clone the real repository in).
+  2. Done in kit 0.7.2 (2026-10-25). Bootstrap is keyed on SPEC.md still
+     being an empty shell, and a step before 1 settles where the code lives:
+     git init here, or stop and ask when the code is in another repository
+     or one already has its own AGENTS.md. Probed with Claude Code in two
+     copies of the template shaped like ../test (no repository, STATE.md
+     already saying the code is in a teammate's repository): the new skill
+     stopped and said the framework belongs inside that repository, and asked
+     about its AGENTS.md, in 2 of 2; the old one also stopped in 2 of 2 but
+     only asked whether to git init here. The old entry condition did not
+     block either run, so the probe does not show the new one mattering; it
+     removes a contradiction that ../test's agent reported. The new
+     description first carried ": ", which YAML reads as a second key and
+     Claude Code shows by listing the stub's body instead; check.sh now
+     fails that, and was seen failing on it and passing after the restore.
+     Every project is on 0.7.2; ../test's two Upstream entries were deleted
+     as answered, and its check.sh still fails only because it is not a
+     repository, which is the user's to settle.
   3. Upstream has no return path. GameBrake's three entries were fixed in
      0.6.1 and still stand there, so every survey shows them again. Proposal:
      a kit/CHANGES that names, per version, the Upstream entries it answers;
